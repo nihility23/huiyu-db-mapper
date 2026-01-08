@@ -24,6 +24,7 @@ pub enum QueryItem<'a> {
     NotInSql(&'a str,String),
     IsNotNull(&'a str),
     IsNull(&'a str),
+    ApplySql(&'a str,Vec<ParamValue>),
 }
 
 // select 列

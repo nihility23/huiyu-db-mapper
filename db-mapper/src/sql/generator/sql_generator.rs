@@ -52,6 +52,10 @@ pub trait WhereSqlGenerator{
     fn not_in_sql(&self, column:&str, sql: &str)->String{
         format!("{} not in ({})", column,sql)
     }
+
+    fn apply_sql(&self, sql: &str, vec_size: usize)->String{
+        sql.to_string()
+    }
 }
 
 pub trait PageSqlGenerator{
@@ -278,6 +282,9 @@ pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + Where
                         }
                         QueryItem::NotInSql(column,sql)=>{
                             where_sql_vec.push(self.not_in_sql(column,sql));
+                        }
+                        QueryItem::ApplySql(sql,param_values)=>{
+                            where_sql_vec.push(self.apply_sql(sql,param_values.len()));
                         }
                     }
                 }

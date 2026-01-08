@@ -143,6 +143,10 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self
     }
 
+    pub fn apply_sql(self, sql:&'a str, params: Vec<ParamValue>)->Self{
+        self.add_condition(QueryItem::ApplySql(sql,params))
+    }
+
     pub fn clear(mut self)->Self{
         self.query.clear();
         self

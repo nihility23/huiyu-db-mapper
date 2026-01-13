@@ -22,7 +22,7 @@ pub trait Entity{
 
     fn set_value_by_field_name(&mut self,field_name: &str, value : ParamValue);
 
-    fn set_value_by_column_name(&mut self,field_name: &str, value : ParamValue);
+    fn set_value_by_column_name(&mut self,column_name: &str, value : ParamValue);
 
     fn get_column_infos()->Vec<ColumnInfo>;
     

@@ -1,14 +1,15 @@
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 use r2d2::Pool;
+use crate::base::entity::Entity;
 
 pub(crate) struct SqlExecutor<T: r2d2::ManageConnection> {
-    pool: Pool<T>
+    pub(crate) pool: Pool<T>
 }
 
 pub(crate) trait Executor{
     fn get_sql_executor()->&'static Self;
-    fn exec(sql:&str, params: &Vec<ParamValue>) -> Result<(),DatabaseError>;
+    fn exec<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 }
 
 // impl DbManager<SqliteConnectionManager> {

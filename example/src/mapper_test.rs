@@ -98,8 +98,8 @@ impl Entity for UserEntity {
         }
     }
 
-    fn set_value_by_column_name(&mut self, field_name: &str, value: ParamValue) {
-        match field_name {
+    fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue) {
+        match column_name {
             "id"=> {
                 self.id = value.into();
             }

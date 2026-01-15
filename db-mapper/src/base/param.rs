@@ -1,6 +1,4 @@
 use chrono::{DateTime, Local};
-use rusqlite::ToSql;
-use rusqlite::types::ToSqlOutput;
 
 #[derive(Clone,Debug)]
 pub enum ParamValue{
@@ -13,6 +11,8 @@ pub enum ParamValue{
     U32(u32),
     U64(u64),
     USize(usize),
+    F32(f32),
+    F64(f64),
     Bool(bool),
     String(String),
     DateTime(DateTime<Local>),
@@ -31,6 +31,18 @@ pub fn get_param_value<T>(value: Option<T>)-> ParamValue where T: Into<ParamValu
 impl From<String> for ParamValue {
     fn from(s: String) -> Self {
         ParamValue::String(s)
+    }
+}
+
+impl From<f32> for ParamValue {
+    fn from(f: f32) -> Self {
+        ParamValue::F32(f)
+    }
+}
+
+impl From<f64> for ParamValue {
+    fn from(value: f64) -> Self {
+        ParamValue::F64(value)
     }
 }
 
@@ -76,15 +88,15 @@ impl From<i16> for ParamValue {
     }
 }
 
-impl From<usize> for ParamValue {
-    fn from(value: usize) -> Self {
-        ParamValue::USize(value)
-    }
-}
-
 impl From<i8> for ParamValue {
     fn from(value: i8) -> Self {
         ParamValue::I8(value)
+    }
+}
+
+impl From<usize> for ParamValue {
+    fn from(value: usize) -> Self {
+        ParamValue::USize(value)
     }
 }
 
@@ -103,6 +115,7 @@ impl From<DateTime<Local>> for ParamValue {
 impl Into<Option<i8>> for ParamValue {
     fn into(self) -> Option<i8> {
         match self {
+            ParamValue::U8(v) => Some(v as i8),
             ParamValue::I8(v) => Some(v),
             _=>None
         }
@@ -111,7 +124,10 @@ impl Into<Option<i8>> for ParamValue {
 impl Into<Option<i16>> for ParamValue {
     fn into(self) -> Option<i16> {
         match self {
+            ParamValue::U8(v) => Some(v as i16),
+            ParamValue::U16(v) => Some(v as i16),
             ParamValue::I16(v) => Some(v),
+            ParamValue::I8(v) => Some(v as i16),
             _=>None
         }
     }
@@ -119,6 +135,11 @@ impl Into<Option<i16>> for ParamValue {
 impl Into<Option<i32>> for ParamValue {
     fn into(self) -> Option<i32> {
         match self {
+            ParamValue::U8(v) => Some(v as i32),
+            ParamValue::U16(v) => Some(v as i32),
+            ParamValue::U32(v) => Some(v as i32),
+            ParamValue::I8(v) => Some(v as i32),
+            ParamValue::I16(v) => Some(v as i32),
             ParamValue::I32(v) => Some(v),
             _=>None
         }
@@ -127,6 +148,13 @@ impl Into<Option<i32>> for ParamValue {
 impl Into<Option<i64>> for ParamValue {
     fn into(self) -> Option<i64> {
         match self {
+            ParamValue::U8(v) => Some(v as i64),
+            ParamValue::U16(v) => Some(v as i64),
+            ParamValue::U32(v) => Some(v as i64),
+            ParamValue::U64(v) => Some(v as i64),
+            ParamValue::I8(v) => Some(v as i64),
+            ParamValue::I16(v) => Some(v as i64),
+            ParamValue::I32(v) => Some(v as i64),
             ParamValue::I64(v) => Some(v),
             _=>None
         }
@@ -137,6 +165,12 @@ impl Into<Option<i64>> for ParamValue {
 impl Into<Option<usize>> for ParamValue {
     fn into(self) -> Option<usize> {
         match self {
+            ParamValue::U8(v) => Some(v as usize),
+            ParamValue::U16(v) => Some(v as usize),
+            ParamValue::U32(v) => Some(v as usize),
+            ParamValue::I8(v) => Some(v as usize),
+            ParamValue::I16(v) => Some(v as usize),
+            ParamValue::I32(v) => Some(v as usize),
             ParamValue::USize(v) => Some(v),
             _=>None
         }
@@ -157,6 +191,7 @@ impl Into<Option<u8>> for ParamValue {
 impl Into<Option<u16>> for ParamValue {
     fn into(self) -> Option<u16> {
         match self {
+            ParamValue::U8(v) => Some(v as u16),
             ParamValue::U16(v) => Some(v),
             _=>None
         }
@@ -166,6 +201,8 @@ impl Into<Option<u16>> for ParamValue {
 impl Into<Option<u32>> for ParamValue {
     fn into(self) -> Option<u32> {
         match self {
+            ParamValue::U8(v) => Some(v as u32),
+            ParamValue::U16(v) => Some(v as u32),
             ParamValue::U32(v) => Some(v),
             _=>None
         }
@@ -175,6 +212,9 @@ impl Into<Option<u32>> for ParamValue {
 impl Into<Option<u64>> for ParamValue {
     fn into(self) -> Option<u64> {
         match self {
+            ParamValue::U8(v) => Some(v as u64),
+            ParamValue::U16(v) => Some(v as u64),
+            ParamValue::U32(v) => Some(v as u64),
             ParamValue::U64(v) => Some(v),
             _=>None
         }
@@ -192,10 +232,7 @@ impl Into<Option<bool>> for ParamValue {
 
 impl Into<Option<String>> for ParamValue {
     fn into(self) -> Option<String> {
-        match self {
-            ParamValue::String(v) => Some(v),
-            _=>None
-        }
+        Some(self.to_string())
     }
 }
 
@@ -238,6 +275,8 @@ impl ParamValue{
             ParamValue::Blob(_) => String::new(),
             ParamValue::Clob(x) => String::from_utf8(x.to_vec()).unwrap(),
             ParamValue::Null => "null".to_string(),
+            ParamValue::F32(x)=>x.to_string(),
+            ParamValue::F64(x)=>x.to_string()
         }
     }
 
@@ -252,6 +291,8 @@ impl ParamValue{
             ParamValue::I16(x) => Some(*x as u64),
             ParamValue::I8(x) => Some(*x as u64),
             ParamValue::USize(x) => Some(*x as u64),
+            ParamValue::F64(x) => Some(*x as u64),
+            ParamValue::F32(x) => Some(*x as u64),
             ParamValue::Bool(_) => None,
             ParamValue::String(_) => None,
             ParamValue::DateTime(_) => None,

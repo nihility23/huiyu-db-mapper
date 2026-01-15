@@ -4,6 +4,7 @@ use r2d2::{Builder, ManageConnection, Pool, PooledConnection};
 use r2d2_mysql::MySqlConnectionManager;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 pub(crate) struct DbManager<T: ManageConnection> {
     pool_map: HashMap<String,Pool<T>>,
@@ -60,7 +61,9 @@ impl <T:ManageConnection> DbManager<T>{
         }
     }
 
-    fn get_instance() -> &'static DbManager<T> {
+    pub fn get_instance() -> &'static mut DbManager<T> {
+        /// 静态存储单例实例的容器
+        // static INSTANCE: OnceLock<&'static mut DbManager> = OnceLock::new();
         Box::leak(Box::new(DbManager { pool_map: HashMap::new(), tx_map: HashMap::new() }))
     }
 }

@@ -5,15 +5,12 @@ use crate::base::param::ParamValue;
 use crate::sql::executor::executor::{Executor, SqlExecutor};
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::ToSql;
+use rusqlite::{Error, ToSql};
 use std::cell::RefCell;
 use std::collections::HashMap;
-
-thread_local! {
-    static TL_MAP: RefCell<HashMap<String, Pool<SqliteConnectionManager>>> = RefCell::new(HashMap::new());
-    static TL_CONN: RefCell<Option<PooledConnection<SqliteConnectionManager>>> = RefCell::new(None);
-    static TL_DB_NAME: RefCell<Option<String>> = RefCell::new(None);
-}
+use rusqlite::ffi::sqlite3;
+use rusqlite::types::{Type, ValueRef};
+use crate::sql::pool::datasource::DbManager;
 
 type SqliteSqlExecutor = SqlExecutor<SqliteConnectionManager>;
 
@@ -24,41 +21,38 @@ impl Executor for SqliteSqlExecutor{
 
     fn exec<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError> where E:Entity {
         println!("Executing: {}",sql);
-        TL_CONN.with(|conn| {
-            if conn.borrow().is_none(){
-                let c = TL_MAP.with(|mut map| {
-                    let db_name = TL_DB_NAME.with(|db_name| {
-                        if let Some(db_name) = db_name.borrow().clone(){
-                            db_name
-                        }else {
-                            "default".to_string()
+        let db_manager = DbManager::get_instance();
+        let conn:PooledConnection<SqliteConnectionManager> = db_manager.get_conn(None,None);
+        let mut stmt = conn.prepare(sql)?;
+        let param_vec:Vec<&dyn ToSql> = params.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
+        let p_slien = param_vec.as_slice();
+        let t_iter = stmt.query_map(p_slien, |row| {
+            let mut e = E::new();
+            for col in E::column_names(){
+                let val = row.get_ref(col)?;
+                let mut param_value=ParamValue::Null;
+                match val {
+                    ValueRef::Null => {  },
+                    ValueRef::Integer(v) => { param_value = ParamValue::I64(v) },
+                    ValueRef::Real(v) => {  param_value = ParamValue::F64(v) },
+                    ValueRef::Text(v) => { 
+                        let s = String::from_utf8(v.to_vec());
+                        match s { 
+                            Ok(s) => { param_value = ParamValue::String(s) },
+                            Err(e) => { return Err(Error::FromSqlConversionFailure(0,Type::Text,Box::new(e))); },
                         }
-                    });
-                    let m = map.borrow();
-                    let res = m.get(&db_name);
-                    res.unwrap().clone()
-                });
-
-                *conn.borrow_mut() = Some(c.get().unwrap());
+                    },
+                    ValueRef::Blob(v) => { param_value = ParamValue::Blob(v.to_vec()) },
+                }
+                e.set_value_by_column_name(col,param_value);
             }
-            let pc = conn.borrow();
-            let conn = pc.as_ref().unwrap();
-            let mut stmt = conn.prepare(sql)?;
-            let param_vec:Vec<&dyn ToSql> = params.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
-            let p_slien = param_vec.as_slice();
-            let t_iter = stmt.query_map(p_slien, |row| {
-                let mut e = E::new();
-                // for col in E::column_names(){
-                //     e.set_value_by_column_name(col,row.get(col)?);
-                // }
-                Ok(e)
-            })?;
-            let mut vec = Vec::new();
-            for t in t_iter{
-                vec.push(t?);
-            }
-            Ok(vec)
-        })
+            Ok(e)
+        })?;
+        let mut vec = Vec::new();
+        for t in t_iter{
+            vec.push(t?);
+        }
+        Ok(vec)
     }
 }
 

@@ -1,25 +1,30 @@
+use crate::base::db_type::DbType;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct DbConfig{
-    host:Option<String>,
-    port:Option<u32>,
-    database:Option<String>,
-    username:Option<String>,
-    password:Option<String>,
-    schema:Option<String>,
-    name:Option<String>,
+    pub host:Option<String>,
+    pub port:Option<u32>,
+    pub database:Option<String>,
+    pub username:Option<String>,
+    pub password:Option<String>,
+    pub schema:Option<String>,
+    pub name:Option<String>,
+    pub db_type: DbType,
 }
 
 impl DbConfig{
-    pub fn new()->DbConfig{
+    pub fn new(db_type: DbType, host:Option<String>,port:Option<u32>,
+                  database:Option<String>,username:Option<String>,password:Option<String>,
+                  schema: Option<String>, name:Option<String>)->Self{
         Self{
-            host:None,
-            port:None,
-            database:None,
-            username:None,
-            password:None,
-            schema:None,
-            name:None,
+            host,
+            port,
+            database,
+            username,
+            password,
+            schema,
+            name,
+            db_type
         }
     }
 }

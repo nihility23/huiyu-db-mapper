@@ -7,6 +7,7 @@ use crate::sql::generator::sql_generator::{BaseSqlGenerator, PageSqlGenerator, Q
 use crate::sql::generator::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 use crate::sql::generator::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
 
+#[derive(Debug,Clone,Copy)]
 pub enum DbType{
     Mysql,
     Sqlite,

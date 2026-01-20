@@ -28,3 +28,13 @@ pub enum ConnectionError{
     #[error("Get Connection Timeout Error")]
     TimeoutError(#[source] r2d2::Error),
 }
+
+#[derive(Error, Debug)]
+pub enum RowError{
+    #[error("NotFoundError Error")]
+    NotFoundError(String),
+    #[error("TypeConversionError Error")]
+    TypeConversionError(String),
+    #[error("RusqliteError Error")]
+    RusqliteError(#[from] rusqlite::Error),
+}

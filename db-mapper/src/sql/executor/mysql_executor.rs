@@ -18,7 +18,7 @@ impl Executor for MysqlSqlExecutor{
         todo!()
     }
 
-    fn exec<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    fn exec<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {

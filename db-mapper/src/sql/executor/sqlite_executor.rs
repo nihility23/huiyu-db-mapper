@@ -1,16 +1,13 @@
-use r2d2::PooledConnection;
 use crate::base::entity::Entity;
+use crate::base::error::DatabaseError::BusinessError;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::executor::{Executor, SqlExecutor};
-use r2d2::Pool;
+use crate::sql::pool::db_manager::DbManager;
+use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{Error, ToSql};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use rusqlite::ffi::sqlite3;
 use rusqlite::types::{Type, ValueRef};
-use crate::sql::pool::datasource::DbManager;
+use rusqlite::{Error, ToSql, TransactionBehavior};
 
 type SqliteSqlExecutor = SqlExecutor<SqliteConnectionManager>;
 
@@ -19,11 +16,15 @@ impl Executor for SqliteSqlExecutor{
         todo!()
     }
 
-    fn exec<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError> where E:Entity {
+    fn exec<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError> where E:Entity {
         println!("Executing: {}",sql);
-        let db_manager = DbManager::get_instance();
-        let conn:PooledConnection<SqliteConnectionManager> = db_manager.get_conn(None,None);
-        let mut stmt = conn.prepare(sql)?;
+        let db_manager = DbManager::get_instance(db_name.unwrap_or("default"));
+        if db_manager.is_none(){
+            return Err(BusinessError("Can't get datasource!!!!".to_string()));
+        }
+        let mut conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get().get()?;
+        let tx =conn.transaction_with_behavior(TransactionBehavior::Immediate).unwrap();
+        let mut stmt = tx.prepare(sql)?;
         let param_vec:Vec<&dyn ToSql> = params.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
         let p_slien = param_vec.as_slice();
         let t_iter = stmt.query_map(p_slien, |row| {

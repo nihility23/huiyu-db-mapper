@@ -16,6 +16,7 @@ pub enum DatabaseError{
     RusqliteError(#[from] rusqlite::Error),
     #[error("FromUtf8Error Error")]
     StringConvertError(#[from] FromUtf8Error ),
+
 }
 
 #[derive(Error, Debug)]

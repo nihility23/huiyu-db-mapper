@@ -8,14 +8,14 @@ pub struct DbConfig{
     pub username:Option<String>,
     pub password:Option<String>,
     pub schema:Option<String>,
-    pub name:Option<String>,
+    pub name:String,
     pub db_type: DbType,
 }
 
 impl DbConfig{
     pub fn new(db_type: DbType, host:Option<String>,port:Option<u32>,
                   database:Option<String>,username:Option<String>,password:Option<String>,
-                  schema: Option<String>, name:Option<String>)->Self{
+                  schema: Option<String>, name:String)->Self{
         Self{
             host,
             port,

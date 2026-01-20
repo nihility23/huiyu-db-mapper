@@ -9,7 +9,7 @@ pub(crate) struct SqlExecutor<T: r2d2::ManageConnection> {
 
 pub(crate) trait Executor{
     fn get_sql_executor()->&'static Self;
-    fn exec<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
+    fn exec<E>(&self, db_name: Option<&str>, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 }
 
 // impl DbManager<SqliteConnectionManager> {

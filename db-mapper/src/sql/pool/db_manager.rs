@@ -1,7 +1,8 @@
-use r2d2::{ManageConnection, Pool};
+use r2d2::{Error, ManageConnection, Pool, PooledConnection};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock};
+use blocking::unblock;
 use crate::base::config::DbConfig;
 
 type RegistryMap = HashMap<(String, TypeId), Arc<dyn Any + Send + Sync>>;
@@ -81,5 +82,10 @@ impl<T: ManageConnection> DbManager<T> {
     pub fn get(&self) -> Pool<T>
     {
         self.pool_data.read().unwrap().clone()
+    }
+
+    pub fn get_conn(&self) -> Result<PooledConnection<T>,Error>
+    {
+         self.get().get()
     }
 }

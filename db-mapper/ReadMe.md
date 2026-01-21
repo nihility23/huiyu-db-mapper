@@ -24,3 +24,5 @@
 ##### DataSource宏
 
 ##### Transactional宏
+
+##### ResultMap宏

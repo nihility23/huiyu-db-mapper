@@ -1,33 +1,58 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use r2d2::Pool;
-use r2d2_mysql::{mysql, MySqlConnectionManager};
-use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::types::Value;
 use crate::base::entity::Entity;
-use crate::base::error::{DatabaseError, RowError};
+use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::executor::{Executor, SqlExecutor};
-
+use crate::sql::executor::executor::Executor;
+use std::sync::OnceLock;
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）
 
-type MysqlSqlExecutor = SqlExecutor<MySqlConnectionManager>;
+pub struct MysqlSqlExecutor;
+
+static MYSQL_SQL_EXECUTOR_CONFIG: OnceLock<MysqlSqlExecutor> = OnceLock::new();
+
 impl Executor for MysqlSqlExecutor{
-    type R<'a> = ();
 
     fn get_sql_executor() -> &'static Self {
-        todo!()
+        MYSQL_SQL_EXECUTOR_CONFIG.get_or_init(||MysqlSqlExecutor)
     }
 
-    fn row_to_entity<'a, E>(row: &Self::R<'_>) -> Result<E, RowError>
+    async fn query_some<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {
         todo!()
     }
 
-    fn exec<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    async fn query_one<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+
+    async fn exec<E,T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn query_count<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn insert<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn update<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
     where
         E: Entity
     {

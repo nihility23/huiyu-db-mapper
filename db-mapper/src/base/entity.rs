@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local};
 use crate::base::param::ParamValue;
 
-pub trait Entity{
+pub trait Entity : Send + Sync + 'static {
     type K: Into<ParamValue>;
 
     fn key(&self) -> Self::K;

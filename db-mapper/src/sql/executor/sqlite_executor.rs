@@ -1,29 +1,23 @@
+use std::sync::OnceLock;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError::BusinessError;
-use crate::base::error::{DatabaseError, RowError};
+use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::executor::{Executor, SqlExecutor};
+use crate::sql::executor::executor::{Executor};
 use crate::sql::pool::db_manager::DbManager;
+use blocking::unblock;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Type, ValueRef};
-use rusqlite::{Error, Row, ToSql, TransactionBehavior};
+use rusqlite::{Error, Row, ToSql};
 
-type SqliteSqlExecutor = SqlExecutor<SqliteConnectionManager>;
+#[derive(Clone)]
+pub struct SqliteSqlExecutor;
+// 全局单例
+static SQLITE_SQL_EXECUTOR_CONFIG: OnceLock<SqliteSqlExecutor> = OnceLock::new();
 
-
-
-impl Executor for SqliteSqlExecutor{
-    type R<'a> = Row<'a>;
-
-    fn get_sql_executor() -> &'static Self {
-        todo!()
-    }
-
-    fn row_to_entity<E>(row: &Self::R<'_>) -> Result<E, RowError>
-    where
-        E: Entity
-    {
+const fn make_e<E>()->impl FnMut(&Row<'_>) -> rusqlite::Result<E> where E:Entity {
+    |row|{
         let mut e = E::new();
         for col in E::column_names(){
             let val = row.get_ref(col)?;
@@ -36,7 +30,7 @@ impl Executor for SqliteSqlExecutor{
                     let s = String::from_utf8(v.to_vec());
                     match s {
                         Ok(s) => { param_value = ParamValue::String(s) },
-                        Err(e) => { return Err(RowError::TypeConversionError("字符串转换错误".to_string())); },
+                        Err(e) => { return Err(Error::FromSqlConversionFailure(0,Type::Text,Box::new(BusinessError("字符串转换错误".to_string())))); },
                     }
                 },
                 ValueRef::Blob(v) => { param_value = ParamValue::Blob(v.to_vec()) },
@@ -45,35 +39,98 @@ impl Executor for SqliteSqlExecutor{
         }
         Ok(e)
     }
+}
 
-    fn exec<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError> where E:Entity {
+impl Executor for SqliteSqlExecutor{
+
+    fn get_sql_executor() -> &'static Self {
+        SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(||SqliteSqlExecutor)
+    }
+
+    async fn query_some<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    where
+        E: Entity
+    {
         println!("Executing: {}",sql);
         let db_manager = DbManager::get_instance(db_name.unwrap_or("default"));
         if db_manager.is_none(){
             return Err(BusinessError("Can't get datasource!!!!".to_string()));
         }
-        let mut conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get().get()?;
-        let tx =conn.transaction_with_behavior(TransactionBehavior::Immediate).unwrap();
-        let mut stmt = tx.prepare(sql)?;
-        let param_vec:Vec<&dyn ToSql> = params.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
-        let p_slien = param_vec.as_slice();
-        let t_iter = stmt.query_map(p_slien, |row| {
-            let e = Self::row_to_entity(row);
-            Ok(e.unwrap())
-            // if e.is_ok(){
-            //     Ok(e.unwrap())
-            // }
-            // match e.err().unwrap() {
-            //     RowError::NotFoundError(str)=>{
-            //         Err(Error::SqliteFailure(Error::NulError()))
-            //     }
-            // }
-        })?;
-        let mut vec = Vec::new();
-        for t in t_iter{
-            vec.push(t?);
+        let sql_c = sql.to_string();
+        let params_c = params.clone();
+        unblock(move ||{
+            let conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get_conn()?;
+            let mut stmt = conn.prepare(sql_c.as_str())?;
+            let param_vec:Vec<&dyn ToSql> = params_c.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
+
+            let p_slien = param_vec.as_slice();
+
+            let t_iter = stmt.query_map(p_slien, |row| {
+                make_e()(row)
+            })?;
+            let mut vec = Vec::new();
+            for t in t_iter{
+                vec.push(t?);
+            }
+            return Ok(vec);
+        }).await
+    }
+
+    async fn query_one<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    where
+        E: Entity
+    {
+        println!("Executing: {}",sql);
+        let db_manager = DbManager::get_instance(db_name.unwrap_or("default"));
+        if db_manager.is_none(){
+            return Err(BusinessError("Can't get datasource!!!!".to_string()));
         }
-        Ok(vec)
+        let sql_c = sql.to_string();
+        let params_c = params.clone();
+        unblock(move ||{
+            let conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get_conn()?;
+            let mut stmt = conn.prepare(sql_c.as_str())?;
+            let param_vec:Vec<&dyn ToSql> = params_c.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
+
+            let p_slien = param_vec.as_slice();
+
+            let t_iter = stmt.query_map(p_slien, |row| {
+                make_e()(row)
+            })?;
+            for t in t_iter{
+                let a =t?;
+                return Ok(Some(a));
+            }
+            return Ok(None);
+        }).await
+    }
+
+    async fn exec<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn query_count<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn insert<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+    async fn update<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
     }
 }
 

@@ -1,136 +1,119 @@
-use std::sync::OnceLock;
 use crate::base::entity::Entity;
-use crate::base::error::DatabaseError::BusinessError;
 use crate::base::error::DatabaseError;
+use crate::base::error::DatabaseError::CommonError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::executor::{Executor};
+use crate::sql::executor::executor::Executor;
 use crate::sql::pool::db_manager::DbManager;
-use blocking::unblock;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Type, ValueRef};
 use rusqlite::{Error, Row, ToSql};
+use std::sync::OnceLock;
 
 #[derive(Clone)]
 pub struct SqliteSqlExecutor;
 // 全局单例
 static SQLITE_SQL_EXECUTOR_CONFIG: OnceLock<SqliteSqlExecutor> = OnceLock::new();
+macro_rules! exec_basic {
+    {
+        db_name: $db_name:expr,
+        sql: $sql:expr,
+        params: $params:expr,
+        map: $mapper:expr,
+        process: $processor:expr
+    } => {{
+        async {
+            let sql_c = $sql.to_string();
+            let params_c = $params.clone();
+            let db_name_str = $db_name.to_string();
 
-const fn make_e<E>()->impl FnMut(&Row<'_>) -> rusqlite::Result<E> where E:Entity {
-    |row|{
-        let mut e = E::new();
-        for col in E::column_names(){
-            let val = row.get_ref(col)?;
-            let mut param_value=ParamValue::Null;
-            match val {
-                ValueRef::Null => {  },
-                ValueRef::Integer(v) => { param_value = ParamValue::I64(v) },
-                ValueRef::Real(v) => {  param_value = ParamValue::F64(v) },
-                ValueRef::Text(v) => {
-                    let s = String::from_utf8(v.to_vec());
-                    match s {
-                        Ok(s) => { param_value = ParamValue::String(s) },
-                        Err(e) => { return Err(Error::FromSqlConversionFailure(0,Type::Text,Box::new(BusinessError("字符串转换错误".to_string())))); },
-                    }
-                },
-                ValueRef::Blob(v) => { param_value = ParamValue::Blob(v.to_vec()) },
-            }
-            e.set_value_by_column_name(col,param_value);
-        }
-        Ok(e)
-    }
+            blocking::unblock(move || {
+                let db_manager = DbManager::get_instance(&db_name_str)
+                    .ok_or_else(|| DatabaseError::CommonError("Can't get datasource!!!!".to_string()))?;
+
+                let conn: PooledConnection<SqliteConnectionManager> = db_manager.get_conn()?;
+                let mut stmt = conn.prepare(&sql_c)?;
+
+                let param_refs: Vec<&dyn ToSql> = params_c
+                    .as_slice()
+                    .iter()
+                    .map(|x| to_sql(x))
+                    .collect();
+
+                let rows = stmt.query_map(&*param_refs, $mapper)?;
+                let mut results = Vec::new();
+
+                for row in rows {
+                    results.push(row?);
+                }
+
+                $processor(results)
+            })
+            .await
+        }.await
+    }};
 }
-
-impl Executor for SqliteSqlExecutor{
-
+impl Executor for SqliteSqlExecutor {
     fn get_sql_executor() -> &'static Self {
-        SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(||SqliteSqlExecutor)
+        SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(|| SqliteSqlExecutor)
     }
 
     async fn query_some<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {
-        println!("Executing: {}",sql);
-        let db_manager = DbManager::get_instance(db_name.unwrap_or("default"));
-        if db_manager.is_none(){
-            return Err(BusinessError("Can't get datasource!!!!".to_string()));
-        }
-        let sql_c = sql.to_string();
-        let params_c = params.clone();
-        unblock(move ||{
-            let conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get_conn()?;
-            let mut stmt = conn.prepare(sql_c.as_str())?;
-            let param_vec:Vec<&dyn ToSql> = params_c.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
-
-            let p_slien = param_vec.as_slice();
-
-            let t_iter = stmt.query_map(p_slien, |row| {
-                make_e()(row)
-            })?;
-            let mut vec = Vec::new();
-            for t in t_iter{
-                vec.push(t?);
-            }
-            return Ok(vec);
-        }).await
+        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results) })
     }
 
     async fn query_one<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
         E: Entity
     {
-        println!("Executing: {}",sql);
-        let db_manager = DbManager::get_instance(db_name.unwrap_or("default"));
-        if db_manager.is_none(){
-            return Err(BusinessError("Can't get datasource!!!!".to_string()));
-        }
-        let sql_c = sql.to_string();
-        let params_c = params.clone();
-        unblock(move ||{
-            let conn:PooledConnection<SqliteConnectionManager> = db_manager.unwrap().get_conn()?;
-            let mut stmt = conn.prepare(sql_c.as_str())?;
-            let param_vec:Vec<&dyn ToSql> = params_c.as_slice().iter().map(|x| to_sql(x)).collect::<Vec<_>>();
+        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results.into_iter().next()) })
+    }
 
-            let p_slien = param_vec.as_slice();
 
-            let t_iter = stmt.query_map(p_slien, |row| {
-                make_e()(row)
-            })?;
-            for t in t_iter{
-                let a =t?;
-                return Ok(Some(a));
+    async fn insert(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError>
+    {
+        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: |row|{
+            let id: ParamValue = value_to_param_value(row.get_ref(0).unwrap()).unwrap();
+            Ok(id)
+        }, process: |results: Vec<ParamValue>| {
+            if results.is_empty() {
+                return Ok(None);
             }
-            return Ok(None);
-        }).await
+            Ok(Some(results.into_iter().next().unwrap()))
+        })
     }
+}
 
-    async fn exec<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
+fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, Error> {
+    let param_value;
+    match value {
+        ValueRef::Null => { param_value = ParamValue::Null },
+        ValueRef::Integer(v) => { param_value = ParamValue::I64(v) },
+        ValueRef::Real(v) => {  param_value = ParamValue::F64(v) },
+        ValueRef::Text(v) => {
+            let s = String::from_utf8(v.to_vec());
+            match s {
+                Ok(s) => { param_value = ParamValue::String(s) },
+                Err(e) => { return Err(Error::FromSqlConversionFailure(0,Type::Text,Box::new(CommonError("字符串转换错误".to_string())))); },
+            }
+        },
+        ValueRef::Blob(v) => { param_value = ParamValue::Blob(v.to_vec()) },
     }
+    Ok(param_value)
+}
 
-    async fn query_count<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn insert<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn update<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
+const fn make_e<E>()->impl FnMut(&Row<'_>) -> rusqlite::Result<E> where E:Entity {
+    |row|{
+        let mut e = E::new();
+        for col in E::column_names(){
+            let val = row.get_ref(col)?;
+            let param_value = value_to_param_value(val)?;
+            e.set_value_by_column_name(col,param_value);
+        }
+        Ok(e)
     }
 }
 
@@ -140,12 +123,21 @@ pub fn to_sql(param_value: &ParamValue)->&dyn ToSql{
         ParamValue::U32(x)=>{x as &dyn ToSql}
         ParamValue::U16(x)=>{x as &dyn ToSql}
         ParamValue::U8(x)=>{x as &dyn ToSql}
+        ParamValue::USize(x)=>{x as &dyn ToSql}
         ParamValue::I64(x)=>{x as &dyn ToSql}
         ParamValue::I32(x)=>{x as &dyn ToSql}
         ParamValue::I16(x)=>{x as &dyn ToSql}
         ParamValue::I8(x)=>{x as &dyn ToSql}
         ParamValue::String(x)=>{x as &dyn ToSql}
-        _ => {&0 as &dyn ToSql}
+        ParamValue::F32(x)=>{x as &dyn ToSql}
+        ParamValue::F64(x)=>{x as &dyn ToSql}
+        ParamValue::Bool(x)=>{x as &dyn ToSql}
+        ParamValue::Blob(x)=>{x as &dyn ToSql}
+        ParamValue::Clob(x)=>{x as &dyn ToSql}
+        ParamValue::Null=>{&rusqlite::types::Null as &dyn ToSql}
+        ParamValue::DateTime(_)=>{&rusqlite::types::Null as &dyn ToSql}
     }
 }
+
+
 

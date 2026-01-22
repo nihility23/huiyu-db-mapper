@@ -17,8 +17,8 @@ pub struct UserEntity{
 impl Entity for UserEntity {
     type K = i64;
 
-    fn key(&self) -> Self::K {
-        1
+    fn key(&self) -> Self::K{
+        self.id.unwrap().into()
     }
 
     fn key_name() -> &'static str{"id"}

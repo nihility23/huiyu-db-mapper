@@ -30,31 +30,7 @@ impl Executor for MysqlSqlExecutor{
         todo!()
     }
 
-
-    async fn exec<E,T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn query_count<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn insert<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn update<E, T>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<T, DatabaseError>
-    where
-        E: Entity
+    async fn insert(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError>
     {
         todo!()
     }

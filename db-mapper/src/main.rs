@@ -20,5 +20,4 @@ struct User{
 
 fn main() {
     
-
 }

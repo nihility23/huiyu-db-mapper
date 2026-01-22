@@ -1,4 +1,6 @@
 use chrono::{DateTime, Local};
+use crate::base::error::DatabaseError;
+use crate::base::error::DatabaseError::ConvertError;
 
 #[derive(Clone,Debug)]
 pub enum ParamValue{
@@ -21,226 +23,243 @@ pub enum ParamValue{
     Null
 }
 
-pub fn get_param_value<T>(value: Option<T>)-> ParamValue where T: Into<ParamValue> {
-    if value.is_none() {
-        return ParamValue::Null;
-    }
-    value.unwrap().into()
-}
+// 支持所有类型的宏版本
+macro_rules! impl_param_value {
+    // 基本数值类型
+    ($($type:ty => $variant:ident),* $(,)?) => {
+        $(
+            impl From<$type> for ParamValue {
+                fn from(value: $type) -> Self {
+                    ParamValue::$variant(value)
+                }
+            }
 
-impl From<String> for ParamValue {
-    fn from(s: String) -> Self {
-        ParamValue::String(s)
-    }
-}
+            impl From<&$type> for ParamValue {
+                fn from(value: &$type) -> Self {
+                    ParamValue::$variant(*value)
+                }
+            }
+        )*
+    };
 
-impl From<f32> for ParamValue {
-    fn from(f: f32) -> Self {
-        ParamValue::F32(f)
-    }
-}
+    // 需要 Clone 的类型
+    (clone $($type:ty => $variant:ident),* $(,)?) => {
+        $(
+            impl From<$type> for ParamValue {
+                fn from(value: $type) -> Self {
+                    ParamValue::$variant(value)
+                }
+            }
 
-impl From<f64> for ParamValue {
-    fn from(value: f64) -> Self {
-        ParamValue::F64(value)
-    }
-}
+            impl From<&$type> for ParamValue {
+                fn from(value: &$type) -> Self {
+                    ParamValue::$variant(value.clone())
+                }
+            }
+        )*
+    };
 
-impl From<u64> for ParamValue {
-    fn from(s: u64) -> Self {
-        ParamValue::U64(s)
-    }
-}
-
-impl From<u32> for ParamValue {
-    fn from(s: u32) -> Self {
-        ParamValue::U32(s)
-    }
-}
-
-impl From<u16> for ParamValue {
-    fn from(s: u16) -> Self {
-        ParamValue::U16(s)
-    }
-}
-
-impl From<u8> for ParamValue {
-    fn from(s: u8) -> Self {
-        ParamValue::U8(s)
-    }
-}
-
-impl From<i64> for ParamValue {
-    fn from(s: i64) -> Self {
-        ParamValue::I64(s)
-    }
-}
-
-impl From<i32> for ParamValue {
-    fn from(s: i32) -> Self {
-        ParamValue::I32(s)
-    }
-}
-
-impl From<i16> for ParamValue {
-    fn from(s: i16) -> Self {
-        ParamValue::I16(s)
-    }
-}
-
-impl From<i8> for ParamValue {
-    fn from(value: i8) -> Self {
-        ParamValue::I8(value)
-    }
-}
-
-impl From<usize> for ParamValue {
-    fn from(value: usize) -> Self {
-        ParamValue::USize(value)
-    }
-}
-
-impl From<bool> for ParamValue {
-    fn from(value: bool) -> Self {
-        ParamValue::Bool(value)
-    }
-}
-
-impl From<DateTime<Local>> for ParamValue {
-    fn from(value: DateTime<Local>) -> Self {
-        ParamValue::DateTime(value)
-    }
-}
-
-impl Into<Option<i8>> for ParamValue {
-    fn into(self) -> Option<i8> {
-        match self {
-            ParamValue::U8(v) => Some(v as i8),
-            ParamValue::I8(v) => Some(v),
-            _=>None
+    // 需要特殊处理的类型
+    (special $type:ty => $variant:ident, $convert:expr) => {
+        impl From<$type> for ParamValue {
+            fn from(value: $type) -> Self {
+                ParamValue::$variant($convert(value))
+            }
         }
+    };
+}
+
+// 使用
+impl_param_value! {
+    i8 => I8,
+    i16 => I16,
+    i32 => I32,
+    i64 => I64,
+    u8 => U8,
+    u16 => U16,
+    u32 => U32,
+    u64 => U64,
+    usize => USize,
+    f32 => F32,
+    f64 => F64,
+    bool => Bool,
+}
+
+impl_param_value!(clone
+    String => String,
+    DateTime<Local> => DateTime,
+    Vec<u8> => Blob,
+);
+
+// &str 特殊处理
+impl From<&str> for ParamValue {
+    fn from(s: &str) -> Self {
+        ParamValue::String(s.to_string())
     }
 }
-impl Into<Option<i16>> for ParamValue {
-    fn into(self) -> Option<i16> {
-        match self {
-            ParamValue::U8(v) => Some(v as i16),
-            ParamValue::U16(v) => Some(v as i16),
-            ParamValue::I16(v) => Some(v),
-            ParamValue::I8(v) => Some(v as i16),
-            _=>None
+
+// 为 Option 提供便捷方法
+pub fn get_param_value<T>(value: Option<T>) -> ParamValue
+where
+    T: Into<ParamValue>,
+{
+    value.map(Into::into).unwrap_or(ParamValue::Null)
+}
+
+// 为 &Option 也提供
+pub fn get_param_value_ref<T>(value: &Option<T>) -> ParamValue
+where
+    T: Clone + Into<ParamValue>,
+{
+    value.as_ref().map(|v| v.clone().into()).unwrap_or(ParamValue::Null)
+}
+
+
+// 基础数值转换宏（只支持值类型，支持 Option 和非 Option）
+macro_rules! impl_numeric_conversions {
+    // 支持多个源类型的转换
+    ($target:ty: $($src:ident),+ $(,)?) => {
+        // 1. 值类型 -> Option<T>
+        impl Into<Option<$target>> for ParamValue {
+            fn into(self) -> Option<$target> {
+                match self {
+                    $(
+                        ParamValue::$src(v) => Some(v as $target),
+                    )+
+                    _ => None,
+                }
+            }
         }
-    }
-}
-impl Into<Option<i32>> for ParamValue {
-    fn into(self) -> Option<i32> {
-        match self {
-            ParamValue::U8(v) => Some(v as i32),
-            ParamValue::U16(v) => Some(v as i32),
-            ParamValue::U32(v) => Some(v as i32),
-            ParamValue::I8(v) => Some(v as i32),
-            ParamValue::I16(v) => Some(v as i32),
-            ParamValue::I32(v) => Some(v),
-            _=>None
+
+        // 2. 值类型 -> T (Result, 非 Option)
+        impl TryInto<$target> for ParamValue {
+            type Error = crate::base::error::DatabaseError;
+            
+            fn try_into(self) -> Result<$target, Self::Error> {
+                match self {
+                    $(
+                        ParamValue::$src(v) => Ok(v as $target),
+                    )+
+                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
+                }
+            }
         }
-    }
-}
-impl Into<Option<i64>> for ParamValue {
-    fn into(self) -> Option<i64> {
-        match self {
-            ParamValue::U8(v) => Some(v as i64),
-            ParamValue::U16(v) => Some(v as i64),
-            ParamValue::U32(v) => Some(v as i64),
-            ParamValue::U64(v) => Some(v as i64),
-            ParamValue::I8(v) => Some(v as i64),
-            ParamValue::I16(v) => Some(v as i64),
-            ParamValue::I32(v) => Some(v as i64),
-            ParamValue::I64(v) => Some(v),
-            _=>None
+    };
+
+    // 单个源类型（不需要转换）
+    ($target:ty: $src:ident) => {
+        // 1. 值类型 -> Option<T>
+        impl Into<Option<$target>> for ParamValue {
+            fn into(self) -> Option<$target> {
+                match self {
+                    ParamValue::$src(v) => Some(v),
+                    _ => None,
+                }
+            }
         }
-    }
-}
 
+        // 2. 值类型 -> T (Result, 非 Option)
+        impl TryInto<$target> for ParamValue {
+            type Error = ConvertError;
 
-impl Into<Option<usize>> for ParamValue {
-    fn into(self) -> Option<usize> {
-        match self {
-            ParamValue::U8(v) => Some(v as usize),
-            ParamValue::U16(v) => Some(v as usize),
-            ParamValue::U32(v) => Some(v as usize),
-            ParamValue::I8(v) => Some(v as usize),
-            ParamValue::I16(v) => Some(v as usize),
-            ParamValue::I32(v) => Some(v as usize),
-            ParamValue::USize(v) => Some(v),
-            _=>None
+            fn try_into(self) -> Result<$target, Self::Error> {
+                match self {
+                    ParamValue::$src(v) => Ok(v),
+                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
+                }
+            }
         }
-    }
+    };
 }
 
-impl Into<Option<u8>> for ParamValue {
-    fn into(self) -> Option<u8> {
-        match self {
-            ParamValue::U8(v) => Some(v),
-            _=>None
+// 浮点数转换宏
+macro_rules! impl_float_conversions {
+    ($target:ty: $($src:ident),+ $(,)?) => {
+        // 1. 值类型 -> Option<T>
+        impl Into<Option<$target>> for ParamValue {
+            fn into(self) -> Option<$target> {
+                match self {
+                    $(
+                        ParamValue::$src(v) => Some(v as $target),
+                    )+
+                    _ => None,
+                }
+            }
         }
-    }
-}
 
+        // 2. 值类型 -> T (Result, 非 Option)
+        impl TryInto<$target> for ParamValue {
+            type Error = DatabaseError;
 
-
-impl Into<Option<u16>> for ParamValue {
-    fn into(self) -> Option<u16> {
-        match self {
-            ParamValue::U8(v) => Some(v as u16),
-            ParamValue::U16(v) => Some(v),
-            _=>None
+            fn try_into(self) -> Result<$target, Self::Error> {
+                match self {
+                    $(
+                        ParamValue::$src(v) => Ok(v as $target),
+                    )+
+                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
+                }
+            }
         }
-    }
+    };
 }
 
-impl Into<Option<u32>> for ParamValue {
-    fn into(self) -> Option<u32> {
-        match self {
-            ParamValue::U8(v) => Some(v as u32),
-            ParamValue::U16(v) => Some(v as u32),
-            ParamValue::U32(v) => Some(v),
-            _=>None
-        }
-    }
-}
+// 使用宏
+impl_numeric_conversions!(i8: I8, U8);
+impl_numeric_conversions!(i16: I8, I16, U8, U16);
+impl_numeric_conversions!(i32: I8, I16, I32, U8, U16, U32);
+impl_numeric_conversions!(i64: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32, USize);
+impl_numeric_conversions!(u8: U8);
+impl_numeric_conversions!(u16: U8, U16);
+impl_numeric_conversions!(u32: U8, U16, U32);
+impl_numeric_conversions!(u64: U8, U16, U32, U64);
 
-impl Into<Option<u64>> for ParamValue {
-    fn into(self) -> Option<u64> {
-        match self {
-            ParamValue::U8(v) => Some(v as u64),
-            ParamValue::U16(v) => Some(v as u64),
-            ParamValue::U32(v) => Some(v as u64),
-            ParamValue::U64(v) => Some(v),
-            _=>None
-        }
-    }
-}
+// 浮点数
+impl_float_conversions!(f32: F32, I8, I16, I32, I64, U8, U16, U32, U64);
+impl_float_conversions!(f64: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
 
-impl Into<Option<bool>> for ParamValue {
-    fn into(self) -> Option<bool> {
-        match self {
-            ParamValue::Bool(v) => Some(v),
-            _=>None
-        }
-    }
-}
+// 布尔值
+impl_numeric_conversions!(bool: Bool);
 
+// 字符串（特殊处理）
+// 1. 值类型 -> Option<String>
 impl Into<Option<String>> for ParamValue {
     fn into(self) -> Option<String> {
         Some(self.to_string())
     }
 }
 
-impl Into<Option<DateTime<Local>>> for ParamValue {
-    fn into(self) -> Option<DateTime<Local>> {
+// 2. 值类型 -> String (Result, 非 Option)
+impl TryInto<String> for ParamValue {
+    type Error = DatabaseError;
+
+    fn try_into(self) -> Result<String, Self::Error> {
+        Ok(self.to_string())
+    }
+}
+
+// 日期时间
+impl_numeric_conversions!(DateTime<Local>: DateTime);
+
+// Blob (Vec<u8>)
+// 1. 值类型 -> Option<Vec<u8>>
+impl Into<Option<Vec<u8>>> for ParamValue {
+    fn into(self) -> Option<Vec<u8>> {
         match self {
-            ParamValue::DateTime(v) => Some(v),
-            _=>None
+            ParamValue::Blob(v) | ParamValue::Clob(v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
+// 2. 值类型 -> Vec<u8> (Result, 非 Option)
+impl TryInto<Vec<u8>> for ParamValue {
+    type Error = DatabaseError;
+
+    fn try_into(self) -> Result<Vec<u8>, Self::Error> {
+        match self {
+            ParamValue::Blob(v) | ParamValue::Clob(v) => Ok(v),
+            _ => Err(ConvertError(format!("{} can't transfer to Vec<u8>", self.to_string()))),
         }
     }
 }
@@ -280,25 +299,36 @@ impl ParamValue{
         }
     }
 
-    pub fn as_u64(&self) -> Option<u64> {
-        match self {
-            ParamValue::U64(x) => Some(*x),
-            ParamValue::U32(x) => Some(*x as u64),
-            ParamValue::U16(x) => Some(*x as u64),
-            ParamValue::U8(x) => Some(*x as u64),
-            ParamValue::I64(x) => Some(*x as u64),
-            ParamValue::I32(x) => Some(*x as u64),
-            ParamValue::I16(x) => Some(*x as u64),
-            ParamValue::I8(x) => Some(*x as u64),
-            ParamValue::USize(x) => Some(*x as u64),
-            ParamValue::F64(x) => Some(*x as u64),
-            ParamValue::F32(x) => Some(*x as u64),
-            ParamValue::Bool(_) => None,
-            ParamValue::String(_) => None,
-            ParamValue::DateTime(_) => None,
-            ParamValue::Blob(_) => None,
-            ParamValue::Clob(_) => None,
-            ParamValue::Null => None,
-        }
+    // 转换为 Option<T>
+    pub fn as_option<T>(self) -> Option<T>
+    where
+        Self: Into<Option<T>>,
+    {
+        self.into()
+    }
+
+    // 尝试转换为 T
+    pub fn try_as<T>(self) -> Result<T, DatabaseError>
+    where
+        Self: TryInto<T, Error = DatabaseError>,
+    {
+        self.try_into()
+    }
+
+    // 安全的数值转换，提供默认值
+    pub fn as_number_or<T>(self, default: T) -> T
+    where
+        T: Default,
+        Self: Into<Option<T>>,
+    {
+        self.into().unwrap_or(default)
+    }
+
+    // 检查是否可以转换为指定类型
+    pub fn can_convert_to<T>(&self) -> bool
+    where
+        Self: Clone + Into<Option<T>>,
+    {
+        self.clone().into().is_some()
     }
 }

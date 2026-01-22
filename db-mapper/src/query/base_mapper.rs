@@ -2,21 +2,24 @@ use crate::base::db_type::DbType;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::page::{Page, PageRes};
+use crate::base::param::ParamValue;
 use crate::query::query_wrapper::QueryWrapper;
 
 pub trait BaseMapper<E> where E: Entity{
 
     // select * from $table_name where $id = ?
-    fn select_by_key(&self, key: &E::K) -> Result<Option<E>,DatabaseError>{
+    async fn select_by_key(&self, key: &E::K) -> Result<Option<E>,DatabaseError>{
         let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
+        let k = key.clone();
+        // let param_vec:Vec<ParamValue> = vec![(*k).into()];
+
         Ok(None)
     }
 
     // select * from $table_name where $id in (?,...)
     fn select_by_keys(&self, keys: &Vec<E::K>) -> Result<Vec<E>,DatabaseError>{
         let sql = format!("select * from {} where {} in ({})", E::table_name(),E::key_name(),vec!["?";keys.len()].join(","));
-        // let param_vec = keys.iter().map(|key|<&<E as Entity>::K as Into<T>>::into(key));
+        // let param_vec = keys.iter().map(|key|<E as Entity>::K as Into<ParamValue>>::into(key));
         Ok(Vec::new())
     }
 

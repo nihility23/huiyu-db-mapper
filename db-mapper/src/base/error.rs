@@ -10,6 +10,8 @@ pub enum DatabaseError{
     NotFoundError(String),
     #[error("Unknow Error : {0}")]
     UnKnowError(String),
+    #[error("Convert Error : {0}")]
+    ConvertError(String),
 
 
     // 三方库异常

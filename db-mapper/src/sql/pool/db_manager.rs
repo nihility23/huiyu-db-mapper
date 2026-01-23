@@ -99,6 +99,9 @@ impl<T: ManageConnection> DbManager<T> {
         self.pool_data.read().unwrap().clone()
     }
 
+    pub fn get_db_type(&self) -> DbType{
+        self.db_type
+    }
     pub fn get_conn(&self) -> Result<PooledConnection<T>,Error>
     {
          self.get().get()

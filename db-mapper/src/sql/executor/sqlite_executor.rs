@@ -16,7 +16,6 @@ pub struct SqliteSqlExecutor;
 static SQLITE_SQL_EXECUTOR_CONFIG: OnceLock<SqliteSqlExecutor> = OnceLock::new();
 macro_rules! exec_basic {
     {
-        db_name: $db_name:expr,
         sql: $sql:expr,
         params: $params:expr,
         map: $mapper:expr,
@@ -25,10 +24,9 @@ macro_rules! exec_basic {
         async {
             let sql_c = $sql.to_string();
             let params_c = $params.clone();
-            let db_name_str = $db_name.to_string();
 
             blocking::unblock(move || {
-                let db_manager = DbManager::get_instance(&db_name_str)
+                let db_manager = DbManager::get_instance()
                     .ok_or_else(|| DatabaseError::CommonError("Can't get datasource!!!!".to_string()))?;
 
                 let conn: PooledConnection<SqliteConnectionManager> = db_manager.get_conn()?;
@@ -58,24 +56,24 @@ impl Executor for SqliteSqlExecutor {
         SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(|| SqliteSqlExecutor)
     }
 
-    async fn query_some<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {
-        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results) })
+        exec_basic!(sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results) })
     }
 
-    async fn query_one<E>(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    async fn query_one<E>(&self,  sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
         E: Entity
     {
-        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results.into_iter().next()) })
+        exec_basic!( sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results.into_iter().next()) })
     }
 
 
-    async fn insert(&self, db_name: Option<&str>, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError>
+    async fn insert(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError>
     {
-        exec_basic!(db_name: db_name.unwrap_or("default"), sql: sql, params: params, map: |row|{
+        exec_basic!(sql: sql, params: params, map: |row|{
             let id: ParamValue = value_to_param_value(row.get_ref(0).unwrap()).unwrap();
             Ok(id)
         }, process: |results: Vec<ParamValue>| {

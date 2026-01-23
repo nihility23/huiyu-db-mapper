@@ -14,4 +14,5 @@ r2d2_sqlite = "0.31.0"
 rusqlite = { version = "0.37.0",features = ["bundled"] }
 thiserror = "2.0.17"
 thread_local = "1.1.9"
+tokio = { version = "1.49.0" ,features = ["full"]}
 uuid = { version = "1.18.1",features = ["v4"] }

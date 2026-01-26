@@ -7,8 +7,14 @@ use crate::sql::pool::db_manager::DbManager;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Type, ValueRef};
-use rusqlite::{Error, Row, ToSql};
+use rusqlite::{Error, Row, ToSql, Transaction};
+use std::cell::RefCell;
 use std::sync::OnceLock;
+use tokio::task_local;
+
+task_local! {
+    static TX: RefCell<Option<rusqlite::Transaction<'static>>>;
+}
 
 #[derive(Clone)]
 pub struct SqliteSqlExecutor;
@@ -51,7 +57,10 @@ macro_rules! exec_basic {
         }.await
     }};
 }
+
 impl Executor for SqliteSqlExecutor {
+    type T = Transaction<'static>;
+
     fn get_sql_executor() -> &'static Self {
         SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(|| SqliteSqlExecutor)
     }
@@ -83,6 +92,24 @@ impl Executor for SqliteSqlExecutor {
             Ok(Some(results.into_iter().next().unwrap()))
         })
     }
+
+    // async fn query_some_tx<E, T>(&self, tx: T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    // where
+    //     E: Entity
+    // {
+    //     todo!()
+    // }
+    //
+    // async fn query_one_tx<E, T>(&self, tx: T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    // where
+    //     E: Entity
+    // {
+    //     todo!()
+    // }
+    //
+    // async fn insert_tx<T>(&self, tx: T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError> {
+    //     todo!()
+    // }
 }
 
 fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, Error> {

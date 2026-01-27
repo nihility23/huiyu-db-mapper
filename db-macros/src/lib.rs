@@ -1,36 +1,63 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, Type};
+use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, ItemFn, ReturnType, Type};
 
-// #[proc_macro_attribute]
-// pub fn mapper(attr: TokenStream, item: TokenStream) -> TokenStream {
-//     let input = parse_macro_input!(item as DeriveInput);
-//
-//     let struct_name = &input.ident;
-//
-//     let attr_parser = syn::meta::parser(|meta| {
-//         Ok(())
-//     });
-//     // 解析参数
-//     let _args = parse_macro_input!(attr with attr_parser);
-//     // 手动解析 TokenStream 来获取参数
-//     let attr_string = attr.to_string();
-//     let parts: Vec<&str> = attr_string.split(',').map(|s| s.trim()).collect();
-//
-//     if parts.len() > 1{
-//         // compile_error!(
-//         //     concat!("mapper宏`", stringify!(#field_name), "`只能有一个参数")
-//         // );
-//     }
-//
-//     let expanded = quote! {
-//         #input
-//
-//
-//     };
-//
-//     expanded.into()
-// }
+#[proc_macro_attribute]
+pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
+    // 解析方法定义
+    let input = parse_macro_input!(item as ItemFn);
+    let method_vis = &input.vis;
+    let method_sig = &input.sig;
+    let method_block = &input.block;
+
+    // 解析属性参数（可选）
+    let attr_string = attr.to_string();
+    let tx_manager = if attr_string.is_empty() {
+        // 默认使用 self.tx_manager
+        quote! { self.tx_manager }
+    } else {
+        let tx_manager_ident = syn::parse_str::<syn::Ident>(&attr_string.trim()).unwrap();
+        // 检查是否包含 self.
+        if attr_string.contains("self.") {
+            quote! { #tx_manager_ident }
+        } else {
+            // 如果没有包含 self.，则添加它
+            quote! { self.#tx_manager_ident }
+        }
+    };
+
+    // 生成新的方法实现，添加事务支持
+    let expanded = quote! {
+        #method_vis #method_sig {
+            #tx_manager.begin();
+
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #method_block
+            }));
+
+            match result {
+                Ok(inner_result) => {
+                    match inner_result {
+                        Ok(value) => {
+                            #tx_manager.commit();
+                            Ok(value)
+                        }
+                        Err(e) => {
+                            #tx_manager.rollback();
+                            Err(e)
+                        }
+                    }
+                }
+                Err(panic_err) => {
+                    #tx_manager.rollback();
+                    Err(format!("Transaction panicked: {:?}", panic_err).into())
+                }
+            }
+        }
+    };
+
+    expanded.into()
+}
 
 #[proc_macro_derive(CheckAllOption, attributes(allow_non_option))]
 pub fn derive_all_option(input: TokenStream) -> TokenStream {

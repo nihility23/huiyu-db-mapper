@@ -1,5 +1,9 @@
+// 独立的事务测试文件
 use std::cell::RefCell;
 use tokio::task_local;
+
+// 导入事务属性宏
+use db_macros::transactional;
 
 task_local! {
     static TX_ID_REGISTRY: RefCell<Option<String>>;
@@ -44,134 +48,115 @@ impl Transaction for SimpleTransaction {
     }
 }
 
-// 主事务宏
-macro_rules! transactional {
-    // 情况1：修饰没有返回值的代码块
-    ($tx:expr, $block:block) => {{
-        let mut transaction = $tx;
-        transaction.begin();
-
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            $block
-        }));
-
-        match result {
-            Ok(_) => {
-                transaction.commit();
-                Ok(())
-            }
-            Err(e) => {
-                transaction.rollback();
-                Err(format!("Transaction failed with panic: {:?}", e))
-            }
-        }
-    }};
-
-    // 情况2：修饰返回 Result<T, E> 的代码块
-    ($tx:expr, result $block:expr) => {{
-        let mut transaction = $tx;
-        transaction.begin();
-
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            $block
-        }));
-
-        match result {
-            Ok(inner_result) => match inner_result {
-                Ok(value) => {
-                    transaction.commit();
-                    Ok(value)
-                }
-                Err(e) => {
-                    transaction.rollback();
-                    Err(e)
-                }
-            },
-            Err(panic_err) => {
-                transaction.rollback();
-                Err(format!("Transaction panicked: {:?}", panic_err).into())
-            }
-        }
-    }};
+// 测试用例：使用方法属性宏的示例
+struct Service {
+    tx_manager: SimpleTransaction,
 }
 
-// 宏的简化版本，自动创建事务管理器
-macro_rules! transaction {
-    ($block:block) => {{
-        let tx = SimpleTransaction::new();
-        transactional!(tx, $block)
-    }};
+impl Service {
+    fn new() -> Self {
+        Self {
+            tx_manager: SimpleTransaction::new(),
+        }
+    }
 
-    // 返回 Result 的版本
-    (result $block:expr) => {{
-        let tx = SimpleTransaction::new();
-        transactional!(tx, result $block)
-    }};
+    // 示例1：无返回值的事务方法
+    #[transactional]
+    fn do_something(&mut self) -> Result<(), String> {
+        println!("Executing business logic...");
+        // 模拟正常执行
+        Ok(())
+    }
+
+    // 示例2：有返回值的事务方法
+    #[transactional]
+    fn do_something_with_result(&mut self) -> Result<i32, String> {
+        println!("Executing business logic with return...");
+        Ok(42)
+    }
+
+    // 示例3：可能失败的事务方法
+    #[transactional]
+    fn do_something_that_might_fail(&mut self, should_fail: bool) -> Result<String, String> {
+        println!("Executing business logic that might fail...");
+        if should_fail {
+            Err("Business error occurred".to_string())
+        } else {
+            Ok("Success".to_string())
+        }
+    }
+
+    // 示例4：可能发生 panic 的事务方法
+    #[transactional]
+    fn do_something_that_might_panic(&mut self, should_panic: bool) -> Result<String, String> {
+        println!("Executing business logic that might panic...");
+        if should_panic {
+            panic!("Unexpected error!");
+        } else {
+            Ok("Success".to_string())
+        }
+    }
 }
 
 // 测试用例
 fn main() {
-    println!("=== 测试1：无返回值的事务 ===");
+    println!("=== 测试1：无返回值的事务方法 ===");
 
-    let tx = SimpleTransaction::new();
-    let result = transactional!(tx, {
-        println!("Executing business logic...");
-        // 模拟正常执行
-    });
+    let mut service = Service::new();
+    let result = service.do_something();
 
     match result {
         Ok(_) => println!("Transaction succeeded"),
         Err(e) => println!("Transaction failed: {}", e),
     }
 
-    println!("\n=== 测试2：有返回值的正常事务 ===");
+    println!("\n=== 测试2：有返回值的正常事务方法 ===");
 
-    let tx = SimpleTransaction::new();
-    let result = transactional!(tx, result {
-        println!("Executing business logic with return...");
-        Ok::<i32, String>(42)
-    });
+    let mut service = Service::new();
+    let result = service.do_something_with_result();
 
     match result {
         Ok(value) => println!("Transaction succeeded with value: {}", value),
         Err(e) => println!("Transaction failed: {}", e),
     }
 
-    println!("\n=== 测试3：返回错误的业务逻辑 ===");
+    println!("\n=== 测试3：返回成功的事务方法 ===");
 
-    let tx = SimpleTransaction::new();
-    let result = transactional!(tx, result {
-        println!("Executing failing business logic...");
-        Err::<i32, String>("Business error occurred".to_string())
-    });
+    let mut service = Service::new();
+    let result = service.do_something_that_might_fail(false);
 
     match result {
         Ok(value) => println!("Transaction succeeded with value: {}", value),
         Err(e) => println!("Business logic failed (transaction rolled back): {}", e),
     }
 
-    println!("\n=== 测试4：发生 panic 的事务 ===");
+    println!("\n=== 测试4：返回错误的事务方法 ===");
 
-    let tx = SimpleTransaction::new();
-    let result = transactional!(tx, {
-        println!("About to panic...");
-        panic!("Unexpected error!");
-    });
+    let mut service = Service::new();
+    let result = service.do_something_that_might_fail(true);
 
     match result {
-        Ok(_) => println!("Transaction succeeded"),
-        Err(e) => println!("Transaction failed with panic (rolled back): {}", e),
+        Ok(value) => println!("Transaction succeeded with value: {}", value),
+        Err(e) => println!("Business logic failed (transaction rolled back): {}", e),
     }
 
-    println!("\n=== 测试5：简化宏的使用 ===");
+    println!("\n=== 测试5：不发生 panic 的事务方法 ===");
 
-    let result = transaction!(result {
-        println!("Using simplified transaction macro...");
-        Ok::<String, String>("Success".to_string())
-    });
+    let mut service = Service::new();
+    let result = service.do_something_that_might_panic(false);
 
     match result {
-        Ok(msg) => println!("Result: {}", msg),
-        Err(e) => println!("Error: {}", e),
+        Ok(value) => println!("Transaction succeeded with value: {}", value),
+        Err(e) => println!("Transaction failed: {}", e),
+    }
+
+    println!("\n=== 测试6：发生 panic 的事务方法 ===");
+
+    let mut service = Service::new();
+    let result = service.do_something_that_might_panic(true);
+
+    match result {
+        Ok(value) => println!("Transaction succeeded with value: {}", value),
+        Err(e) => println!("Transaction failed with panic (rolled back): {}", e),
     }
 }

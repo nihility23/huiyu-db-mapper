@@ -3,6 +3,10 @@ name = "db-mapper"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "test_transaction"
+path = "src/sql/pool/transaction.rs"
+
 [dependencies]
 blocking = "1.6.2"
 chrono = "0.4.42"

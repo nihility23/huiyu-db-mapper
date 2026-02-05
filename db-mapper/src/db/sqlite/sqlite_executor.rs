@@ -3,7 +3,7 @@ use crate::base::error::DatabaseError;
 use crate::base::error::DatabaseError::CommonError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::Executor;
-use crate::sql::pool::db_manager::DbManager;
+use crate::pool::db_manager::DbManager;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Type, ValueRef};

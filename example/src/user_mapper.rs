@@ -15,7 +15,7 @@ impl UserMapper{
 
 
     pub(crate) async fn find_by_id11(&self, id: i32) -> Option<User> {
-        db_mapper::sql::pool::datasource::DB_NAME_REGISTRY.scope(std::cell::RefCell::new(Some("name".to_string())), async {
+        db_mapper::pool::datasource::DB_NAME_REGISTRY.scope(std::cell::RefCell::new(Some("name".to_string())), async {
             {
                 None
             }

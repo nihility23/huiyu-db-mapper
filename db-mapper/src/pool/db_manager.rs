@@ -1,6 +1,6 @@
 use crate::base::config::DbConfig;
 use crate::base::db_type::DbType;
-use crate::sql::pool::datasource::get_datasource;
+use crate::pool::datasource::get_datasource;
 use r2d2::{Error, ManageConnection, Pool, PooledConnection};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;

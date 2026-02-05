@@ -3,6 +3,7 @@ mod query;
 
 mod base;
 mod db;
+mod pool;
 use crate::base::db_type::DbType;
 use crate::base::entity::Entity;
 use crate::base::page::Page;

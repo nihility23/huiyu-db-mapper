@@ -19,7 +19,7 @@ pub fn datasource(attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #vis #new_sig {
             // 关键：需要 `.await` 来获取实际返回值
-            db_mapper::sql::pool::datasource::DB_NAME_REGISTRY
+            db_mapper::pool::datasource::DB_NAME_REGISTRY
                 .scope(
                     std::cell::RefCell::new(Some(#db_name.to_string())),
                     async { #block }

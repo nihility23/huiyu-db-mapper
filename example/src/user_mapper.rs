@@ -1,4 +1,4 @@
-use db_macros::datasource;
+use db_macros::{datasource};
 
 pub struct User {
     pub id: i32,

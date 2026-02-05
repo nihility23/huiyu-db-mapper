@@ -3,5 +3,3 @@ name = "huiyu-db-util"
 version = "0.1.0"
 edition = "2024"
 members = ["db-macros", "db-mapper", "example"]
-
-[workspace.dependencies]

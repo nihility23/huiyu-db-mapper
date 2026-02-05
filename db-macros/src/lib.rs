@@ -1,7 +1,35 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, ItemFn, ReturnType, Type};
+use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, ItemFn, LitStr, Signature, Type};
+use syn::token::Async;
 
+#[proc_macro_attribute]
+pub fn datasource(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let db_name = parse_macro_input!(attr as LitStr);
+    let input_fn = parse_macro_input!(item as ItemFn);
+    let vis = &input_fn.vis;
+    let sig = &input_fn.sig;
+    let block = &input_fn.block;
+
+    let new_sig = Signature {
+        asyncness: Some(syn::token::Async::default()),
+        ..sig.clone()
+    };
+
+    let expanded = quote! {
+        #vis #new_sig {
+            // 关键：需要 `.await` 来获取实际返回值
+            db_mapper::sql::pool::datasource::DB_NAME_REGISTRY
+                .scope(
+                    std::cell::RefCell::new(Some(#db_name.to_string())),
+                    async { #block }
+                )
+                .await
+        }
+    };
+
+    expanded.into()
+}
 #[proc_macro_attribute]
 pub fn transactional(attr: TokenStream, item: TokenStream) -> TokenStream {
     // 解析方法定义

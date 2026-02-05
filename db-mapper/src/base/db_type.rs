@@ -1,11 +1,11 @@
 use crate::base::entity::Entity;
 use crate::base::param::ParamValue;
-use crate::sql::generator::mysql_sql_generator::MYSQL_SQL_GENERATOR;
-use crate::sql::generator::oracle_sql_generator::ORACLE_SQL_GENERATOR;
-use crate::sql::generator::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
-use crate::sql::generator::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
-use crate::sql::generator::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
-use crate::sql::generator::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
+use crate::db::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
+use crate::db::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
+use crate::db::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
+use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+use crate::db::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
+use crate::db::sqlserver::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
 
 #[derive(Debug,Clone,Copy)]
 pub enum DbType{

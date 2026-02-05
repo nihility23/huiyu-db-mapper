@@ -2,7 +2,7 @@ use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::error::DatabaseError::CommonError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::executor::Executor;
+use crate::sql::executor::Executor;
 use crate::sql::pool::db_manager::DbManager;
 use r2d2::PooledConnection;
 use r2d2_sqlite::SqliteConnectionManager;

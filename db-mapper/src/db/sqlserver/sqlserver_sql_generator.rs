@@ -1,6 +1,6 @@
 use crate::base::entity::Entity;
 use crate::base::param::ParamValue;
-use crate::sql::generator::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 
 pub const SQL_SERVER_SQL_GENERATOR:SqlServerSqlGenerator= SqlServerSqlGenerator {};
 pub struct SqlServerSqlGenerator;

@@ -1,4 +1,4 @@
-use db_mapper::sql::generator::sql_generator::QueryWrapperSqlGenerator;
+use db_mapper::sql::sql_generator::QueryWrapperSqlGenerator;
 mod mapper_test;
 mod user_mapper;
 

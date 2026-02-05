@@ -1,6 +1,6 @@
 use crate::base::entity::Entity;
 use crate::base::param::ParamValue;
-use crate::sql::generator::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 
 pub const ORACLE_SQL_GENERATOR:OracleSqlGenerator=OracleSqlGenerator{};
 pub struct OracleSqlGenerator;

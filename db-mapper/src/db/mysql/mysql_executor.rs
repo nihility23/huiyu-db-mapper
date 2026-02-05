@@ -1,7 +1,7 @@
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::executor::Executor;
+use crate::sql::executor::Executor;
 use std::sync::OnceLock;
 use r2d2_mysql::mysql::Transaction;
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）

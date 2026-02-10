@@ -1,11 +1,14 @@
 use r2d2_mysql::MySqlConnectionManager;
+use rusqlite::fallible_iterator::FallibleIterator;
 use crate::base::db_type::DbType;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::page::{Page, PageRes};
 use crate::base::param::ParamValue;
 use crate::exec_tx;
+use crate::pool::datasource::get_datasource_type;
 use crate::query::query_wrapper::QueryWrapper;
+use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 
 pub trait BaseMapper<E> where E: Entity{
 
@@ -40,29 +43,41 @@ pub trait BaseMapper<E> where E: Entity{
 
     // update $table_name set $column_name = ? where id = ?
     async fn update_by_key(&self, e: &E) -> Result<u64,DatabaseError>{
-        let sql = format!("update {} set {} where {} = ?", E::table_name(),"",E::key_name());
-        // let param_vec = vec![e.into()];
-        Ok(0)
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+
+        let (sql,param_vec) = db_type.gen_update_by_key_sql(e,false);
+        exec_tx!(sql.as_str(), &param_vec,update)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
-    async fn insert(&self, entity: &E) -> Result<E::K,DatabaseError>{
-        let sql = format!("insert into {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![];
-        Ok(E::new().key())
+    async fn insert(&self, e: &E) -> Result<E::K,DatabaseError>{
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+
+        let (sql,param_vec) = db_type.gen_insert_one_sql(e);
+        // exec_tx!(sql.as_str(), &param_vec,insert::<E>)
+        todo!()
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
     async fn insert_batch(&self, entities: &Vec<E>) -> Result<u32,DatabaseError>{
-        let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![];
-        Ok(0)
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+
+        let (sql,param_vec) = db_type.gen_insert_batch_sql(entities);
+        // exec_tx!(sql.as_str(), &param_vec,insert::<E>)
+        todo!()
     }
 
     // select count(*) from (select * from $table_name where $column = ? ...)
     // select * from $table_name where $column = ? ... limit ?,?
     async fn select_page<'a>(&self, page: Page, query_wrapper: &QueryWrapper<'a,E>) -> Result<PageRes<E>,DatabaseError>{
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
+        let (query_sql,total_sql,param_vec) = db_type.gen_page_sql(&page,query_wrapper);
+        // exec_tx!(query_sql.as_str(), &param_vec,query_some)
         // let param_vec = vec![key.into()];
         Ok(PageRes::new())
     }

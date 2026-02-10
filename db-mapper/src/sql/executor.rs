@@ -14,7 +14,7 @@ pub(crate) trait Executor{
     async fn query_one<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
 
     // 执行插入操作，返回主键
-    async fn insert(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>,DatabaseError>;
+    async fn insert<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<E::K,DatabaseError>where E:Entity;
     async fn delete(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
     
     async fn update(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;

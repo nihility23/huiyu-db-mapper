@@ -12,3 +12,9 @@ pub fn get_transaction_id() -> Option<String> {
         None
     }
 }
+
+pub fn set_transaction_id(tx_id: &str){
+    TX_ID_REGISTRY.try_with(|name| {
+        *name.borrow_mut() = Some(tx_id.to_string());
+    }).ok();
+}

@@ -1,6 +1,6 @@
 use crate::base::config::DbConfig;
 use crate::base::db_type::DbType;
-use crate::pool::datasource::get_datasource;
+use crate::pool::datasource::{get_datasource_id, set_datasource_type};
 use r2d2::{Error, ManageConnection, Pool, PooledConnection};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
@@ -8,6 +8,7 @@ use std::sync::{Arc, OnceLock, RwLock};
 
 type RegistryMap = HashMap<(String, TypeId), Arc<dyn Any + Send + Sync>>;
 static DB_REGISTRY: OnceLock<RwLock<RegistryMap>> = OnceLock::new();
+
 
 
 pub struct DbManager<T:ManageConnection>{
@@ -23,6 +24,7 @@ pub struct DbManager<T:ManageConnection>{
 impl<T: ManageConnection> DbManager<T> {
 
     pub fn register_db<F>(db_config: &DbConfig, f: F) where F: FnOnce(&DbConfig) -> Pool<T> {
+        set_datasource_type(db_config.name.clone(), db_config.db_type);
         // 类型别名，提高代码可读性
         let registry = DB_REGISTRY.get_or_init(|| RwLock::new(RegistryMap::new()));
         let key = (db_config.name.to_string(), TypeId::of::<T>());
@@ -61,7 +63,7 @@ impl<T: ManageConnection> DbManager<T> {
 
     pub fn get_instance() -> Option<Arc<Self>>
     {
-        let db_name_opt = get_datasource();
+        let db_name_opt = get_datasource_id();
         let db_name;
         if db_name_opt.is_none() {
             db_name = "default".to_string();
@@ -94,16 +96,15 @@ impl<T: ManageConnection> DbManager<T> {
     }
 
     /// 获取数据（克隆版本）
-    pub fn get(&self) -> Pool<T>
+    pub fn get_pool(&self) -> Pool<T>
     {
         self.pool_data.read().unwrap().clone()
     }
-
     pub fn get_db_type(&self) -> DbType{
         self.db_type
     }
     pub fn get_conn(&self) -> Result<PooledConnection<T>,Error>
     {
-         self.get().get()
+         self.get_pool().get()
     }
 }

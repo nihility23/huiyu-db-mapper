@@ -4,21 +4,22 @@ use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::Executor;
 use std::sync::OnceLock;
-use r2d2_mysql::mysql::Transaction;
+use r2d2_mysql::mysql::{Transaction, TxOpts};
+
+
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）
+pub const MYSQL_SQL_EXECUTOR: MysqlSqlExecutor<'static> = MysqlSqlExecutor { _a: PhantomData };
 
 pub struct MysqlSqlExecutor<'a>{
     _a: PhantomData<&'a ()>,
 }
 
-static MYSQL_SQL_EXECUTOR_CONFIG: OnceLock<MysqlSqlExecutor<'_>> = OnceLock::new();
-
-impl<'a> Executor<'a> for MysqlSqlExecutor<'a>{
+impl<'a> Executor for MysqlSqlExecutor<'a>{
     type T = Transaction<'a>;
 
-    fn get_sql_executor() -> &'a Self {
-        MYSQL_SQL_EXECUTOR_CONFIG.get_or_init(|| MysqlSqlExecutor { _a: PhantomData })
+    fn get_sql_executor() -> &'static Self {
+        todo!()
     }
 
     async fn query_some<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
@@ -36,6 +37,14 @@ impl<'a> Executor<'a> for MysqlSqlExecutor<'a>{
     }
 
     async fn insert(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError> {
+        todo!()
+    }
+
+    async fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        todo!()
+    }
+
+    async fn update(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 

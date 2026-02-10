@@ -148,48 +148,6 @@ impl BaseMapper<UserEntity> for UserMapper {
         return Ok(None)
     }
 
-    fn select_by_keys(&self, key: &Vec<<UserEntity as Entity>::K>) -> Result<Vec<UserEntity>, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn delete_by_key(&self, key: &<UserEntity as Entity>::K) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn delete_by_keys(&self, key: &Vec<<UserEntity as Entity>::K>) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn update_by_key(&self, user_entity: &UserEntity) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn insert(&self, entity: &UserEntity) -> Result<<UserEntity as Entity>::K, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn insert_batch(&self, entities: &Vec<UserEntity>) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn select_page(&self, page: Page, query_wrapper: &QueryWrapper<UserEntity>) -> Result<PageRes<UserEntity>, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn select(&self, query_wrapper: &QueryWrapper<UserEntity>) -> Result<Option<Vec<UserEntity>>, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn select_one(&self, query_wrapper: &QueryWrapper<UserEntity>) -> Result<Option<UserEntity>, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn update(&self, entity: &UserEntity, query_wrapper: &QueryWrapper<UserEntity>) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
-
-    fn delete(&self, query_wrapper: &QueryWrapper<UserEntity>) -> Result<u32, db_mapper::base::error::DatabaseError> {
-        todo!()
-    }
+   
 }
 

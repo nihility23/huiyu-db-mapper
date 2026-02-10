@@ -36,6 +36,11 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
         todo!()
     }
 
+    async fn query_count(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    {
+        todo!()
+    }
+
     async fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<E::K, DatabaseError>
     where
         E: Entity

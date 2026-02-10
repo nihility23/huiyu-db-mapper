@@ -107,8 +107,8 @@ pub trait BaseSqlGenerator{
         (format!("select * from {} where {} = ?", E::table_name(),E::key_name()),ks.into_iter().map(|k| k.into()).collect::<Vec<ParamValue>>())
     }
 
-    fn gen_delete_by_key_sql<E>(&self,k : E::K) ->(String,ParamValue) where E:Entity{
-        (format!("delete from {} where {} = ?", E::table_name(),E::key_name()),k.into())
+    fn gen_delete_by_key_sql<E>(&self,k : &E::K) ->(String,ParamValue) where E:Entity{
+        (format!("delete from {} where {} = ?", E::table_name(),E::key_name()),k.clone().into())
     }
 
     fn gen_update_by_key_sql<E>(&self,e: &E, is_update_null: bool) ->(String,Vec<ParamValue>) where E:Entity{

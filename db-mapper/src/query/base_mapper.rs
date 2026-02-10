@@ -29,9 +29,10 @@ pub trait BaseMapper<E> where E: Entity{
 
     // delete from $table_name where $id = ?
     async fn delete_by_key(&self, key: &E::K) -> Result<u64,DatabaseError>{
-        let sql = format!("delete from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
-        exec_tx!(sql.as_str(), &vec![key.clone().into()],delete)
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+        let (sql,param_vec) = db_type.gen_delete_by_key_sql::<E>(&key);
+        exec_tx!(sql.as_str(), &vec![param_vec],delete)
     }
 
     // delete from $table_name where $id in (?,...)
@@ -56,7 +57,6 @@ pub trait BaseMapper<E> where E: Entity{
         let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
         let (sql,param_vec) = db_type.gen_insert_one_sql(e);
-        // exec_tx!(sql.as_str(), &param_vec,insert::<E>)
         todo!()
     }
 
@@ -77,40 +77,47 @@ pub trait BaseMapper<E> where E: Entity{
         let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
         let (query_sql,total_sql,param_vec) = db_type.gen_page_sql(&page,query_wrapper);
-        // exec_tx!(query_sql.as_str(), &param_vec,query_some)
+        let total = exec_tx!(total_sql.as_str(), &param_vec,query_count)?;
+        let list = exec_tx!(query_sql.as_str(), &param_vec,query_some)?;
         // let param_vec = vec![key.into()];
-        Ok(PageRes::new())
+        Ok(PageRes::new_from_records(total,page.page_size,list))
     }
 
     // select * from $table_name where $column = ? ...
-    async fn select<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<Option<Vec<E>>,DatabaseError>{
-        let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
-        Ok(None)
+    async fn select<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<Vec<E>,DatabaseError>{
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+
+        let (query_sql,param_vec) = db_type.gen_query_sql(query_wrapper);
+        exec_tx!(query_sql.as_str(), &param_vec,query_some)
     }
 
     // select * from $table_name where $column = ? ... limit 1
     async fn select_one<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<Option<E>,DatabaseError>{
-        let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
-        Ok(None)
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+
+        let (query_sql,param_vec) = db_type.gen_query_sql(query_wrapper);
+        exec_tx!(query_sql.as_str(), &param_vec,query_one)
     }
 
     // update $table_name set $column_name = ? where $column = ? ...
     async fn update<'a>(&self, entity: &E, query_wrapper: &QueryWrapper<'a,E>) -> Result<u32,DatabaseError>{
-        let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
-        // 获取当前数据库类型
-        let db_type = DbType::Mysql;
-        // 获取查询语句
-        // <SqliteSqlGenerator as SqlGenerator>::gen_query_sql(&query_wrapper);
-        Ok(0)
+        // let db_type_opt = get_datasource_type();
+        // let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+        //
+        // let (sql,param_vec) = db_type.gen_(e,false);
+        // exec_tx!(sql.as_str(), &param_vec,update)
+        todo!()
     }
 
     // delete from $table_name where $column = ? ...
     async fn delete<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<u32,DatabaseError>{
-        let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
-        // let param_vec = vec![key.into()];
-        Ok(0)
+        // let db_type_opt = get_datasource_type();
+        // let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+        //
+        // let (sql,param_vec) = db_type.gen_delete_sql::<E>(e,false);
+        // exec_tx!(sql.as_str(), &param_vec,update)
+        todo!()
     }
 }

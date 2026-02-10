@@ -13,12 +13,13 @@ pub(crate) trait Executor{
     // 查询单个结果
     async fn query_one<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
 
+    async fn query_count(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
     // 执行插入操作，返回主键
     async fn insert<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<E::K,DatabaseError>where E:Entity;
     async fn delete(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
-    
+
     async fn update(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
-    
+
     async fn start_transaction(&self, tx:&Self::T) -> Result<(), DatabaseError>;
     
     async fn commit(&self, tx:&Self::T) -> Result<(),DatabaseError>;
@@ -50,7 +51,7 @@ macro_rules! exec_tx {
             DbType::Mysql => {
                 let mut conn: PooledConnection<MySqlConnectionManager> = DbManager::get_instance().unwrap().get_conn()?;
                 let tx = conn.start_transaction(TxOpts::default()).unwrap();
-                return MysqlSqlExecutor::get_sql_executor().$f(&tx, $sql, $params).await;
+                MysqlSqlExecutor::get_sql_executor().$f(&tx, $sql, $params).await
             },
             _ => panic!("Not support")
         }

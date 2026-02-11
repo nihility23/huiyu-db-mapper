@@ -149,7 +149,7 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         }
         self
     }
-    
+
     pub fn or_wrapper<F>(mut self, f: F)->Self where Self: Sized, F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         let mut sub_query_wrapper = QueryWrapper::new();
         f(&mut sub_query_wrapper);
@@ -288,7 +288,7 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.query.query_group.query_item_nodes.push(QueryItemNode::Item(query_item));
         self
     }
-    
+
 }
 
 

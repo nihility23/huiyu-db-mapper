@@ -2,7 +2,7 @@ use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum DatabaseError{
+pub enum DatabaseError {
     #[error("Business Error")]
     CommonError(String),
     #[error("Not Found Error : {0}")]
@@ -12,12 +12,11 @@ pub enum DatabaseError{
     #[error("Convert Error : {0}")]
     ConvertError(String),
 
-
     // 三方库异常
     #[error("R2d2 Error")]
     R2d2Error(#[from] r2d2::Error),
     #[error("RusqliteError Error")]
     RusqliteError(#[from] rusqlite::Error),
     #[error("FromUtf8Error Error")]
-    StringConvertError(#[from] FromUtf8Error ),
+    StringConvertError(#[from] FromUtf8Error),
 }

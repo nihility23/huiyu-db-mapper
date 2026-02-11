@@ -9,21 +9,21 @@ use std::sync::{Arc, OnceLock, RwLock};
 type RegistryMap = HashMap<(String, TypeId), Arc<dyn Any + Send + Sync>>;
 static DB_REGISTRY: OnceLock<RwLock<RegistryMap>> = OnceLock::new();
 
-
-
-pub struct DbManager<T:ManageConnection>{
+pub struct DbManager<T: ManageConnection> {
     /// 核心数据存储
     pool_data: Arc<RwLock<Pool<T>>>,
 
     /// 实例标签
     name: String,
 
-    db_type: DbType
+    db_type: DbType,
 }
 
 impl<T: ManageConnection> DbManager<T> {
-
-    pub fn register_db<F>(db_config: &DbConfig, f: F) where F: FnOnce(&DbConfig) -> Pool<T> {
+    pub fn register_db<F>(db_config: &DbConfig, f: F)
+    where
+        F: FnOnce(&DbConfig) -> Pool<T>,
+    {
         set_datasource_type(db_config.name.clone(), db_config.db_type);
         // 类型别名，提高代码可读性
         let registry = DB_REGISTRY.get_or_init(|| RwLock::new(RegistryMap::new()));
@@ -34,7 +34,7 @@ impl<T: ManageConnection> DbManager<T> {
             let registry_guard = registry.read().unwrap();
             if let Some(existing) = registry_guard.get(&key) {
                 if let Ok(_) = existing.clone().downcast::<Self>() {
-                    return ;
+                    return;
                 }
             }
         }
@@ -56,13 +56,15 @@ impl<T: ManageConnection> DbManager<T> {
             db_type: db_config.db_type,
         });
         if registry_guard.is_empty() {
-            registry_guard.insert(("default".to_string(),TypeId::of::<T>()), instance.clone() as Arc<dyn Any + Send + Sync>);
+            registry_guard.insert(
+                ("default".to_string(), TypeId::of::<T>()),
+                instance.clone() as Arc<dyn Any + Send + Sync>,
+            );
         }
         registry_guard.insert(key, instance.clone() as Arc<dyn Any + Send + Sync>);
     }
 
-    pub fn get_instance() -> Option<Arc<Self>>
-    {
+    pub fn get_instance() -> Option<Arc<Self>> {
         let db_name_opt = get_datasource_id();
         let db_name;
         if db_name_opt.is_none() {
@@ -96,15 +98,13 @@ impl<T: ManageConnection> DbManager<T> {
     }
 
     /// 获取数据（克隆版本）
-    pub fn get_pool(&self) -> Pool<T>
-    {
+    pub fn get_pool(&self) -> Pool<T> {
         self.pool_data.read().unwrap().clone()
     }
-    pub fn get_db_type(&self) -> DbType{
+    pub fn get_db_type(&self) -> DbType {
         self.db_type
     }
-    pub fn get_conn(&self) -> Result<PooledConnection<T>,Error>
-    {
-         self.get_pool().get()
+    pub fn get_conn(&self) -> Result<PooledConnection<T>, Error> {
+        self.get_pool().get()
     }
 }

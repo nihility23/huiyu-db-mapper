@@ -68,7 +68,7 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
     fn get_sql_executor() -> &'a Self {
         SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(|| SqliteSqlExecutor { _t: PhantomData })
     }
-    
+
     fn query_some<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity

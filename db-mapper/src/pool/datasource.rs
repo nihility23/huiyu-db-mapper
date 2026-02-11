@@ -1,11 +1,11 @@
+use crate::base::db_type::DbType;
+use lazy_static::lazy_static;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::RwLock;
-use lazy_static::lazy_static;
 use tokio::task_local;
-use crate::base::db_type::DbType;
 
-task_local!{
+task_local! {
     pub static DB_NAME_REGISTRY: RefCell<Option<String>>;
 }
 
@@ -14,18 +14,18 @@ lazy_static! {
 }
 
 pub fn get_datasource_id() -> Option<String> {
-    if let Some(name) = DB_NAME_REGISTRY.try_get().ok(){
+    if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
         name.borrow().clone()
     } else {
         None
     }
 }
 
-pub(crate) fn set_datasource_type(name: String, data_type: DbType){
+pub(crate) fn set_datasource_type(name: String, data_type: DbType) {
     DB_TYPE_REGISTRY.write().unwrap().insert(name, data_type);
 }
 
-pub fn get_datasource_type_by_name(name: &str) -> Option<DbType>{
+pub fn get_datasource_type_by_name(name: &str) -> Option<DbType> {
     DB_TYPE_REGISTRY.read().unwrap().get(name).cloned()
 }
 

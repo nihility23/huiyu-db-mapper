@@ -77,7 +77,7 @@ pub trait BaseSqlGenerator{
             }else if column_info.column_type==ColumnType::DateTime && (column_info.fill_on_insert || column_info.fill_on_update){
                     column_names.push(column_info.column_name);
                     params.push(ParamValue::DateTime(Local::now()));
-                
+
             }
         }
         (format!("insert into {}({}) values ({})", E::table_name(),column_names.join(","),vec!["?";column_names.len()].join(",")),params)

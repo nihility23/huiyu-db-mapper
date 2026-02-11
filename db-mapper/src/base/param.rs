@@ -1,9 +1,9 @@
-use chrono::{DateTime, Local};
 use crate::base::error::DatabaseError;
 use crate::base::error::DatabaseError::ConvertError;
+use chrono::{DateTime, Local};
 
-#[derive(Clone,Debug)]
-pub enum ParamValue{
+#[derive(Clone, Debug)]
+pub enum ParamValue {
     I8(i8),
     I16(i16),
     I32(i32),
@@ -20,7 +20,7 @@ pub enum ParamValue{
     DateTime(DateTime<Local>),
     Blob(Vec<u8>),
     Clob(Vec<u8>),
-    Null
+    Null,
 }
 
 // 支持所有类型的宏版本
@@ -111,9 +111,11 @@ pub fn get_param_value_ref<T>(value: &Option<T>) -> ParamValue
 where
     T: Clone + Into<ParamValue>,
 {
-    value.as_ref().map(|v| v.clone().into()).unwrap_or(ParamValue::Null)
+    value
+        .as_ref()
+        .map(|v| v.clone().into())
+        .unwrap_or(ParamValue::Null)
 }
-
 
 // 基础数值转换宏（只支持值类型，支持 Option 和非 Option）
 macro_rules! impl_numeric_conversions {
@@ -258,10 +260,9 @@ impl From<ParamValue> for Vec<u8> {
 }
 // 2. 值类型 -> Vec<u8> (Result, 非 Option)
 
-impl ParamValue{
-    
+impl ParamValue {
     pub fn is_null(&self) -> bool {
-        match self { 
+        match self {
             ParamValue::Null => true,
             _ => false,
         }
@@ -270,8 +271,8 @@ impl ParamValue{
     pub fn is_not_null(&self) -> bool {
         !self.is_null()
     }
-    
-    pub fn to_string(&self) -> String{
+
+    pub fn to_string(&self) -> String {
         match self {
             ParamValue::U64(x) => x.to_string(),
             ParamValue::U32(x) => x.to_string(),
@@ -288,8 +289,8 @@ impl ParamValue{
             ParamValue::Blob(_) => String::new(),
             ParamValue::Clob(x) => String::from_utf8(x.to_vec()).unwrap(),
             ParamValue::Null => "null".to_string(),
-            ParamValue::F32(x)=>x.to_string(),
-            ParamValue::F64(x)=>x.to_string()
+            ParamValue::F32(x) => x.to_string(),
+            ParamValue::F64(x) => x.to_string(),
         }
     }
 

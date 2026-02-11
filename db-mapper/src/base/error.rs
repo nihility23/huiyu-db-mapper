@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use std::string::FromUtf8Error;
 use thiserror::Error;
 

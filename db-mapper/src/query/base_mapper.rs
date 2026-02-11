@@ -7,13 +7,6 @@ use crate::pool::datasource::get_datasource_type;
 use crate::query::query_wrapper::QueryWrapper;
 use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 
-macro_rules! exec {
-    ($block:expr) => {
-        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
-        $block
-    };
-}
-
 #[allow(async_fn_in_trait)]
 pub trait BaseMapper<E> where E: Entity{
 

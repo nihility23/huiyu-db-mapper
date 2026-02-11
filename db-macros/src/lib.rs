@@ -1,7 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Attribute, Data, DeriveInput, Fields, ItemFn, LitStr, Signature, Type};
-use syn::token::Async;
 
 #[proc_macro_attribute]
 pub fn datasource(attr: TokenStream, item: TokenStream) -> TokenStream {

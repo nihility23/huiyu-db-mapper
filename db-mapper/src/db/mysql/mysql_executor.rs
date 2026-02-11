@@ -1,10 +1,9 @@
-use std::marker::PhantomData;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::Executor;
-use std::sync::OnceLock;
-use r2d2_mysql::mysql::{Transaction, TxOpts};
+use r2d2_mysql::mysql::Transaction;
+use std::marker::PhantomData;
 
 
 // 定义线程本地存储的 HashMap（每个线程一个独立副本）

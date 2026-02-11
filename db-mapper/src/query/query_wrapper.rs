@@ -1,8 +1,8 @@
 use crate::base::entity::Entity;
-use crate::query::query::{Query, QueryItem, QueryItemNode};
-use std::marker::PhantomData;
 use crate::base::param::ParamValue;
 use crate::query::query::QueryRelation::{And, Or};
+use crate::query::query::{Query, QueryItem, QueryItemNode};
+use std::marker::PhantomData;
 
 pub struct QueryWrapper<'a, E> where E: Entity{
     pub(crate) query: Query<'a>,
@@ -62,17 +62,17 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.between(column,start_value,end_value)
     }
 
-    pub fn order_by_desc_when(mut self,condition: bool,column: &'a str)->Self{
+    pub fn order_by_desc_when(self,condition: bool,column: &'a str)->Self{
         if !condition {return self;}
         self.order_by_desc(column)
     }
 
-    pub fn order_by_asc_when(mut self,condition: bool,column: &'a str)->Self{
+    pub fn order_by_asc_when(self,condition: bool,column: &'a str)->Self{
         if !condition {return self;}
         self.order_by_asc(column)
     }
 
-    pub fn order_by_when(mut self,condition: bool,column: &'a str, is_asc: bool)->Self{
+    pub fn order_by_when(self,condition: bool,column: &'a str, is_asc: bool)->Self{
         if !condition {return self;}
         self.order_by(column,is_asc)
     }
@@ -127,14 +127,14 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.not_in_sql(column,values)
     }
 
-    pub fn is_null_when(self,condition: bool,column:&'a str)->Self{
+    pub fn null_when(self,condition: bool,column:&'a str)->Self{
         if !condition {return self;}
-        self.is_null(column)
+        self.null(column)
     }
 
-    pub fn is_not_null_when(self,condition: bool,column:&'a str)->Self{
+    pub fn not_null_when(self,condition: bool,column:&'a str)->Self{
         if !condition {return self;}
-        self.is_not_null(column)
+        self.not_null(column)
     }
 
     pub fn apply_sql_when(self, condition: bool,sql:&'a str, params: Vec<ParamValue>)->Self{
@@ -248,11 +248,11 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.add_condition(QueryItem::NotIn(column,values))
     }
 
-    pub fn is_null(self,column:&'a str)->Self{
+    pub fn null(self,column:&'a str)->Self{
         self.add_condition(QueryItem::IsNull(column))
     }
 
-    pub fn is_not_null(self,column:&'a str)->Self{
+    pub fn not_null(self,column:&'a str)->Self{
         self.add_condition(QueryItem::IsNotNull(column))
     }
 

@@ -40,7 +40,7 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
         todo!()
     }
 
-    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<E::K, DatabaseError>
+    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError>
     where
         E: Entity
     {

@@ -119,10 +119,18 @@ where
 macro_rules! impl_numeric_conversions {
     // 支持多个源类型的转换
     ($target:ty: $($src:ident),+ $(,)?) => {
-        // 1. 值类型 -> Option<T>
-        impl Into<Option<$target>> for ParamValue {
-            fn into(self) -> Option<$target> {
-                match self {
+
+        impl From<ParamValue> for $target where $target: Default{
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<$target> = val.into();
+                result.unwrap_or_default()
+            }
+        }
+        // 2. 从 ParamValue 到 Option<$target> 的转换（总是成功）
+        impl From<ParamValue> for Option<$target> {
+            fn from(val: ParamValue) -> Self {
+                match val {
                     $(
                         ParamValue::$src(v) => Some(v as $target),
                     )+
@@ -131,16 +139,14 @@ macro_rules! impl_numeric_conversions {
             }
         }
 
-        // 2. 值类型 -> T (Result, 非 Option)
-        impl TryInto<$target> for ParamValue {
-            type Error = crate::base::error::DatabaseError;
-            
-            fn try_into(self) -> Result<$target, Self::Error> {
-                match self {
+        // 3. 从引用 ParamValue 到 Option<$target> 的转换（方便使用）
+        impl From<&ParamValue> for Option<$target> {
+            fn from(val: &ParamValue) -> Self {
+                match val {
                     $(
-                        ParamValue::$src(v) => Ok(v as $target),
+                        ParamValue::$src(v) => Some(*v as $target),
                     )+
-                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
+                    _ => None,
                 }
             }
         }
@@ -148,10 +154,9 @@ macro_rules! impl_numeric_conversions {
 
     // 单个源类型（不需要转换）
     ($target:ty: $src:ident) => {
-        // 1. 值类型 -> Option<T>
-        impl Into<Option<$target>> for ParamValue {
-            fn into(self) -> Option<$target> {
-                match self {
+        impl From<ParamValue> for Option<$target> {
+            fn from(val: ParamValue) -> Self {
+                match val {
                     ParamValue::$src(v) => Some(v),
                     _ => None,
                 }
@@ -159,26 +164,23 @@ macro_rules! impl_numeric_conversions {
         }
 
         // 2. 值类型 -> T (Result, 非 Option)
-        impl TryInto<$target> for ParamValue {
-            type Error = ConvertError;
-
-            fn try_into(self) -> Result<$target, Self::Error> {
-                match self {
-                    ParamValue::$src(v) => Ok(v),
-                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
-                }
+        impl From<ParamValue> for $target where $target: Default {
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<$target> = val.into();
+                result.unwrap_or_default()
             }
         }
+
     };
 }
 
 // 浮点数转换宏
 macro_rules! impl_float_conversions {
     ($target:ty: $($src:ident),+ $(,)?) => {
-        // 1. 值类型 -> Option<T>
-        impl Into<Option<$target>> for ParamValue {
-            fn into(self) -> Option<$target> {
-                match self {
+        impl From<ParamValue> for Option<$target> {
+            fn from(val: ParamValue) -> Self {
+                match val {
                     $(
                         ParamValue::$src(v) => Some(v as $target),
                     )+
@@ -186,18 +188,11 @@ macro_rules! impl_float_conversions {
                 }
             }
         }
-
-        // 2. 值类型 -> T (Result, 非 Option)
-        impl TryInto<$target> for ParamValue {
-            type Error = DatabaseError;
-
-            fn try_into(self) -> Result<$target, Self::Error> {
-                match self {
-                    $(
-                        ParamValue::$src(v) => Ok(v as $target),
-                    )+
-                    _ => Err(ConvertError(format!("{} can't transfer to {}", self.to_string(), std::any::type_name::<$target>()))),
-                }
+        impl From<ParamValue> for $target where $target: Default {
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<$target> = val.into();
+                result.unwrap_or_default()
             }
         }
     };
@@ -243,26 +238,25 @@ impl_numeric_conversions!(DateTime<Local>: DateTime);
 
 // Blob (Vec<u8>)
 // 1. 值类型 -> Option<Vec<u8>>
-impl Into<Option<Vec<u8>>> for ParamValue {
-    fn into(self) -> Option<Vec<u8>> {
-        match self {
+
+impl From<ParamValue> for Option<Vec<u8>> {
+    fn from(val: ParamValue) -> Self {
+        match val {
             ParamValue::Blob(v) | ParamValue::Clob(v) => Some(v),
             _ => None,
         }
     }
 }
 
-// 2. 值类型 -> Vec<u8> (Result, 非 Option)
-impl TryInto<Vec<u8>> for ParamValue {
-    type Error = DatabaseError;
-
-    fn try_into(self) -> Result<Vec<u8>, Self::Error> {
-        match self {
-            ParamValue::Blob(v) | ParamValue::Clob(v) => Ok(v),
-            _ => Err(ConvertError(format!("{} can't transfer to Vec<u8>", self.to_string()))),
+impl From<ParamValue> for Vec<u8> {
+    fn from(val: ParamValue) -> Self {
+        match val {
+            ParamValue::Blob(v) | ParamValue::Clob(v) => v,
+            _ => Vec::new(),
         }
     }
 }
+// 2. 值类型 -> Vec<u8> (Result, 非 Option)
 
 impl ParamValue{
     

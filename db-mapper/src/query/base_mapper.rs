@@ -46,7 +46,7 @@ pub trait BaseMapper<E> where E: Entity{
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
-    async fn insert(&self, e: &E) -> Result<E::K,DatabaseError>{
+    async fn insert(&self, e: &E) -> Result<Option<E::K>,DatabaseError>{
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
         let (sql,param_vec) = db_type.gen_insert_one_sql(e);
         exec_tx!(db_type, sql.as_str(), &param_vec, E, insert)

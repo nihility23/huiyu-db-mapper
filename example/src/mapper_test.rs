@@ -1,8 +1,6 @@
-use db_mapper::query::base_mapper::BaseMapper;
 use db_mapper::base::entity::{ColumnInfo, Entity};
-use db_mapper::base::page::{Page, PageRes};
 use db_mapper::base::param::{get_param_value, ParamValue};
-use db_mapper::query::query_wrapper::QueryWrapper;
+use db_mapper::query::base_mapper::BaseMapper;
 pub struct UserMapper;
 
 pub struct UserEntity{

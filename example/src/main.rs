@@ -11,9 +11,9 @@ use db_mapper::query::query_wrapper::QueryWrapper;
 fn main() {
     let mut query_wrapper = QueryWrapper::<UserEntity>::new()
         .ge("age",ParamValue::I16(18))
-        .is_null("sex")
+        .null("sex")
         .like_left("name",ParamValue::String("zhangsan".to_string()))
-        .is_not_null("name");
+        .not_null("name");
 
 
     let (sql,params) = DbType::Sqlite.gen_query_sql(&mut query_wrapper);

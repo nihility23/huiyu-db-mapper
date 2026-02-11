@@ -24,6 +24,21 @@ macro_rules! exec_basic_tx {
     {
         tx: $tx:expr,
         sql: $sql:expr,
+        params: $params:expr
+    } => {{
+            let param_refs: Vec<&dyn ToSql> = $params
+                .as_slice()
+                .iter()
+                .map(|x| to_sql(x))
+                .collect();
+
+            let res = $tx.execute($sql,&*param_refs)?;
+            Ok(res as u64)
+    }};
+
+    {
+        tx: $tx:expr,
+        sql: $sql:expr,
         params: $params:expr,
         map: $mapper:expr,
         process: $processor:expr
@@ -73,33 +88,31 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
         exec_basic_tx!(tx: tx, sql: sql, params: params, map: |row| { Ok(row.get(0)?) }, process: |results: Vec<u64>| { Ok(results.into_iter().sum()) })
     }
 
-    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<E::K, DatabaseError> where E:Entity
+    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError> where E:Entity
     {
-        // exec_basic!(tx: tx, sql: sql, params: params, map: |row|{
-        //     let id: ParamValue = value_to_param_value(row.get_ref(0).unwrap()).unwrap();
-        //     Ok(id)
-        // }, process: |results: Vec<ParamValue>| {
-        //     if results.is_empty() {
-        //         return Ok(None);
-        //     }
-        //     Ok(Some(results.into_iter().next().unwrap()))
-        // })
-        todo!()
+        exec_basic_tx!(tx: tx, sql: sql, params: params,map: |row| {
+            let val = row.get_ref(0)?;
+            let param_value = value_to_param_value(val)?;
+            Ok(param_value) }, process: |results: Vec<ParamValue>| {
+            if results.is_empty(){
+                return Ok(None);
+            }
+            Ok(Some(results.into_iter().next().unwrap().try_into().unwrap())) })
     }
 
     fn insert_batch<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
     where
         E: Entity
     {
-        todo!()
+        exec_basic_tx!(tx: tx, sql: sql,  params: params)
     }
 
     fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
+        exec_basic_tx!(tx: tx, sql: sql, params: params)
     }
 
     fn update(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
+        exec_basic_tx!(tx: tx, sql: sql, params: params)
     }
 
     fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {

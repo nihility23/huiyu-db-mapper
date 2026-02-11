@@ -19,29 +19,29 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
     type T = Transaction<'a>;
 
     fn get_sql_executor() -> &'static Self {
-        todo!()
+        &MYSQL_SQL_EXECUTOR
     }
 
-     fn query_some<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    fn query_some<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {
         todo!()
     }
 
-     fn query_one<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    fn query_one<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
         E: Entity
     {
         todo!()
     }
 
-     fn query_count(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    fn query_count(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
     {
         todo!()
     }
 
-     fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<E::K, DatabaseError>
+    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<E::K, DatabaseError>
     where
         E: Entity
     {
@@ -55,60 +55,29 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
         todo!()
     }
 
-     fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 
-     fn update(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    fn update(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 
 
-     fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {
         todo!()
     }
 
-     fn commit(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    fn commit(&self, tx: &Self::T) -> Result<(), DatabaseError> {
         todo!()
     }
 
-     fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
         todo!()
     }
 
-     fn exec_tx(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    fn exec_tx(&self, tx: &Self::T) -> Result<(), DatabaseError> {
         todo!()
     }
-
-    //  fn query_some_tx<E,T>(&self, tx:T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
-    // where
-    //     E: Entity
-    // {
-    //     todo!()
-    // }
-    //
-    //  fn query_one_tx<E,T>(&self, tx:T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
-    // where
-    //     E: Entity
-    // {
-    //     todo!()
-    // }
-
-    //  fn insert_tx<T>(&self, tx:T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<ParamValue>, DatabaseError>
-    // {
-    //     todo!()
-    // }
-
-    //  fn start_transaction(&self) -> Result<(), DatabaseError> {
-    //     todo!()
-    // }
-    //
-    //  fn commit(&self) -> Result<(), DatabaseError> {
-    //     todo!()
-    // }
-    //
-    //  fn rollback(&self) -> Result<(), DatabaseError> {
-    //     todo!()
-    // }
 }
 

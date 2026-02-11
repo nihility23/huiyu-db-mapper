@@ -1,3 +1,4 @@
+use tokio::task;
 use crate::base::db_type::DbType;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
@@ -11,18 +12,25 @@ use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 pub trait BaseMapper<E> where E: Entity{
 
     // select * from $table_name where $id = ?
-     async fn select_by_key(&self, key: &E::K) -> Result<Option<E>,DatabaseError>{
+    async fn select_by_key(&self, key: &E::K) -> Result<Option<E>,DatabaseError>{
         let sql = format!("select * from {} where {} = ?", E::table_name(),E::key_name());
         let param:ParamValue = (key.clone()).into();
-
-        exec_tx!(sql.as_str(), &vec![param],query_one)
+        exec_tx!(sql.as_str(), &vec![param], query_one)
     }
 
     // select * from $table_name where $id in (?,...)
-    async fn select_by_keys(&self, keys: &Vec<E::K>) -> Result<Vec<E>,DatabaseError>{
-        let sql = format!("select * from {} where {} in ({})", E::table_name(),E::key_name(),vec!["?";keys.len()].join(","));
-        let param_vec:Vec<ParamValue> = keys.iter().map(|key| (key.clone()).into()).collect();
-        exec_tx!(sql.as_str(), &param_vec,query_some)
+    async fn select_by_keys(&self, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
+        let sql = format!(
+            "select * from {} where {} in ({})",
+            E::table_name(),
+            E::key_name(),
+            vec!["?"; keys.len()].join(",")
+        );
+        let param_vec: Vec<ParamValue> = keys.iter()
+            .map(|key| (key.clone()).into())
+            .collect();
+
+        exec_tx!(sql.as_str(), &param_vec, query_some)
     }
 
     // delete from $table_name where $id = ?
@@ -74,9 +82,9 @@ pub trait BaseMapper<E> where E: Entity{
         let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
         let (query_sql,total_sql,param_vec) = db_type.gen_page_sql(&page,query_wrapper);
+        let p1 = param_vec.clone();
         let total = exec_tx!(total_sql.as_str(), &param_vec,query_count)?;
-        let list = exec_tx!(query_sql.as_str(), &param_vec,query_some)?;
-        // let param_vec = vec![key.into()];
+        let list = exec_tx!(query_sql.as_str(), &p1,query_some)?;
         Ok(PageRes::new_from_records(total,page.page_size,list))
     }
 

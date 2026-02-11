@@ -17,6 +17,138 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
             e:PhantomData,
         }
     }
+
+    pub fn or_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized, F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+        if !condition {return self;}
+        self.or_wrapper(f)
+    }
+    pub fn and_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized,F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+        if !condition {return self;}
+        self.and_wrapper(f)
+    }
+
+    pub fn eq_when(self, condition: bool,column: &'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.eq(column,value)
+    }
+
+    pub fn lt_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.lt(column,value)
+    }
+
+    pub fn le_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.le(column,value)
+    }
+
+    pub fn gt_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.gt(column,value)
+    }
+
+    pub fn ge_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.ge(column,value)
+    }
+
+    pub fn ne_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.ne(column,value)
+    }
+
+    pub fn between_when(self,condition: bool,column:&'a str, start_value: ParamValue, end_value: ParamValue)->Self{
+        if !condition {return self;}
+        self.between(column,start_value,end_value)
+    }
+
+    pub fn order_by_desc_when(mut self,condition: bool,column: &'a str)->Self{
+        if !condition {return self;}
+        self.order_by_desc(column)
+    }
+
+    pub fn order_by_asc_when(mut self,condition: bool,column: &'a str)->Self{
+        if !condition {return self;}
+        self.order_by_asc(column)
+    }
+
+    pub fn order_by_when(mut self,condition: bool,column: &'a str, is_asc: bool)->Self{
+        if !condition {return self;}
+        self.order_by(column,is_asc)
+    }
+
+    pub fn like_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.like(column,value)
+    }
+
+    pub fn like_left_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.like_left(column,value)
+    }
+
+    pub fn like_right_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.like_right(column,value)
+    }
+
+    pub fn not_like_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.not_like(column,value)
+    }
+
+    pub fn not_like_left_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.not_like_left(column,value)
+    }
+
+    pub fn not_like_right_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+        if !condition {return self;}
+        self.not_like_right(column,value)
+    }
+
+    pub fn in_values_when(self,condition: bool,column:&'a str, values: Vec<ParamValue>)->Self{
+        if !condition {return self;}
+        self.in_values(column,values)
+    }
+
+    pub fn in_sql_when(self,condition: bool,column:&'a str, sql:&str)->Self{
+        if !condition {return self;}
+        self.in_sql(column,sql)
+    }
+
+    pub fn not_in_values_when(self,condition: bool,column:&'a str, sql:&str)->Self{
+        if !condition {return self;}
+        self.not_in_values(column,sql)
+    }
+
+    pub fn not_in_sql_when(self,condition: bool,column:&'a str, values: Vec<ParamValue>)->Self{
+        if !condition {return self;}
+        self.not_in_sql(column,values)
+    }
+
+    pub fn is_null_when(self,condition: bool,column:&'a str)->Self{
+        if !condition {return self;}
+        self.is_null(column)
+    }
+
+    pub fn is_not_null_when(self,condition: bool,column:&'a str)->Self{
+        if !condition {return self;}
+        self.is_not_null(column)
+    }
+
+    pub fn apply_sql_when(self, condition: bool,sql:&'a str, params: Vec<ParamValue>)->Self{
+
+        if !condition {return self;}
+        self.apply_sql(sql,params)
+    }
+
+    pub fn clear_when(mut self, condition: bool)->Self{
+        if condition {
+            self.query.clear();
+        }
+        self
+    }
     
     pub fn or_wrapper<F>(mut self, f: F)->Self where Self: Sized, F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         let mut sub_query_wrapper = QueryWrapper::new();
@@ -158,4 +290,5 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
     }
     
 }
+
 

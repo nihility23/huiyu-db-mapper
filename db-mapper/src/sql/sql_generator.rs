@@ -111,6 +111,10 @@ pub trait BaseSqlGenerator{
         (format!("delete from {} where {} = ?", E::table_name(),E::key_name()),k.clone().into())
     }
 
+    fn gen_delete_by_keys_sql<E>(&self,ks : &Vec<E::K>) ->(String,Vec<ParamValue>) where E:Entity{
+        (format!("delete from {} where {} in ({})", E::table_name(),E::key_name(),vec!["?";ks.len()].join(",")),ks.into_iter().map(|k| k.clone().into()).collect::<Vec<ParamValue>>())
+    }
+
     fn gen_update_by_key_sql<E>(&self,e: &E, is_update_null: bool) ->(String,Vec<ParamValue>) where E:Entity{
         let mut params = Vec::new();
         let mut update_sql_parts = Vec::new();

@@ -31,27 +31,25 @@ pub(crate) trait Executor{
 
     fn rollback(&self, tx:&Self::T) -> Result<(),DatabaseError>;
 
-    fn exec_tx(&self, tx:&Self::T) -> Result<(),DatabaseError>;
 }
 
 #[macro_export]
 macro_rules! exec_tx {
     // 模式1: 无实体类型参数
-    ($sql:expr, $params:expr, $f:tt) => {
-        exec_tx!(@inner $sql, $params, $f,)
+    ($db_type:expr,$sql:expr, $params:expr, $f:tt) => {
+        exec_tx!(@inner $db_type, $sql, $params, $f,)
     };
 
     // 模式2: 有实体类型参数
-    ($sql:expr, $params:expr, $e:ident, $f:tt) => {
-        exec_tx!(@inner $sql, $params, $f, $e)
+    ($db_type:expr,$sql:expr, $params:expr, $e:ident, $f:tt) => {
+        exec_tx!(@inner $db_type, $sql, $params, $f, $e)
     };
 
     // 内部实现 - 统一处理
-    (@inner $sql:expr, $params:expr, $f:tt, $($type_args:tt)?) => {{
+    (@inner $db_type:expr, $sql:expr, $params:expr, $f:tt, $($type_args:tt)?) => {{
         // 提前导入所有依赖
         use crate::sql::executor::Executor;
         use crate::db::mysql::mysql_executor::MysqlSqlExecutor;
-        use crate::pool::datasource::get_datasource_type;
         use r2d2_mysql::MySqlConnectionManager;
         use crate::pool::db_manager::DbManager;
         use r2d2::PooledConnection;
@@ -61,10 +59,10 @@ macro_rules! exec_tx {
         // 创建闭包执行数据库操作
         let db_operation = move || -> Result<_, DatabaseError> {
             // 获取数据库类型
-            let db_type = get_datasource_type()
-                .ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
+            // let db_type = get_datasource_type()
+            //     .ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
 
-            match db_type {
+            match $db_type {
                 DbType::Mysql => {
                     // 获取连接管理器
                     let manager = DbManager::get_instance()

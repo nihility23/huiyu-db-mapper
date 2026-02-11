@@ -116,10 +116,6 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
         tx.execute("ROLLBACK", params![])?;
         Ok(())
     }
-
-    fn exec_tx(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-        todo!()
-    }
 }
 
 fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, Error> {

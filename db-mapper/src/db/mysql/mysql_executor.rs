@@ -75,9 +75,5 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
     fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
         todo!()
     }
-
-    fn exec_tx(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-        todo!()
-    }
 }
 

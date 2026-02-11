@@ -142,7 +142,28 @@ pub trait BaseSqlGenerator{
 // }
 
 pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + WhereSqlGenerator {
+    fn gen_update_sql<E>(&self,e: &E,query_wrapper: &QueryWrapper<E>, is_update_null: bool) ->(String,Vec<ParamValue>) where E:Entity{
+        let mut params = Vec::new();
+        let mut update_sql_parts = Vec::new();
+        for column_info in E::get_column_infos(){
+            let value = e.get_value_by_column_name(column_info.column_name);
+            if is_update_null || value.is_not_null(){
+                update_sql_parts.push(format!("{} = ?", column_info.column_name));
+                params.push(value);
+            }else if column_info.fill_on_update && column_info.column_type==ColumnType::DateTime{
+                update_sql_parts.push(format!("{} = ?", column_info.column_name));
+                params.push(ParamValue::DateTime(Local::now()));
+            }
+        }
+        let (where_sql,param_types) = self.gen_where_sql(query_wrapper).unwrap();
+        params.extend(param_types);
+        (format!("update {} set {} where {}", E::table_name(),update_sql_parts.join(","),where_sql),params)
+    }
 
+    fn gen_delete_sql<E>(&self,query_wrapper: &QueryWrapper<E>) ->(String,Vec<ParamValue>) where E:Entity{
+        let (where_sql,params) = self.gen_where_sql(query_wrapper).unwrap();
+        (format!("delete from {} where {}", E::table_name(),where_sql),params)
+    }
     fn gen_query_column_sql<E>(&self, query_wrapper: &QueryWrapper<E>)-> String where E:Entity {
         if query_wrapper.query.select_include_columns.len() > 0{
             return query_wrapper.query.select_include_columns.join(",");

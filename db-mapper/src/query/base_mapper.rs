@@ -102,22 +102,18 @@ pub trait BaseMapper<E> where E: Entity{
     }
 
     // update $table_name set $column_name = ? where $column = ? ...
-    async fn update<'a>(&self, entity: &E, query_wrapper: &QueryWrapper<'a,E>) -> Result<u32,DatabaseError>{
-        // let db_type_opt = get_datasource_type();
-        // let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
-        //
-        // let (sql,param_vec) = db_type.gen_(e,false);
-        // exec_tx!(sql.as_str(), &param_vec,update)
-        todo!()
+    async fn update<'a>(&self, entity: &E, query_wrapper: &QueryWrapper<'a,E>) -> Result<u64,DatabaseError>{
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+        let (sql, param_vec) = db_type.gen_update_sql(entity, query_wrapper,false);
+        exec_tx!(sql.as_str(), &param_vec,update)
     }
 
     // delete from $table_name where $column = ? ...
-    async fn delete<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<u32,DatabaseError>{
-        // let db_type_opt = get_datasource_type();
-        // let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
-        //
-        // let (sql,param_vec) = db_type.gen_delete_sql::<E>(e,false);
-        // exec_tx!(sql.as_str(), &param_vec,update)
-        todo!()
+    async fn delete<'a>(&self, query_wrapper: &QueryWrapper<'a,E>) -> Result<u64,DatabaseError>{
+        let db_type_opt = get_datasource_type();
+        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
+        let (sql, param_vec) = db_type.gen_delete_sql(query_wrapper);
+        exec_tx!(sql.as_str(), &param_vec,delete)
     }
 }

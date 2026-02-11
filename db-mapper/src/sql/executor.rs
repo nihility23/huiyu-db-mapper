@@ -36,11 +36,19 @@ pub(crate) trait Executor{
 
 #[macro_export]
 macro_rules! exec_tx {
-    (
-        $sql:expr,
-        $params: expr,
-        $f: tt
-    ) => {{
+    // 模式1: 无实体类型参数
+    ($sql:expr, $params:expr, $f:tt) => {
+        exec_tx!(@inner $sql, $params, $f,)
+    };
+
+    // 模式2: 有实体类型参数
+    ($sql:expr, $params:expr, $e:ident, $f:tt) => {
+        exec_tx!(@inner $sql, $params, $f, $e)
+    };
+
+    // 内部实现 - 统一处理
+    (@inner $sql:expr, $params:expr, $f:tt, $($type_args:tt)?) => {{
+        // 提前导入所有依赖
         use crate::sql::executor::Executor;
         use crate::db::mysql::mysql_executor::MysqlSqlExecutor;
         use crate::pool::datasource::get_datasource_type;
@@ -48,86 +56,40 @@ macro_rules! exec_tx {
         use crate::pool::db_manager::DbManager;
         use r2d2::PooledConnection;
         use r2d2_mysql::mysql::TxOpts;
+        use tokio::task;
 
-        let result = task::spawn_blocking(move || -> Result<_, DatabaseError> {
-            let db_type_opt = get_datasource_type();
-            let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError(
-                "DataSource Not config !!!".to_string()
-            ))?;
+        // 创建闭包执行数据库操作
+        let db_operation = move || -> Result<_, DatabaseError> {
+            // 获取数据库类型
+            let db_type = get_datasource_type()
+                .ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
 
             match db_type {
                 DbType::Mysql => {
                     // 获取连接管理器
-                    let manager = DbManager::get_instance().ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
+                    let manager = DbManager::get_instance()
+                        .ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
 
                     // 获取连接
-                    let mut conn: PooledConnection<MySqlConnectionManager> = manager.get_conn()?;
+                    let mut conn: PooledConnection<MySqlConnectionManager> = manager.get_conn()
+                        .map_err(|e| DatabaseError::CommonError(e.to_string()))?;
 
                     // 开始事务
                     let tx = conn.start_transaction(TxOpts::default())
                         .map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {}", e)))?;
 
-                    // 执行查询
+                    // 执行查询 - 根据是否有类型参数选择调用方式
                     MysqlSqlExecutor::get_sql_executor()
-                        .$f(&tx, $sql, $params)
+                        .$f $(::<$type_args>)? (&tx, $sql, $params)
+                        .map_err(|e| DatabaseError::CommonError(e.to_string()))
                 },
                 _ => Err(DatabaseError::NotFoundError("Database type not supported".to_string()))
             }
-        })
-            .await;  // 这里返回 Result<Result<Option<E>, DatabaseError>, JoinError>
+        };
 
-        // 处理两层 Result
-        match result {
-            Ok(query_result) => query_result,  // 内层 Result<Option<E>, DatabaseError>
-            Err(join_error) => Err(DatabaseError::CommonError(format!("Task execution failed: {}", join_error))),
-        }
-    }};
-
-    (
-        $sql:expr,
-        $params: expr,
-        $e: ident,
-        $f: tt
-    ) => {{
-                        use crate::sql::executor::Executor;
-        use crate::db::mysql::mysql_executor::MysqlSqlExecutor;
-        use crate::pool::datasource::get_datasource_type;
-        use r2d2_mysql::MySqlConnectionManager;
-        use crate::pool::db_manager::DbManager;
-        use r2d2::PooledConnection;
-        use r2d2_mysql::mysql::TxOpts;
-
-        // 使用 tokio::task::spawn_blocking 执行阻塞操作
-        let result = task::spawn_blocking(move || -> Result<_, DatabaseError> {
-            let db_type_opt = get_datasource_type();
-            let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError(
-                "DataSource Not config !!!".to_string()
-            ))?;
-
-            match db_type {
-                DbType::Mysql => {
-                    // 获取连接管理器
-                    let manager = DbManager::get_instance().ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
-
-                    // 获取连接
-                    let mut conn: PooledConnection<MySqlConnectionManager> = manager.get_conn()?;
-
-                    // 开始事务
-                    let tx = conn.start_transaction(TxOpts::default())
-                        .map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {}", e)))?;
-
-                    // 执行查询
-                    MysqlSqlExecutor::get_sql_executor()
-                        .$f::<E>(&tx, $sql, $params)
-                },
-                _ => Err(DatabaseError::NotFoundError("Database type not supported".to_string()))
-            }
-        })
-            .await;  // 这里返回 Result<Result<Option<E>, DatabaseError>, JoinError>
-
-        // 处理两层 Result
-        match result {
-            Ok(query_result) => query_result,  // 内层 Result<Option<E>, DatabaseError>
+        // 在阻塞线程中执行并处理结果
+        match task::spawn_blocking(db_operation).await {
+            Ok(query_result) => query_result,
             Err(join_error) => Err(DatabaseError::CommonError(format!("Task execution failed: {}", join_error))),
         }
     }};

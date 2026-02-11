@@ -1,5 +1,3 @@
-use r2d2_mysql::MySqlConnectionManager;
-use rusqlite::fallible_iterator::FallibleIterator;
 use crate::base::db_type::DbType;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
@@ -57,17 +55,16 @@ pub trait BaseMapper<E> where E: Entity{
         let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
         let (sql,param_vec) = db_type.gen_insert_one_sql(e);
-        todo!()
+        exec_tx!(sql.as_str(), &param_vec,E,insert)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
-    async fn insert_batch(&self, entities: &Vec<E>) -> Result<u32,DatabaseError>{
+    async fn insert_batch(&self, entities: &Vec<E>) -> Result<u64,DatabaseError>{
         let db_type_opt = get_datasource_type();
         let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError("datasource type is null".to_string()))?;
 
         let (sql,param_vec) = db_type.gen_insert_batch_sql(entities);
-        // exec_tx!(sql.as_str(), &param_vec,insert::<E>)
-        todo!()
+        exec_tx!(sql.as_str(), &param_vec,E,insert_batch)
     }
 
     // select count(*) from (select * from $table_name where $column = ? ...)

@@ -48,6 +48,13 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
         todo!()
     }
 
+    fn insert_batch<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
      fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }

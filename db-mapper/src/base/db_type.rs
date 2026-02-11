@@ -88,4 +88,5 @@ impl PageSqlGenerator for DbType {
 
 impl BaseSqlGenerator for DbType {
     impl_db_method_generic!(gen_insert_and_get_id_sql<E>(e: &E) -> (String, Vec<ParamValue>)where E: Entity);
+    impl_db_method_generic!(gen_insert_batch_sql<E>(e_vec: &Vec<E>) -> (String, Vec<ParamValue>)where E: Entity);
 }

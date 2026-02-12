@@ -119,6 +119,9 @@ pub trait BaseSqlGenerator{
         let mut params = Vec::new();
         let mut update_sql_parts = Vec::new();
         for column_info in E::get_column_infos(){
+            if column_info.is_primary_key {
+                continue;
+            }
             let value = e.get_value_by_column_name(column_info.column_name);
             if is_update_null || value.is_not_null(){
                 update_sql_parts.push(format!("{} = ?", column_info.column_name));

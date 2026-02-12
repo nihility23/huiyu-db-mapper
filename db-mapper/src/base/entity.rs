@@ -37,6 +37,8 @@ pub struct ColumnInfo {
     pub fill_on_update: bool,
     // 当插入时候放入最新值，只有时间类型生效
     pub fill_on_insert: bool,
+    
+    pub is_primary_key: bool,
 }
 
 impl ColumnInfo {
@@ -46,6 +48,7 @@ impl ColumnInfo {
         column_type: ColumnType,
         fill_on_update: bool,
         fill_on_insert: bool,
+        is_primary_key: bool,
     ) -> Self {
         Self {
             field_name,
@@ -53,6 +56,7 @@ impl ColumnInfo {
             column_type,
             fill_on_update,
             fill_on_insert,
+            is_primary_key,
         }
     }
 }

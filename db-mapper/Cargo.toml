@@ -11,6 +11,7 @@ r2d2 = "0.8.10"
 r2d2_mysql = "25.0.0"
 r2d2_sqlite = "0.31.0"
 rusqlite = { version = "0.37.0",features = ["bundled"] }
+rustlog = "0.3.1"
 thiserror = "2.0.17"
 thread_local = "1.1.9"
 tokio = { version = "1.49.0" ,features = ["full"]}

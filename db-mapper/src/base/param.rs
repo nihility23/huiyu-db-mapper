@@ -23,6 +23,10 @@ pub enum ParamValue {
     Null,
 }
 
+/////
+/////  其他类型->ParamValue
+/////
+/////
 // 支持所有类型的宏版本
 macro_rules! impl_param_value {
     // 基本数值类型
@@ -117,6 +121,10 @@ where
         .unwrap_or(ParamValue::Null)
 }
 
+/////
+///// ParamValue->其他类型
+/////
+/////
 // 基础数值转换宏（只支持值类型，支持 Option 和非 Option）
 macro_rules! impl_numeric_conversions {
     // 支持多个源类型的转换

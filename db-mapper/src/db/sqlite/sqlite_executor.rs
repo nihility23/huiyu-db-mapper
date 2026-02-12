@@ -4,15 +4,9 @@ use crate::base::error::DatabaseError::CommonError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::Executor;
 use rusqlite::types::{Type, ValueRef};
-use rusqlite::{params, Error, Row, ToSql, Transaction};
-use std::cell::RefCell;
+use rusqlite::{Error, Row, ToSql, Transaction};
 use std::marker::PhantomData;
 use std::sync::OnceLock;
-use tokio::task_local;
-
-task_local! {
-    static TX: RefCell<Option<rusqlite::Transaction<'static>>>;
-}
 
 #[derive(Clone)]
 pub struct SqliteSqlExecutor<'a>{
@@ -20,46 +14,37 @@ pub struct SqliteSqlExecutor<'a>{
 }
 // 全局单例
 static SQLITE_SQL_EXECUTOR_CONFIG: OnceLock<SqliteSqlExecutor> = OnceLock::new();
-macro_rules! exec_basic_tx {
-    {
-        tx: $tx:expr,
-        sql: $sql:expr,
-        params: $params:expr
-    } => {{
-            let param_refs: Vec<&dyn ToSql> = $params
-                .as_slice()
-                .iter()
-                .map(|x| to_sql(x))
-                .collect();
 
-            let res = $tx.execute($sql,&*param_refs)?;
-            Ok(res as u64)
-    }};
+// 查询基本实现
+fn query_basic<F,Q,M,T>(tx: Transaction<'_>, sql: &str, params: &Vec<ParamValue>, f:F,q:Q) -> Result<T, DatabaseError> where F:FnMut(&Row<'_>) -> rusqlite::Result<M>, Q: Fn(Vec<M>) -> Result<T, DatabaseError> {
+    let mut stmt = tx.prepare(sql)?;
 
-    {
-        tx: $tx:expr,
-        sql: $sql:expr,
-        params: $params:expr,
-        map: $mapper:expr,
-        process: $processor:expr
-    } => {{
-            let mut stmt = $tx.prepare($sql)?;
+    let param_refs: Vec<&dyn ToSql> = params
+        .as_slice()
+        .iter()
+        .map(|x| to_sql(x))
+        .collect();
 
-            let param_refs: Vec<&dyn ToSql> = $params
-                .as_slice()
-                .iter()
-                .map(|x| to_sql(x))
-                .collect();
+    let rows = stmt.query_map(&*param_refs, f)?;
+    let mut results = Vec::new();
 
-            let rows = stmt.query_map(&*param_refs, $mapper)?;
-            let mut results = Vec::new();
+    for row in rows {
+        results.push(row?);
+    }
 
-            for row in rows {
-                results.push(row?);
-            }
+    q(results)
+}
 
-            $processor(results)
-    }};
+// 执行基本实现
+fn exec_basic(tx:Transaction<'_>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    let param_refs: Vec<&dyn ToSql> = params
+        .as_slice()
+        .iter()
+        .map(|x| to_sql(x))
+        .collect();
+    let res = tx.execute(sql,&*param_refs)?;
+    tx.commit()?;
+    Ok(res as u64)
 }
 
 impl<'a> Executor for SqliteSqlExecutor<'a> {
@@ -69,66 +54,66 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
         SQLITE_SQL_EXECUTOR_CONFIG.get_or_init(|| SqliteSqlExecutor { _t: PhantomData })
     }
 
-    fn query_some<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    fn query_some<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
     {
-        exec_basic_tx!(tx: tx, sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results) })
+        query_basic(tx, sql, params, make_e::<E>(), |results: Vec<E>| { Ok(results) })
     }
 
 
-    fn query_one<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    fn query_one<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
         E: Entity
     {
-        exec_basic_tx!(tx: tx, sql: sql, params: params, map: make_e::<E>(), process: |results: Vec<E>| { Ok(results.into_iter().next()) })
+        query_basic(tx, sql, params, make_e::<E>(), |results: Vec<E>| { Ok(results.into_iter().next()) })
     }
 
-    fn query_count(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        exec_basic_tx!(tx: tx, sql: sql, params: params, map: |row| { Ok(row.get(0)?) }, process: |results: Vec<u64>| { Ok(results.into_iter().sum()) })
+    fn query_count(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        query_basic(tx, sql, params, |row| { Ok(row.get(0)?) }, |results: Vec<u64>| { Ok(results.into_iter().sum()) })
     }
 
-    fn insert<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError> where E:Entity
+    fn insert<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError> where E:Entity
     {
-        exec_basic_tx!(tx: tx, sql: sql, params: params,map: |row| {
+        query_basic(tx, sql, params, |row| {
             let val = row.get_ref(0)?;
             let param_value = value_to_param_value(val)?;
-            Ok(param_value) }, process: |results: Vec<ParamValue>| {
+            Ok(param_value) },  |results: Vec<ParamValue>| {
             if results.is_empty(){
                 return Ok(None);
             }
             Ok(Some(results.into_iter().next().unwrap().try_into().unwrap())) })
     }
 
-    fn insert_batch<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    fn insert_batch<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
     where
         E: Entity
     {
-        exec_basic_tx!(tx: tx, sql: sql,  params: params)
+        exec_basic(tx, sql,  params)
     }
 
-    fn delete(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        exec_basic_tx!(tx: tx, sql: sql, params: params)
+    fn delete(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        exec_basic(tx, sql, params)
     }
 
-    fn update(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        exec_basic_tx!(tx: tx, sql: sql, params: params)
+    fn update(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        exec_basic(tx, sql, params)
     }
 
-    fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-        tx.execute("BEGIN", params![])?;
-        Ok(())
-    }
-
-    fn commit(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-        tx.execute("COMMIT", params![])?;
-        Ok(())
-    }
-
-    fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-        tx.execute("ROLLBACK", params![])?;
-        Ok(())
-    }
+    // fn start_transaction(&self, tx: Self::T) -> Result<(), DatabaseError> {
+    //     tx.execute("BEGIN", params![])?;
+    //     Ok(())
+    // }
+    //
+    // fn commit(&self, tx: Self::T) -> Result<(), DatabaseError> {
+    //     tx.execute("COMMIT", params![])?;
+    //     Ok(())
+    // }
+    //
+    // fn rollback(&self, tx: Self::T) -> Result<(), DatabaseError> {
+    //     tx.execute("ROLLBACK", params![])?;
+    //     Ok(())
+    // }
 }
 
 fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, Error> {

@@ -63,11 +63,11 @@ impl Entity for AppEntity {
 
     fn get_value_by_column_name(&self, column_name: &str) -> ParamValue {
         match column_name {
-            "id" => ParamValue::String(self.id.clone().unwrap_or_default()),
-            "app_name" => ParamValue::String(self.app_name.clone().unwrap_or_default()),
-            "app_key" => ParamValue::String(self.app_key.clone().unwrap_or_default()),
-            "app_secret" => ParamValue::String(self.app_secret.clone().unwrap_or_default()),
-            "create_time" => ParamValue::I64(self.create_time.unwrap_or_default()),
+            "id" => if self.id.is_none() { ParamValue::Null } else { ParamValue::String(self.id.clone().unwrap_or_default()) },
+            "app_name" => if self.app_name.is_none() { ParamValue::Null } else { ParamValue::String(self.app_name.clone().unwrap_or_default()) },
+            "app_key" => if self.app_key.is_none() { ParamValue::Null } else { ParamValue::String(self.app_key.clone().unwrap_or_default()) },
+            "app_secret" => if self.app_secret.is_none() { ParamValue::Null } else { ParamValue::String(self.app_secret.clone().unwrap_or_default()) },
+            "create_time" => if self.create_time.is_none() { ParamValue::Null } else { ParamValue::I64(self.create_time.unwrap_or_default()) },
             _ => panic!("Column name not found: {}", column_name),
         }
     }
@@ -89,11 +89,11 @@ impl Entity for AppEntity {
 
     fn get_column_infos() -> Vec<ColumnInfo> {
         vec![
-            ColumnInfo::new("id", "id", ColumnType::String, false, false),
-            ColumnInfo::new("app_name", "app_name", ColumnType::String, false, false),
-            ColumnInfo::new("app_key", "app_key", ColumnType::String, false, false),
-            ColumnInfo::new("app_secret", "app_secret", ColumnType::String, false, false),
-            ColumnInfo::new("create_time", "create_time", ColumnType::I64, false, false),
+            ColumnInfo::new("id", "id", ColumnType::String, false, false, true),
+            ColumnInfo::new("app_name", "app_name", ColumnType::String, false, false, false),
+            ColumnInfo::new("app_key", "app_key", ColumnType::String, false, false, false),
+            ColumnInfo::new("app_secret", "app_secret", ColumnType::String, false, false, false),
+            ColumnInfo::new("create_time", "create_time", ColumnType::I64, false, false, false),
         ]
     }
 }
@@ -133,7 +133,25 @@ pub async fn test(){
     pool
     });
 
+    let app_mapper = AppMapper{};
+    // query one
     let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
-    let res = AppMapper{}.select_one(&query_wrapper).await;
+    let res = app_mapper.select_one(&query_wrapper).await;
     println!("select one {:?}", res.unwrap());
+
+    // query list
+    let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
+    let res = app_mapper.select(&query_wrapper).await;
+    println!("select list {:?}", res.unwrap());
+
+    // select_by_key
+    let res = app_mapper.select_by_key(&"2".to_string()).await;
+    println!("select by key {:?}", res.unwrap());
+
+    // update by key
+    let mut entity = AppEntity::new();
+    entity.app_secret = Some(uuid::Uuid::new_v4().to_string().replace("-", ""));
+    entity.id = Some("2".to_string());
+    let res = app_mapper.update_by_key(&entity).await;
+    println!("update by key {:?}", res.unwrap());
 }

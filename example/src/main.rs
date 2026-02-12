@@ -10,9 +10,11 @@ use db_mapper::base::page::Page;
 use db_mapper::base::param::ParamValue;
 use db_mapper::query::query_wrapper::QueryWrapper;
 use crate::app_test::test;
-
+use rustlog::*;
 #[tokio::main]
 async fn main() {
+    set_target(Target::Stderr);
+    set_level(Level::Info);
     test().await;
     // let mut query_wrapper = QueryWrapper::<UserEntity>::new()
     //     .ge("age",ParamValue::I16(18))

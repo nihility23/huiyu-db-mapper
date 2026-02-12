@@ -18,7 +18,7 @@ where
             "datasource type is null".to_string(),
         ))?;
         let (sql, param_vec) = db_type.gen_select_by_key_sql::<E>(key.clone());
-        exec_tx!(db_type, sql.as_str(), &vec![param_vec], query_one)
+        exec_tx!(db_type, sql.as_str(), &vec![param_vec.clone()], query_one)
     }
 
     // select * from $table_name where $id in (?,...)
@@ -36,7 +36,7 @@ where
             "datasource type is null".to_string(),
         ))?;
         let (sql, param_vec) = db_type.gen_delete_by_key_sql::<E>(&key);
-        exec_tx!(db_type, sql.as_str(), &vec![param_vec], delete)
+        exec_tx!(db_type, sql.as_str(), &vec![param_vec.clone()], delete)
     }
 
     // delete from $table_name where $id in (?,...)

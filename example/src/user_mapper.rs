@@ -1,4 +1,4 @@
-use db_macros::{datasource};
+// use db_macros::{datasource};
 
 pub struct User {
     pub id: i32,
@@ -8,7 +8,7 @@ pub struct User {
 pub(crate) struct UserMapper;
 
 impl UserMapper{
-    #[datasource("name")]
+    // #[datasource("name")]
     pub async fn find_by_id(&self, id: i32) -> Option<User> {
         None
     }

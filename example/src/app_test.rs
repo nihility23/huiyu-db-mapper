@@ -1,4 +1,6 @@
 use r2d2_sqlite::SqliteConnectionManager;
+use rustlog::error;
+use db_macros::Entity;
 use db_mapper::base::config::DbConfig;
 use db_mapper::base::db_type::DbType;
 use db_mapper::base::entity::{ColumnInfo, ColumnType, Entity};
@@ -7,96 +9,101 @@ use db_mapper::pool::db_manager::DbManager;
 use db_mapper::query::base_mapper::BaseMapper;
 use db_mapper::query::query_wrapper::QueryWrapper;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,Entity)]
+#[table(name = "t_app")]
 pub struct AppEntity{
+    #[id(column = "id", auto_increment = true)]
     pub id: Option<String>,
+    #[field(column = "app_name")]
     pub app_name: Option<String>,
+    #[field(column = "app_key")]
     pub app_key: Option<String>,
+    #[field(column = "app_secret")]
     pub app_secret: Option<String>,
+    #[field(column = "create_time")]
     pub create_time: Option<i64>,
 }
 
-
-impl Entity for AppEntity {
-    type K = String;
-
-    fn key(&self) -> Self::K {
-        self.id.clone().unwrap_or_default()
-    }
-
-    fn key_name() -> &'static str {
-        "id"
-    }
-
-    fn column_names() -> Vec<&'static str> {
-        vec!["id", "app_name", "app_key", "app_secret", "create_time"]
-    }
-
-    fn field_names() -> Vec<&'static str> {
-        vec!["id", "app_name", "app_key", "app_secret", "create_time"]
-    }
-
-    fn table_name() -> &'static str {
-        "t_app"
-    }
-
-    fn new() -> Self {
-        AppEntity {
-            id: None,
-            app_name: None,
-            app_key: None,
-            app_secret: None,
-            create_time: None,
-        }
-    }
-
-    fn get_value_by_field_name(&self, field_name: &str) -> ParamValue {
-        match field_name {
-            "id" => ParamValue::String(self.id.clone().unwrap_or_default()),
-            "app_name" => ParamValue::String(self.app_name.clone().unwrap_or_default()),
-            "app_key" => ParamValue::String(self.app_key.clone().unwrap_or_default()),
-            "app_secret" => ParamValue::String(self.app_secret.clone().unwrap_or_default()      ),
-            "create_time" => ParamValue::I64(self.create_time.unwrap_or_default()),
-            _ => panic!("Field name not found: {}", field_name),
-        }
-    }
-
-    fn get_value_by_column_name(&self, column_name: &str) -> ParamValue {
-        match column_name {
-            "id" => if self.id.is_none() { ParamValue::Null } else { ParamValue::String(self.id.clone().unwrap_or_default()) },
-            "app_name" => if self.app_name.is_none() { ParamValue::Null } else { ParamValue::String(self.app_name.clone().unwrap_or_default()) },
-            "app_key" => if self.app_key.is_none() { ParamValue::Null } else { ParamValue::String(self.app_key.clone().unwrap_or_default()) },
-            "app_secret" => if self.app_secret.is_none() { ParamValue::Null } else { ParamValue::String(self.app_secret.clone().unwrap_or_default()) },
-            "create_time" => if self.create_time.is_none() { ParamValue::Null } else { ParamValue::I64(self.create_time.unwrap_or_default()) },
-            _ => panic!("Column name not found: {}", column_name),
-        }
-    }
-
-    fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue) {
-        match field_name {
-            "id" => self.id = Some(value.to_string()),
-            "app_name" => self.app_name = Some(value.to_string()),
-            "app_key" => self.app_key = Some(value.to_string()),
-            "app_secret" => self.app_secret = Some(value.to_string()),
-            "create_time" => self.create_time = value.into(),
-            _ => panic!("Field name not found: {}", field_name),
-        }
-    }
-
-    fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue) {
-        self.set_value_by_field_name(column_name, value)
-    }
-
-    fn get_column_infos() -> Vec<ColumnInfo> {
-        vec![
-            ColumnInfo::new("id", "id", ColumnType::String, false, false, true),
-            ColumnInfo::new("app_name", "app_name", ColumnType::String, false, false, false),
-            ColumnInfo::new("app_key", "app_key", ColumnType::String, false, false, false),
-            ColumnInfo::new("app_secret", "app_secret", ColumnType::String, false, false, false),
-            ColumnInfo::new("create_time", "create_time", ColumnType::I64, false, false, false),
-        ]
-    }
-}
+// impl Entity for AppEntity {
+//     type K = String;
+//
+//     fn key(&self) -> Self::K {
+//         self.id.clone().unwrap_or_default()
+//     }
+//
+//     fn key_name() -> &'static str {
+//         "id"
+//     }
+//
+//     fn column_names() -> Vec<&'static str> {
+//         vec!["id", "app_name", "app_key", "app_secret", "create_time"]
+//     }
+//
+//     fn field_names() -> Vec<&'static str> {
+//         vec!["id", "app_name", "app_key", "app_secret", "create_time"]
+//     }
+//
+//     fn table_name() -> &'static str {
+//         "t_app"
+//     }
+//
+//     fn new() -> Self {
+//         AppEntity {
+//             id: None,
+//             app_name: None,
+//             app_key: None,
+//             app_secret: None,
+//             create_time: None,
+//         }
+//     }
+//
+//     fn get_value_by_field_name(&self, field_name: &str) -> ParamValue {
+//         match field_name {
+//             "id" => if self.id.is_none() { ParamValue::Null } else { self.id.clone().unwrap().into() },
+//             "app_name" => if self.app_name.is_none() { ParamValue::Null } else { self.app_name.clone().unwrap().into() },
+//             "app_key" => if self.app_key.is_none() { ParamValue::Null } else { self.app_key.clone().unwrap().into() },
+//             "app_secret" => if self.app_secret.is_none() { ParamValue::Null } else { self.app_secret.clone().unwrap().into() },
+//             "create_time" => if self.create_time.is_none() { ParamValue::Null } else { self.create_time.clone().unwrap().into() },
+//             _ => ParamValue::Null,
+//         }
+//     }
+//
+//     fn get_value_by_column_name(&self, column_name: &str) -> ParamValue {
+//         match column_name {
+//             "id" => if self.id.is_none() { ParamValue::Null } else { self.id.clone().unwrap().into() },
+//             "app_name" => if self.app_name.is_none() { ParamValue::Null } else { self.app_name.clone().unwrap().into() },
+//             "app_key" => if self.app_key.is_none() { ParamValue::Null } else { self.app_key.clone().unwrap().into() },
+//             "app_secret" => if self.app_secret.is_none() { ParamValue::Null } else { self.app_secret.clone().unwrap().into() },
+//             "create_time" => if self.create_time.is_none() { ParamValue::Null } else { self.create_time.clone().unwrap().into() },
+//             _ => ParamValue::Null,
+//         }
+//     }
+//
+//     fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue) {
+//         match field_name {
+//             "id" => self.id = Some(value.to_string()),
+//             "app_name" => self.app_name = Some(value.to_string()),
+//             "app_key" => self.app_key = Some(value.to_string()),
+//             "app_secret" => self.app_secret = Some(value.to_string()),
+//             "create_time" => self.create_time = value.into(),
+//             _ => error!("Field name not found: {}", field_name),
+//         }
+//     }
+//
+//     fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue) {
+//         self.set_value_by_field_name(column_name, value)
+//     }
+//
+//     fn get_column_infos() -> Vec<ColumnInfo> {
+//         vec![
+//             ColumnInfo::new("id", "id", ColumnType::String, false, false, true),
+//             ColumnInfo::new("app_name", "app_name", ColumnType::String, false, false, false),
+//             ColumnInfo::new("app_key", "app_key", ColumnType::String, false, false, false),
+//             ColumnInfo::new("app_secret", "app_secret", ColumnType::String, false, false, false),
+//             ColumnInfo::new("create_time", "create_time", ColumnType::I64, false, false, false),
+//         ]
+//     }
+// }
 
 pub struct AppMapper;
 
@@ -154,4 +161,5 @@ pub async fn test(){
     entity.id = Some("2".to_string());
     let res = app_mapper.update_by_key(&entity).await;
     println!("update by key {:?}", res.unwrap());
+
 }

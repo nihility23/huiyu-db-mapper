@@ -10,9 +10,7 @@ use crate::base::page::Page;
 use crate::base::param::ParamValue;
 use crate::query::query_wrapper::QueryWrapper;
 use db_mapper::sql::sql_generator::QueryWrapperSqlGenerator;
-use db_macros::CheckAllOption;
 
-#[derive(CheckAllOption)]
 struct User{
     name:Option<String>,
     age:Option<u16>

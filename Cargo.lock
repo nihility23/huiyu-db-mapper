@@ -508,6 +508,8 @@ dependencies = [
  "r2d2_sqlite",
  "rusqlite",
  "rustlog",
+ "serde",
+ "serde_json",
  "thiserror 2.0.17",
  "thread_local",
  "tokio",

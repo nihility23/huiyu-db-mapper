@@ -1,5 +1,7 @@
 use r2d2_sqlite::SqliteConnectionManager;
 use rustlog::error;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use db_macros::Entity;
 use db_mapper::base::config::DbConfig;
 use db_mapper::base::db_type::DbType;
@@ -9,7 +11,7 @@ use db_mapper::pool::db_manager::DbManager;
 use db_mapper::query::base_mapper::BaseMapper;
 use db_mapper::query::query_wrapper::QueryWrapper;
 
-#[derive(Clone, Debug,Entity)]
+#[derive(Clone, Debug,Entity,Serialize,Deserialize)]
 #[table(name = "t_app")]
 pub struct AppEntity{
     #[id(column = "id", auto_increment = true)]
@@ -144,22 +146,25 @@ pub async fn test(){
     // query one
     let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
     let res = app_mapper.select_one(&query_wrapper).await;
-    println!("select one {:?}", res.unwrap());
+    let value = res.unwrap();
+    println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
 
     // query list
     let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
     let res = app_mapper.select(&query_wrapper).await;
-    println!("select list {:?}", res.unwrap());
+    let value = res.unwrap();
+    println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
 
     // select_by_key
     let res = app_mapper.select_by_key(&"2".to_string()).await;
-    println!("select by key {:?}", res.unwrap());
+    let value = res.unwrap();
+    println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
 
     // update by key
     let mut entity = AppEntity::new();
     entity.app_secret = Some(uuid::Uuid::new_v4().to_string().replace("-", ""));
     entity.id = Some("2".to_string());
     let res = app_mapper.update_by_key(&entity).await;
-    println!("update by key {:?}", res.unwrap());
+    println!("update by key {:?}", json!(res.unwrap()));
 
 }

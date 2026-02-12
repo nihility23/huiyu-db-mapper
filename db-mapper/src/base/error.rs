@@ -13,10 +13,10 @@ pub enum DatabaseError {
     ConvertError(String),
 
     // 三方库异常
-    #[error("R2d2 Error")]
+    #[error("R2d2 Error：{0}")]
     R2d2Error(#[from] r2d2::Error),
-    #[error("RusqliteError Error")]
+    #[error("RusqliteError Error: {0}")]
     RusqliteError(#[from] rusqlite::Error),
-    #[error("FromUtf8Error Error")]
+    #[error("FromUtf8Error Error: {0}")]
     StringConvertError(#[from] FromUtf8Error),
 }

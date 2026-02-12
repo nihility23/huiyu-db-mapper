@@ -236,7 +236,7 @@ pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + Where
                 Item(query_item) => {
                     match query_item {
                         QueryItem::Eq(column,param_value)=>{
-                            where_sql_vec.push(self.ge(column));
+                            where_sql_vec.push(self.eq(column));
                             query_value_vec.push(param_value.clone());
                         }
                         QueryItem::Ne(column,param_value)=>{

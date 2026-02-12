@@ -13,7 +13,7 @@ pub struct AppEntity{
     pub app_name: Option<String>,
     pub app_key: Option<String>,
     pub app_secret: Option<String>,
-    pub create_time: Option<u64>,
+    pub create_time: Option<i64>,
 }
 
 
@@ -56,7 +56,7 @@ impl Entity for AppEntity {
             "app_name" => ParamValue::String(self.app_name.clone().unwrap_or_default()),
             "app_key" => ParamValue::String(self.app_key.clone().unwrap_or_default()),
             "app_secret" => ParamValue::String(self.app_secret.clone().unwrap_or_default()      ),
-            "create_time" => ParamValue::U64(self.create_time.unwrap_or_default()),
+            "create_time" => ParamValue::I64(self.create_time.unwrap_or_default()),
             _ => panic!("Field name not found: {}", field_name),
         }
     }
@@ -67,7 +67,7 @@ impl Entity for AppEntity {
             "app_name" => ParamValue::String(self.app_name.clone().unwrap_or_default()),
             "app_key" => ParamValue::String(self.app_key.clone().unwrap_or_default()),
             "app_secret" => ParamValue::String(self.app_secret.clone().unwrap_or_default()),
-            "create_time" => ParamValue::U64(self.create_time.unwrap_or_default()),
+            "create_time" => ParamValue::I64(self.create_time.unwrap_or_default()),
             _ => panic!("Column name not found: {}", column_name),
         }
     }
@@ -93,7 +93,7 @@ impl Entity for AppEntity {
             ColumnInfo::new("app_name", "app_name", ColumnType::String, false, false),
             ColumnInfo::new("app_key", "app_key", ColumnType::String, false, false),
             ColumnInfo::new("app_secret", "app_secret", ColumnType::String, false, false),
-            ColumnInfo::new("create_time", "create_time", ColumnType::U64, false, false),
+            ColumnInfo::new("create_time", "create_time", ColumnType::I64, false, false),
         ]
     }
 }

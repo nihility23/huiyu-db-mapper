@@ -127,28 +127,3 @@ impl Query<'_> {
     }
 }
 
-// impl <CC>QueryItemGroup<CC>{
-//     pub(crate) fn to_sql<T>(&self)-> (String,Vec<ParamValue>) where T: WhereSqlGenerator{
-//         let mut param_type_vec = Vec::new();
-//         let mut where_sql_vec = Vec::new();
-//         for query_item in &self.query_items{
-//             match query_item {
-//                 QueryTypeItem(query_type) => {
-//                     match query_type {
-//                         QueryType::Eq(column, ParamValue)=>{
-//                             where_sql_vec.push(T::eq(column.as_str()));
-//                             param_type_vec.push(ParamValue.clone());
-//                         }
-//                         _=>{}
-//                     }
-//                 }
-//                 QueryTypeItemGroup(query_item_group) => {
-//                     let (sub_sql,sub_param_vec) = query_item_group.to_where_sql::<T>();
-//                     where_sql_vec.push(format!("({})",sub_sql));
-//                     param_type_vec.extend(sub_param_vec);
-//                 }
-//             }
-//         }
-//         (where_sql_vec.join(format!(" {} ",self.relation_type.to_sql_string()).as_str()),param_type_vec)
-//     }
-// }

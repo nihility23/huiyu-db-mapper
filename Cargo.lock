@@ -497,8 +497,18 @@ dependencies = [
 name = "example"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "db-macros",
  "db-mapper",
+ "lazy_static",
+ "r2d2",
+ "r2d2_mysql",
+ "r2d2_sqlite",
+ "rusqlite",
+ "thiserror 2.0.17",
+ "thread_local",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]

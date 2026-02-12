@@ -17,7 +17,7 @@ pub fn get_datasource_id() -> Option<String> {
     if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
         name.borrow().clone()
     } else {
-        None
+        Some("default".to_string())
     }
 }
 

@@ -220,20 +220,25 @@ impl_numeric_conversions!(bool: Bool);
 
 // 字符串（特殊处理）
 // 1. 值类型 -> Option<String>
-impl Into<Option<String>> for ParamValue {
-    fn into(self) -> Option<String> {
-        Some(self.to_string())
+impl From<ParamValue> for Option<String> {
+    fn from(val: ParamValue) -> Self {
+        match val {
+            ParamValue::String(v) => Some(v),
+            _ => None,
+        }
     }
 }
 
 // 2. 值类型 -> String (Result, 非 Option)
-impl TryInto<String> for ParamValue {
-    type Error = DatabaseError;
-
-    fn try_into(self) -> Result<String, Self::Error> {
-        Ok(self.to_string())
+impl From<ParamValue> for String {
+    fn from(val: ParamValue) -> Self {
+        match val {
+            ParamValue::String(v) => v,
+            _ => "".to_string(),
+        }
     }
 }
+
 
 // 日期时间
 impl_numeric_conversions!(DateTime<Local>: DateTime);

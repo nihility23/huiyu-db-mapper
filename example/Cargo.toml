@@ -6,3 +6,14 @@ edition = "2024"
 [dependencies]
 db-macros = {path = "../db-macros"}
 db-mapper = {path = "../db-mapper"}
+
+chrono = "0.4.42"
+lazy_static = "1.5.0"
+r2d2 = "0.8.10"
+r2d2_mysql = "25.0.0"
+r2d2_sqlite = "0.31.0"
+rusqlite = { version = "0.37.0",features = ["bundled"] }
+thiserror = "2.0.17"
+thread_local = "1.1.9"
+tokio = { version = "1.49.0" ,features = ["full"]}
+uuid = { version = "1.18.1",features = ["v4"] }

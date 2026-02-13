@@ -50,7 +50,7 @@ macro_rules! exec_tx {
 
                     // 执行查询 - 根据是否有类型参数选择调用方式
                     MysqlSqlExecutor::get_sql_executor()
-                        .$f $(::<$type_args>)? (tx, $sql, $params)
+                        .$f $(::<$type_args>)? (&tx, $sql, $params)
                         .map_err(|e| DatabaseError::CommonError(e.to_string()))
                 },
                 DbType::Sqlite => {
@@ -70,7 +70,7 @@ macro_rules! exec_tx {
 
                     // 执行查询 - 根据是否有类型参数选择调用方式
                     SqliteSqlExecutor::get_sql_executor()
-                        .$f $(::<$type_args>)? (tx, $sql, $params)
+                        .$f $(::<$type_args>)? (&tx, $sql, $params)
                         .map_err(|e| DatabaseError::CommonError(e.to_string()))
                 },
                 _ => Err(DatabaseError::NotFoundError("Database type not supported".to_string()))
@@ -90,25 +90,25 @@ pub(crate) trait Executor{
 
     fn get_sql_executor() -> &'static Self;
 
-    fn query_some<E>(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
+    fn query_some<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 
     // 查询单个结果
-    fn query_one<E>(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
+    fn query_one<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
 
-    fn query_count(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn query_count(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
     // 执行插入操作，返回主键
-    fn insert<E>(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
+    fn insert<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
 
-    fn insert_batch<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
+    fn insert_batch<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
 
-    fn delete(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn delete(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    fn update(&self, tx:Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn update(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    // fn start_transaction(&self, tx:Self::T) -> Result<(), DatabaseError>;
+    // fn start_transaction(&self, tx:&Self::T) -> Result<(), DatabaseError>;
     // 
-    // fn commit(&self, tx:Self::T) -> Result<(),DatabaseError>;
+    // fn commit(&self, tx:&Self::T) -> Result<(),DatabaseError>;
     // 
-    // fn rollback(&self, tx:Self::T) -> Result<(),DatabaseError>;
+    // fn rollback(&self, tx:&Self::T) -> Result<(),DatabaseError>;
 
 }

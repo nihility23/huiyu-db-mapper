@@ -95,6 +95,12 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
     let key_type = extract_inner_type(&id_field.field_type);
 
     let expanded = quote! {
+
+        use db_mapper::base::entity::ColumnType;
+        use db_mapper::base::entity::Entity;
+        use db_mapper::base::entity::ColumnInfo;
+        use db_mapper::base::param::ParamValue;
+
         impl Entity for #name {
             type K = #key_type;
 

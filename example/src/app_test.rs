@@ -1,16 +1,14 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use db_macros::Entity;
+use db_mapper::base::config::DbConfig;
+use db_mapper::base::db_type::DbType;
+use db_mapper::pool::db_manager::DbManager;
+use db_mapper::query::base_mapper::BaseMapper;
+use db_mapper::query::query_wrapper::QueryWrapper;
 use r2d2_sqlite::SqliteConnectionManager;
 use rustlog::error;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use db_macros::Entity;
-use db_mapper::base::config::DbConfig;
-use db_mapper::base::db_type::DbType;
-use db_mapper::base::entity::{ColumnInfo, ColumnType, Entity};
-use db_mapper::base::param::ParamValue;
-use db_mapper::pool::db_manager::DbManager;
-use db_mapper::query::base_mapper::BaseMapper;
-use db_mapper::query::query_wrapper::QueryWrapper;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug,Entity,Serialize,Deserialize)]
 #[table(name = "t_app")]
@@ -114,12 +112,13 @@ impl BaseMapper<AppEntity> for AppMapper {}
 
 #[cfg(test)]
 mod tests{
-    use r2d2_sqlite::SqliteConnectionManager;
+    use super::*;
     use db_mapper::base::config::DbConfig;
     use db_mapper::base::db_type::DbType;
     use db_mapper::pool::db_manager::DbManager;
     use db_mapper::query::query_wrapper::QueryWrapper;
-    use super::*;
+    use r2d2_sqlite::SqliteConnectionManager;
+    use db_mapper::base::param::ParamValue;
 
     #[test]
     fn test(){

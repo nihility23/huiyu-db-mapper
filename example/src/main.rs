@@ -3,6 +3,7 @@ use db_mapper::sql::sql_generator::QueryWrapperSqlGenerator;
 mod mapper_test;
 mod user_mapper;
 mod app_test;
+mod student_test;
 
 use crate::mapper_test::UserEntity;
 use db_mapper::base::db_type::DbType;

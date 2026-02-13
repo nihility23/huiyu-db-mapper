@@ -63,7 +63,14 @@ where
             "datasource type is null".to_string(),
         ))?;
         let (sql, param_vec) = db_type.gen_insert_one_sql(e);
-        exec_tx!(db_type, sql.as_str(), &param_vec, E, insert)
+        exec_tx!(db_type, sql.as_str(), &param_vec, E, insert);
+        for column_info in E::get_column_infos(){
+            if column_info.is_primary_key && column_info.is_auto_increment {
+                return Ok(Some(e.key().clone()));
+            }
+        }
+
+        Ok(Some(e.key().clone()))
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)

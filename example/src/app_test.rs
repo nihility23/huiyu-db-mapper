@@ -1,3 +1,4 @@
+use std::time::{SystemTime, UNIX_EPOCH};
 use r2d2_sqlite::SqliteConnectionManager;
 use rustlog::error;
 use serde::{Deserialize, Serialize};
@@ -166,5 +167,24 @@ pub async fn test(){
     entity.id = Some("2".to_string());
     let res = app_mapper.update_by_key(&entity).await;
     println!("update by key {:?}", json!(res.unwrap()));
+
+    // delete by key
+    let res = app_mapper.delete_by_key(&"2".to_string()).await;
+    println!("delete by key {:?}", json!(res.unwrap()));
+
+    // delete by wrapper
+    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
+    let res = app_mapper.delete(&query_wrapper).await;
+    println!("delete by wrapper {:?}", json!(res.unwrap()));
+
+    // insert
+    let mut entity = AppEntity::new();
+    entity.id = Some("13".to_string());
+    entity.app_name = Some("test".to_string());
+    entity.app_key = Some("test".to_string());
+    entity.app_secret = Some("test".to_string());
+    entity.create_time = Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64);
+    let res = app_mapper.insert(&entity).await;
+    println!("insert {:?}", json!(res.unwrap()));
 
 }

@@ -20,7 +20,9 @@ impl BaseSqlGenerator for SqliteSqlGenerator{
     where
         E: Entity
     {
-        todo!()
+        let (insert_sql, params) = self.gen_insert_one_sql(e);
+        let sql = format!("{} {};", insert_sql, " RETURNING id".to_string());
+        (sql, params)
     }
 }
 

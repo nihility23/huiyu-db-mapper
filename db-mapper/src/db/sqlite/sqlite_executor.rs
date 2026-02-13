@@ -75,14 +75,16 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
 
     fn insert<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError> where E:Entity
     {
-        query_basic(tx, sql, params, |row| {
-            let val = row.get_ref(0)?;
-            let param_value = value_to_param_value(val)?;
-            Ok(param_value) },  |results: Vec<ParamValue>| {
-            if results.is_empty(){
-                return Ok(None);
-            }
-            Ok(Some(results.into_iter().next().unwrap().try_into().unwrap())) })
+        // query_basic(tx, sql, params, |row| {
+        //     let val = row.get_ref(0)?;
+        //     let param_value = value_to_param_value(val)?;
+        //     Ok(param_value) },  |results: Vec<ParamValue>| {
+        //     if results.is_empty(){
+        //         return Ok(None);
+        //     }
+        //     Ok(Some(results.into_iter().next().unwrap().try_into().unwrap())) })
+        exec_basic(tx, sql, params);
+        Ok(None)
     }
 
     fn insert_batch<E>(&self, tx: Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>

@@ -1,9 +1,8 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use rustlog::info;
 use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Fields, Lit, LitStr, Type,
-    Error, spanned::Spanned,
+    parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Error, Fields, Lit,
+    LitStr, Type,
 };
 
 #[proc_macro_derive(Entity, attributes(id, field, table))]

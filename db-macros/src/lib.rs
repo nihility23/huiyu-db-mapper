@@ -53,9 +53,9 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
     // ============ 标识符（用于字段访问） ============
     let id_field_ident = format_ident!("{}", &id_field.field_name);
+    let id_column_info = generate_column_info(&id_field);
 
     // ============ 字符串字面量（用于返回值） ============
-    let id_field_name_lit = LitStr::new(&id_field.field_name, proc_macro2::Span::call_site());
     let id_column_name_lit = LitStr::new(&id_field.column_name, proc_macro2::Span::call_site());
 
     // 字段名列表 - 字符串字面量
@@ -104,6 +104,10 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
             fn key_name() -> &'static str {
                 #id_column_name_lit
+            }
+
+            fn key_info() -> Option<ColumnInfo> {
+                Some(#id_column_info)
             }
 
             fn column_names() -> Vec<&'static str> {
@@ -443,46 +447,90 @@ fn parse_bool_lit(meta: &ParseNestedMeta) -> Result<bool, syn::Error> {
 // }
 
 // 生成 ColumnInfo
+// fn generate_column_infos(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStream> {
+//     fields_info
+//         .iter()
+//         .map(|f| {
+//             let field_name_lit = LitStr::new(&f.field_name, proc_macro2::Span::call_site());
+//             let column_name_lit = LitStr::new(&f.column_name, proc_macro2::Span::call_site());
+//
+//             let is_nullable = f.is_nullable;
+//             let is_auto_increment = f.is_auto_increment;
+//             let is_id = f.is_id;
+//             let fill_on_update = f.fill_on_update;
+//             let fill_on_insert = f.fill_on_insert;
+//
+//             let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
+//             let column_type = infer_column_type(ty);
+//
+//             // 主键生成策略（保持为 Option<String>）
+//             let key_generate_type = match &f.key_generate_type {
+//                 Some(s) => {
+//                     let s_lit = LitStr::new(s, proc_macro2::Span::call_site());
+//                     quote! { Some(#s_lit.to_string()) }
+//                 }
+//                 None => quote! { None },
+//             };
+//
+//             quote! {
+//                 ColumnInfo {
+//                     field_name: #field_name_lit,
+//                     column_name: #column_name_lit,
+//                     column_type: #column_type,
+//                     is_nullable: #is_nullable,
+//                     is_auto_increment: #is_auto_increment,
+//                     is_primary_key: #is_id,
+//                     key_generate_type: #key_generate_type.into(),
+//                     fill_on_update: #fill_on_update,
+//                     fill_on_insert: #fill_on_insert,
+//                 }
+//             }
+//         })
+//         .collect()
+// }
+
 fn generate_column_infos(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStream> {
     fields_info
         .iter()
-        .map(|f| {
-            let field_name_lit = LitStr::new(&f.field_name, proc_macro2::Span::call_site());
-            let column_name_lit = LitStr::new(&f.column_name, proc_macro2::Span::call_site());
-
-            let is_nullable = f.is_nullable;
-            let is_auto_increment = f.is_auto_increment;
-            let is_id = f.is_id;
-            let fill_on_update = f.fill_on_update;
-            let fill_on_insert = f.fill_on_insert;
-
-            let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
-            let column_type = infer_column_type(ty);
-
-            // 主键生成策略（保持为 Option<String>）
-            let key_generate_type = match &f.key_generate_type {
-                Some(s) => {
-                    let s_lit = LitStr::new(s, proc_macro2::Span::call_site());
-                    quote! { Some(#s_lit.to_string()) }
-                }
-                None => quote! { None },
-            };
-
-            quote! {
-                ColumnInfo {
-                    field_name: #field_name_lit,
-                    column_name: #column_name_lit,
-                    column_type: #column_type,
-                    is_nullable: #is_nullable,
-                    is_auto_increment: #is_auto_increment,
-                    is_primary_key: #is_id,
-                    key_generate_type: #key_generate_type.into(),
-                    fill_on_update: #fill_on_update,
-                    fill_on_insert: #fill_on_insert,
-                }
-            }
-        })
+        .map(|f| generate_column_info(f))
         .collect()
+}
+
+fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
+    let field_name_lit = LitStr::new(&f.field_name, proc_macro2::Span::call_site());
+    let column_name_lit = LitStr::new(&f.column_name, proc_macro2::Span::call_site());
+
+    let is_nullable = f.is_nullable;
+    let is_auto_increment = f.is_auto_increment;
+    let is_id = f.is_id;
+    let fill_on_update = f.fill_on_update;
+    let fill_on_insert = f.fill_on_insert;
+
+    let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
+    let column_type = infer_column_type(ty);
+
+    // 主键生成策略（保持为 Option<String>）
+    let key_generate_type = match &f.key_generate_type {
+        Some(s) => {
+            let s_lit = LitStr::new(s, proc_macro2::Span::call_site());
+            quote! { Some(#s_lit.to_string()) }
+        }
+        None => quote! { None },
+    };
+
+    quote! {
+        ColumnInfo {
+            field_name: #field_name_lit,
+            column_name: #column_name_lit,
+            column_type: #column_type,
+            is_nullable: #is_nullable,
+            is_auto_increment: #is_auto_increment,
+            is_primary_key: #is_id,
+            key_generate_type: #key_generate_type.into(),
+            fill_on_update: #fill_on_update,
+            fill_on_insert: #fill_on_insert,
+        }
+    }
 }
 
 // 推断列类型

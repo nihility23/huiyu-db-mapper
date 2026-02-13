@@ -21,6 +21,10 @@ impl Entity for UserEntity {
 
     fn key_name() -> &'static str{"id"}
 
+    fn key_info() -> Option<ColumnInfo> {
+        todo!()
+    }
+
     fn column_names() -> Vec<&'static str> {
         vec!["ID","NAME","AGE","SEX"]
     }

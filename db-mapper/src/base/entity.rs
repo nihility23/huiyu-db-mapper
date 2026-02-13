@@ -8,6 +8,8 @@ pub trait Entity: Send + Sync + 'static {
     fn key(&self) -> Self::K;
 
     fn key_name() -> &'static str;
+    
+    fn key_info() -> Option<ColumnInfo>;
 
     fn column_names() -> Vec<&'static str>;
 

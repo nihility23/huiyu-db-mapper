@@ -20,3 +20,32 @@ pub fn set_transaction_id(tx_id: &str) {
         })
         .ok();
 }
+
+
+// 定义统一的事务 trait
+pub trait TransactionLike {
+    fn commit(&self) -> Result<(), Box<dyn std::error::Error>>;
+    fn rollback(&self) -> Result<(), Box<dyn std::error::Error>>;
+}
+
+// 为 MySQL Transaction 实现
+impl TransactionLike for r2d2_mysql::mysql::Transaction<'_> {
+    fn commit(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(self.commit()?)
+    }
+
+    fn rollback(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(self.rollback()?)
+    }
+}
+
+// 为 SQLite Transaction 实现
+impl TransactionLike for r2d2_sqlite::rusqlite::Transaction<'_> {
+    fn commit(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(self.commit()?)
+    }
+
+    fn rollback(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(self.rollback()?)
+    }
+}

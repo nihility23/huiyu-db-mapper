@@ -4,8 +4,6 @@ use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 
 use std::option::Option;
-use r2d2_mysql::mysql::Transaction;
-
 #[macro_export]
 macro_rules! exec_tx_with {
     // 模式1: 无实体类型参数
@@ -48,7 +46,7 @@ macro_rules! exec_tx_with {
                     // // 开始事务
                     // let tx = conn.start_transaction(TxOpts::default())
                     //     .map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {}", e)))?;
-                    let tx:&r2d2_mysql::mysql::Transaction = $tx;
+                    let tx:&r2d2_mysql::mysql::Transaction = $tx as &r2d2_mysql::mysql::Transaction;
                     // 执行查询 - 根据是否有类型参数选择调用方式
                     let res = MysqlSqlExecutor::get_sql_executor()
                         .$f $(::<$type_args>)? (tx, $sql, $params)
@@ -69,10 +67,10 @@ macro_rules! exec_tx_with {
                     // // 开始事务
                     // let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
                     //     .map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {}", e)))?;
-                    let tx:&rusqlite::Transaction = $tx;
+                    let tx:&rusqlite::Transaction = $tx as &rusqlite::Transaction;
                     // 执行查询 - 根据是否有类型参数选择调用方式
                     let res = SqliteSqlExecutor::get_sql_executor()
-                        .$f $(::<$type_args>)? ($tx, $sql, $params)
+                        .$f $(::<$type_args>)? (tx, $sql, $params)
                         .map_err(|e| DatabaseError::CommonError(e.to_string()));
                     res
                 },
@@ -87,6 +85,8 @@ macro_rules! exec_tx_with {
         }
     }};
 }
+
+use r2d2_mysql::mysql::Transaction;
 #[macro_export]
 macro_rules! exec_tx {
     // 模式1: 无实体类型参数

@@ -62,6 +62,18 @@ impl<'a> Executor for MysqlSqlExecutor<'a>{
         todo!()
     }
 
+    // fn start_transaction(&self) -> Result<Self::T, DatabaseError> {
+    //     todo!()
+    // }
+    // 
+    // fn commit(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+    // 
+    // fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+
 
     // fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {
     //     todo!()

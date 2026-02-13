@@ -9,6 +9,8 @@ use crate::query::query_wrapper::QueryWrapper;
 use r2d2::PooledConnection;
 use r2d2_mysql::MySqlConnectionManager;
 use r2d2_sqlite::SqliteConnectionManager;
+use crate::{exec_tx, exec_tx_with};
+use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 
 pub trait BaseMapperTx<E, Tx>
 where
@@ -16,191 +18,141 @@ where
 {
     type Tx;
     // select * from $table_name where $id = ?
-    fn select_by_key(&self, tx: Self::Tx, key: &E::K) -> Result<Option<E>, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        let k = key.clone();
-        // let param_vec:Vec<ParamValue> = vec![(*k).into()];
-        // 判断数据库类型，获取数据库执行器
-        // 获取数据库姓名
-
-        let db_type_opt = get_datasource_type();
-        let db_type = db_type_opt.ok_or(DatabaseError::NotFoundError(
-            "DataSource Not config !!!".to_string(),
+    async fn select_by_key(&self, tx: &Self::Tx, key: &E::K) -> Result<Option<E>, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
         ))?;
-
-        let tx_id_opt = get_transaction_id();
-        // 判断是否在事务里面，如果在事务里面则使用事务里面的数据库连接
-        match db_type {
-            // 获取当前数据库连接
-            // 执行查询
-            // 返回结果
-            DbType::Mysql => {
-                // 获取mysql数据库连接
-                let conn: PooledConnection<MySqlConnectionManager> =
-                    DbManager::get_instance().unwrap().get_conn()?;
-            }
-            DbType::Sqlite => {
-                // 获取sqlite数据库连接
-                let conn: PooledConnection<SqliteConnectionManager> =
-                    DbManager::get_instance().unwrap().get_conn()?;
-            }
-            DbType::Oracle => {
-                // 获取oracle数据库连接
-            }
-            DbType::Postgres => {
-                // 获取postgres数据库连接
-            }
-            DbType::SqlServer => {
-                // 获取sqlserver数据库连接
-            }
-        }
-
-        Ok(None)
+        let (sql, param_vec) = db_type.gen_select_by_key_sql::<E>(key.clone());
+        exec_tx_with!(tx, db_type, sql.as_str(), &vec![param_vec.clone()], query_one)
     }
 
     // select * from $table_name where $id in (?,...)
-    fn select_by_keys(&self, tx: Self::Tx, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} in ({})",
-            E::table_name(),
-            E::key_name(),
-            vec!["?"; keys.len()].join(",")
-        );
-        // let param_vec = keys.iter().map(|key|<E as Entity>::K as Into<ParamValue>>::into(key));
-        Ok(Vec::new())
+    async fn select_by_keys(&self, tx: &Self::Tx, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_select_by_keys_sql::<E>(keys.clone());
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_some)
     }
 
     // delete from $table_name where $id = ?
-    fn delete_by_key(&self, tx: Self::Tx, key: &E::K) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "delete from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![key.into()];
-        Ok(0)
+    async fn delete_by_key(&self, tx: &Self::Tx, key: &E::K) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_delete_by_key_sql::<E>(&key);
+        exec_tx_with!(tx, db_type, sql.as_str(), &vec![param_vec.clone()], delete)
     }
 
     // delete from $table_name where $id in (?,...)
-    fn delete_by_keys(&self, tx: Self::Tx, keys: &Vec<E::K>) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "delete from {} where {} in ({})",
-            E::table_name(),
-            E::key_name(),
-            vec!["?"; keys.len()].join(",")
-        );
-        // let param_vec = keys.iter().map(|key|key.into());
-        Ok(0)
+    async fn delete_by_keys(&self, tx: &Self::Tx, keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_delete_by_keys_sql::<E>(keys);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, delete)
     }
 
     // update $table_name set $column_name = ? where id = ?
-    fn update_by_key(&self, tx: Self::Tx, e: &E) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "update {} set {} where {} = ?",
-            E::table_name(),
-            "",
-            E::key_name()
-        );
-        // let param_vec = vec![e.key().into()];
-        Ok(0)
+    async fn update_by_key(&self, tx: &Self::Tx, e: &E) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_update_by_key_sql(e, false);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
-    fn insert(&self, tx: Self::Tx, entity: &E) -> Result<E::K, DatabaseError> {
-        let sql = format!(
-            "insert into {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![];
-        Ok(E::new().key())
+    async fn insert(&self, tx: &Self::Tx, entity: &E) -> Result<Option<E::K>, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(entity);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, E, insert)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
-    fn insert_batch(&self, tx: Self::Tx, entities: &Vec<E>) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![];
-        Ok(0)
+    async fn insert_batch(&self, tx: &Self::Tx, entities: &Vec<E>) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(entities);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, E, insert_batch)
     }
 
     // select count(*) from (select * from $table_name where $column = ? ...)
     // select * from $table_name where $column = ? ... limit ?,?
-    fn select_page(
+    async fn select_page(
         &self,
-        tx: Self::Tx,
+        tx: &Self::Tx,
         page: Page,
-        query_wrapper: &QueryWrapper<E>,
+        query_wrapper: &QueryWrapper<'_, E>,
     ) -> Result<PageRes<E>, DatabaseError> {
         // let param_vec = vec![key.into()];
         Ok(PageRes::new())
     }
 
     // select * from $table_name where $column = ? ...
-    fn select(
+    async fn select(
         &self,
-        tx: Self::Tx,
-        query_wrapper: &QueryWrapper<E>,
-    ) -> Result<Option<Vec<E>>, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![key.into()];
-        Ok(None)
+        tx: &Self::Tx,
+        query_wrapper: &QueryWrapper<'_, E>,
+    ) -> Result<Vec<E>, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_some)
     }
 
     // select * from $table_name where $column = ? ... limit 1
-    fn select_one(
+    async fn select_one(
         &self,
-        tx: Self::Tx,
-        query_wrapper: &QueryWrapper<E>,
+        tx: &Self::Tx,
+        query_wrapper: &QueryWrapper<'_, E>,
     ) -> Result<Option<E>, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![key.into()];
-        Ok(None)
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_one)
     }
 
     // update $table_name set $column_name = ? where $column = ? ...
-    fn update(
+    async fn update<'a>(
         &self,
-        tx: Self::Tx,
+        tx: &Self::Tx,
         entity: &E,
-        query_wrapper: &QueryWrapper<E>,
-    ) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![key.into()];
-        // 获取当前数据库类型
-        let db_type = DbType::Mysql;
-        // 获取查询语句
-        // <SqliteSqlGenerator as SqlGenerator>::gen_query_sql(&query_wrapper);
-        Ok(0)
+        query_wrapper: &QueryWrapper<'a,E>,
+    ) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_update_sql::<E>(entity, query_wrapper, false);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
+    }
+
+    async fn update_with_null<'a>(
+        &self,
+        tx: &Self::Tx,
+        entity: &E,
+        query_wrapper: &QueryWrapper<'a, E>,
+    ) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_update_sql(entity, query_wrapper, true);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
     }
 
     // delete from $table_name where $column = ? ...
-    fn delete(&self, tx: Self::Tx, query_wrapper: &QueryWrapper<E>) -> Result<u32, DatabaseError> {
-        let sql = format!(
-            "select * from {} where {} = ?",
-            E::table_name(),
-            E::key_name()
-        );
-        // let param_vec = vec![key.into()];
-        Ok(0)
+    async fn delete<'a>(&self, tx: &Self::Tx, query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
+        let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+            "datasource type is null".to_string(),
+        ))?;
+        let (sql, param_vec) = db_type.gen_delete_sql(query_wrapper);
+        exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, delete)
     }
+
+
 }

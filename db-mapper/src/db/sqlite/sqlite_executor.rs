@@ -7,6 +7,8 @@ use rusqlite::types::{Type, ValueRef};
 use rusqlite::{Error, Row, ToSql, Transaction};
 use std::marker::PhantomData;
 use std::sync::OnceLock;
+use r2d2::PooledConnection;
+use crate::pool::db_manager::DbManager;
 
 #[derive(Clone)]
 pub struct SqliteSqlExecutor<'a>{
@@ -98,20 +100,31 @@ impl<'a> Executor for SqliteSqlExecutor<'a> {
         exec_basic(tx, sql, params)
     }
 
-    // fn start_transaction(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-    //     tx.execute("BEGIN", params![])?;
-    //     Ok(())
+    // fn start_transaction(&self, conn: &mut Self::C) -> Result<Self::T, DatabaseError> {
+    //     // use crate::db::sqlite::sqlite_executor::SqliteSqlExecutor;
+    //     // use r2d2_sqlite::SqliteConnectionManager;
+    //     // // 获取连接管理器
+    //     // let manager = DbManager::get_instance()
+    //     //     .ok_or(DatabaseError::NotFoundError("DataSource Not config !!!".to_string()))?;
+    //     //
+    //     // // 获取连接
+    //     // let mut conn: PooledConnection<SqliteConnectionManager> = manager.get_conn()
+    //     //     .map_err(|e| DatabaseError::CommonError(e.to_string()))?;
+    //
+    //     // 开始事务
+    //     let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)
+    //         .map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {}", e)))?;
+    //     Ok(tx)
     // }
     //
     // fn commit(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-    //     tx.execute("COMMIT", params![])?;
-    //     Ok(())
+    //     todo!()
     // }
     //
     // fn rollback(&self, tx: &Self::T) -> Result<(), DatabaseError> {
-    //     tx.execute("ROLLBACK", params![])?;
-    //     Ok(())
+    //     todo!()
     // }
+
 }
 
 fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, Error> {

@@ -1,7 +1,9 @@
+use std::cmp::PartialEq;
 use crate::base::db_type::DbType;
-use crate::base::entity::Entity;
+use crate::base::entity::{Entity, KeyGenerateType};
 use crate::base::error::DatabaseError;
 use crate::base::page::{Page, PageRes};
+use crate::base::param::ParamValue;
 use crate::exec_tx;
 use crate::pool::datasource::get_datasource_type;
 use crate::query::query_wrapper::QueryWrapper;
@@ -58,19 +60,35 @@ where
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
-    async fn insert(&self, e: &E) -> Result<Option<E::K>, DatabaseError> {
+    async fn insert(&self, e: &mut E) -> Result<Option<E::K>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
-        let (sql, param_vec) = db_type.gen_insert_one_sql(e);
-        exec_tx!(db_type, sql.as_str(), &param_vec, E, insert);
-        for column_info in E::get_column_infos(){
-            if column_info.is_primary_key && column_info.is_auto_increment {
-                return Ok(Some(e.key().clone()));
-            }
+
+        let key_info = E::key_info();
+        if key_info.is_none() {
+            let (sql, param_vec) = db_type.gen_insert_one_sql(e);
+            return exec_tx!(db_type, sql.as_str(), &param_vec, E, insert);
+        }
+        let key_info = key_info.unwrap();
+        let mut key = None;
+        let key_generate_type = key_info.key_generate_type;
+
+        // 有自增
+        if key_info.is_auto_increment{
+            let (sql, param_vec) = db_type.gen_insert_and_get_id_sql(e);
+            return exec_tx!(db_type, sql.as_str(), &param_vec, E, insert);
         }
 
-        Ok(Some(e.key().clone()))
+        // 无自增:uuid
+        if key_generate_type == KeyGenerateType::UUID {
+            let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
+            e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
+            let (sql, param_vec) = db_type.gen_insert_one_sql(e);
+            exec_tx!(db_type, sql.as_str(), &param_vec, E, insert);
+            key = Some(ParamValue::String(uuid).into());
+        }
+        Ok(key)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)

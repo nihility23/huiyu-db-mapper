@@ -184,7 +184,7 @@ pub async fn test(){
     entity.app_key = Some("test".to_string());
     entity.app_secret = Some("test".to_string());
     entity.create_time = Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64);
-    let res = app_mapper.insert(&entity).await;
+    let res = app_mapper.insert(&mut entity).await;
     println!("insert {:?}", json!(res.unwrap()));
 
 }

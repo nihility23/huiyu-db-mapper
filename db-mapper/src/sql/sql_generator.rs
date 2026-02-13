@@ -136,8 +136,6 @@ pub trait BaseSqlGenerator{
     }
 
     fn gen_insert_and_get_id_sql<E>(&self, e: &E) ->(String,Vec<ParamValue>) where E:Entity;
-
-
 }
 
 // pub trait QueryWrapperSqlGenerator{

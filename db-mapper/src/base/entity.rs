@@ -8,7 +8,7 @@ pub trait Entity: Send + Sync + 'static {
     fn key(&self) -> Self::K;
 
     fn key_name() -> &'static str;
-    
+
     fn key_info() -> Option<ColumnInfo>;
 
     fn column_names() -> Vec<&'static str>;
@@ -42,11 +42,16 @@ pub trait Entity: Send + Sync + 'static {
     SQL Server	自增	useGeneratedKeys	-	或SCOPE_IDENTITY()
  */
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyGenerateType {
     None,
+    // mysql专用
     AutoIncrement,
+    // mysql,oracle
     UUID,
+    // mysql,oracle,postgresql,sqlserver
     UseGeneratedKeys,
+    // oracle,
     Sequence
 }
 

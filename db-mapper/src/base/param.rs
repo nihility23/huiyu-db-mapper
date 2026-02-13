@@ -144,6 +144,7 @@ macro_rules! impl_numeric_conversions {
                     $(
                         ParamValue::$src(v) => Some(v as $target),
                     )+
+                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
                     _ => None,
                 }
             }
@@ -156,6 +157,7 @@ macro_rules! impl_numeric_conversions {
                     $(
                         ParamValue::$src(v) => Some(*v as $target),
                     )+
+                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
                     _ => None,
                 }
             }
@@ -230,9 +232,10 @@ impl_numeric_conversions!(bool: Bool);
 // 1. 值类型 -> Option<String>
 impl From<ParamValue> for Option<String> {
     fn from(val: ParamValue) -> Self {
-        match val {
-            ParamValue::String(v) => Some(v),
-            _ => None,
+        if val.is_null() {
+            None
+        } else {
+            Some(val.to_string())
         }
     }
 }
@@ -240,9 +243,10 @@ impl From<ParamValue> for Option<String> {
 // 2. 值类型 -> String (Result, 非 Option)
 impl From<ParamValue> for String {
     fn from(val: ParamValue) -> Self {
-        match val {
-            ParamValue::String(v) => v,
-            _ => "".to_string(),
+        if val.is_null() {
+            "".to_string()
+        } else {
+            val.to_string()
         }
     }
 }

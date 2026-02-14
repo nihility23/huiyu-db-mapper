@@ -4,6 +4,7 @@ mod mapper_test;
 mod user_mapper;
 mod app_test;
 mod student_test;
+mod transaction_test;
 
 use crate::mapper_test::UserEntity;
 use db_mapper::base::db_type::DbType;

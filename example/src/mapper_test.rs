@@ -145,10 +145,6 @@ impl UserEntity{
     通过宏生成一下代码
 ***/
 impl BaseMapper<UserEntity> for UserMapper {
-    async fn select_by_key(&self, key: &i64) -> Result<Option<UserEntity>, db_mapper::base::error::DatabaseError> {
-        // select *from $table_name where $key = $key
-        return Ok(None)
-    }
 
    
 }

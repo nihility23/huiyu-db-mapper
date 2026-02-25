@@ -15,7 +15,7 @@ where
     E: Entity,
 {
     // select * from $table_name where $id = ?
-    async fn select_by_key(&self, key: &E::K) -> Result<Option<E>, DatabaseError> {
+    async fn select_by_key(key: &E::K) -> Result<Option<E>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -24,7 +24,7 @@ where
     }
 
     // select * from $table_name where $id in (?,...)
-    async fn select_by_keys(&self, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
+    async fn select_by_keys(keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -33,7 +33,7 @@ where
     }
 
     // delete from $table_name where $id = ?
-    async fn delete_by_key(&self, key: &E::K) -> Result<u64, DatabaseError> {
+    async fn delete_by_key(key: &E::K) -> Result<u64, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -42,7 +42,7 @@ where
     }
 
     // delete from $table_name where $id in (?,...)
-    async fn delete_by_keys(&self, keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
+    async fn delete_by_keys(keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -51,16 +51,16 @@ where
     }
 
     // update $table_name set $column_name = ? where id = ?
-    async fn update_by_key(&self, e: &E) -> Result<u64, DatabaseError> {
+    async fn update_by_key(e: &E) -> Result<u64, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
-        let (sql, param_vec) = db_type.gen_update_by_key_sql(e, false);
+        let (sql, param_vec) = db_type.gen_update_by_key_sql::<E>(e, false);
         exec_tx!(db_type, sql.as_str(), &param_vec, update)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
-    async fn insert(&self, e: &mut E) -> Result<Option<E::K>, DatabaseError> {
+    async fn insert(e: &mut E) -> Result<Option<E::K>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -92,7 +92,7 @@ where
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
-    async fn insert_batch(&self, entities: &Vec<E>) -> Result<u64, DatabaseError> {
+    async fn insert_batch(entities: &Vec<E>) -> Result<u64, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;
@@ -103,7 +103,6 @@ where
     // select count(*) from (select * from $table_name where $column = ? ...)
     // select * from $table_name where $column = ? ... limit ?,?
     async fn select_page<'a>(
-        &self,
         page: Page,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<PageRes<E>, DatabaseError> {
@@ -119,7 +118,6 @@ where
 
     // select * from $table_name where $column = ? ...
     async fn select<'a>(
-        &self,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Vec<E>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
@@ -131,7 +129,6 @@ where
 
     // select * from $table_name where $column = ? ... limit 1
     async fn select_one<'a>(
-        &self,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Option<E>, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
@@ -143,7 +140,6 @@ where
 
     // update $table_name set $column_name = ? where $column = ? ...
     async fn update<'a>(
-        &self,
         entity: &E,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<u64, DatabaseError> {
@@ -167,7 +163,7 @@ where
     }
 
     // delete from $table_name where $column = ? ...
-    async fn delete<'a>(&self, query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
+    async fn delete<'a>(query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
             "datasource type is null".to_string(),
         ))?;

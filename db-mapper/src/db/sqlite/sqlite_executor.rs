@@ -7,8 +7,6 @@ use rusqlite::types::{Type, ValueRef};
 use rusqlite::{Error, Row, ToSql, Transaction};
 use std::marker::PhantomData;
 use std::sync::OnceLock;
-use r2d2::PooledConnection;
-use crate::pool::db_manager::DbManager;
 
 #[derive(Clone)]
 pub struct SqliteSqlExecutor<'a>{

@@ -130,7 +130,7 @@ mod tests{
         });
 
         let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
-        let res = AppMapper{}.select_one(&query_wrapper);
+        let res = AppMapper::select_one(&query_wrapper);
     }
 }
 
@@ -142,21 +142,20 @@ pub async fn test(){
     pool
     });
 
-    let app_mapper = AppMapper{};
     // query one
     let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
-    let res = app_mapper.select_one(&query_wrapper).await;
+    let res = AppMapper::select_one(&query_wrapper).await;
     let value = res.unwrap();
     println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
 
     // query list
     let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
-    let res = app_mapper.select(&query_wrapper).await;
+    let res = AppMapper::select(&query_wrapper).await;
     let value = res.unwrap();
     println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
 
     // select_by_key
-    let res = app_mapper.select_by_key(&"2".to_string()).await;
+    let res = AppMapper::select_by_key(&"2".to_string()).await;
     let value = res.unwrap();
     println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
 
@@ -164,16 +163,16 @@ pub async fn test(){
     let mut entity = AppEntity::new();
     entity.app_secret = Some(uuid::Uuid::new_v4().to_string().replace("-", ""));
     entity.id = Some("2".to_string());
-    let res = app_mapper.update_by_key(&entity).await;
+    let res = AppMapper::update_by_key(&entity).await;
     println!("update by key {:?}", json!(res.unwrap()));
 
     // delete by key
-    let res = app_mapper.delete_by_key(&"2".to_string()).await;
+    let res = AppMapper::delete_by_key(&"2".to_string()).await;
     println!("delete by key {:?}", json!(res.unwrap()));
 
     // delete by wrapper
     let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
-    let res = app_mapper.delete(&query_wrapper).await;
+    let res = AppMapper::delete(&query_wrapper).await;
     println!("delete by wrapper {:?}", json!(res.unwrap()));
 
     // insert
@@ -183,7 +182,7 @@ pub async fn test(){
     entity.app_key = Some("test".to_string());
     entity.app_secret = Some("test".to_string());
     entity.create_time = Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64);
-    let res = app_mapper.insert(&mut entity).await;
+    let res = AppMapper::insert(&mut entity).await;
     println!("insert {:?}", json!(res.unwrap()));
 
 }

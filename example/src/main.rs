@@ -1,18 +1,16 @@
-use rusqlite::fallible_iterator::FallibleIterator;
+use std::time;
 use db_mapper::sql::sql_generator::QueryWrapperSqlGenerator;
+use rusqlite::fallible_iterator::FallibleIterator;
 mod mapper_test;
 mod user_mapper;
 mod app_test;
 mod student_test;
 mod transaction_test;
 
-use crate::mapper_test::UserEntity;
-use db_mapper::base::db_type::DbType;
-use db_mapper::base::page::Page;
-use db_mapper::base::param::ParamValue;
-use db_mapper::query::query_wrapper::QueryWrapper;
 use crate::app_test::test;
 use rustlog::*;
+use tokio::time::sleep;
+
 #[tokio::main]
 async fn main() {
     set_target(Target::Stderr);
@@ -43,4 +41,6 @@ async fn main() {
     // println!("Oracle page sql: {}",page_sql);
     // println!("Oracle total sql: {}",total_sql);
     // println!("Oracle params: {:?}",params);
+
+    sleep(time::Duration::from_secs(5)).await;
 }

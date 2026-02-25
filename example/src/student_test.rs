@@ -37,6 +37,6 @@ async fn test_student_mapper() {
         name: Some("张三".to_string()),
         age: Some(18),
     };
-    let res = student_mapper.insert(&mut student_entity).await;
+    let res = StudentMapper::insert(&mut student_entity).await;
     println!("insert res: {:?}", res.unwrap().unwrap());
 }

@@ -1,15 +1,13 @@
-// use crate::sql::pool::db_manager::DbManager;
 // use std::any::{Any, TypeId};
 // use std::cell::RefCell;
 // use std::collections::HashMap;
-// use std::sync::{Arc, OnceLock, RwLock};
+// use std::sync::{Arc, Mutex, OnceLock, RwLock};
 // use r2d2::PooledConnection;
-// use r2d2_mysql::MySqlConnectionManager;
 // use r2d2_sqlite::SqliteConnectionManager;
 // use uuid::Uuid;
 // use crate::base::db_type::DbType;
 // use crate::base::error::DatabaseError;
-// use crate::sql::executor::mysql_executor::MysqlSqlExecutor;
+// use crate::pool::db_manager::DbManager;
 //
 // thread_local! {
 //     static TX_ID_MAP: RefCell<Option<String>> = RefCell::new(None);
@@ -21,6 +19,11 @@
 // pub struct TxManager<T: Send + Sync>{
 //     tx_data: Arc<RwLock<T>>,
 //     tx_id: String,
+// }
+//
+// // 包装事务使其成为 Send
+// struct SendableTransaction<Tx> {
+//     tx: Arc<Mutex<Tx>>,
 // }
 //
 // impl<T: Send + Sync + 'static> TxManager<T>{
@@ -74,9 +77,9 @@
 //         DbType::Sqlite => {
 //             let tx = TxManager::get_instance(|| {
 //                 let db_manager = DbManager::get_instance().unwrap();
-//                 let mut conn:PooledConnection<SqliteConnectionManager> = db_manager.get().get().unwrap();
+//                 let mut conn:PooledConnection<SqliteConnectionManager> = db_manager.get_conn().unwrap();
 //                 let tx  = conn.transaction().unwrap();
-//                 tx
+//                 Arc::new(RwLock::new(tx))
 //             });
 //             Ok(tx)
 //         }

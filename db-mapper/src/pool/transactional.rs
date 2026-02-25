@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use tokio::task_local;
+use crate::base::db_type::DbType;
 
 task_local! {
     pub static TX_ID_REGISTRY: RefCell<Option<String>>;
@@ -49,3 +50,14 @@ impl TransactionLike for r2d2_sqlite::rusqlite::Transaction<'_> {
         Ok(self.rollback()?)
     }
 }
+
+impl TransactionLike for DbType{
+    fn commit(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+
+    fn rollback(&self) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+}
+

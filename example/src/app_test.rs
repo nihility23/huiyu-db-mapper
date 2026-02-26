@@ -143,16 +143,25 @@ pub async fn test(){
     });
 
     // query one
-    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("1".to_string()));
+    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("3".to_string()));
     let res = AppMapper::select_one(&query_wrapper).await;
-    let value = res.unwrap();
-    println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
+    if res.is_err(){
+        error!("Error: {}", res.err().unwrap());
+    }else {
+
+        let value = res.unwrap();
+        println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
+    }
 
     // query list
     let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
     let res = AppMapper::select(&query_wrapper).await;
-    let value = res.unwrap();
-    println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
+    if res.is_err(){
+        error!("Error: {}", res.err().unwrap());
+    }else {
+        let value = res.unwrap();
+        println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
+    }
 
     // select_by_key
     let res = AppMapper::select_by_key(&"2".to_string()).await;

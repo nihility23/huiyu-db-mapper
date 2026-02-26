@@ -231,29 +231,26 @@ macro_rules! exec {
 // }
 
 pub(crate) trait Executor{
-    type T;
-
-    fn get_sql_executor() -> &'static Self;
-
-    fn query_some<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
+    
+    fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 
     // 查询单个结果
-    fn query_one<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
+    fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
 
-    fn query_count(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
     // 执行插入操作，返回主键
-    fn insert<E>(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
+    fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
 
-    fn insert_batch<E>(&self, tx: &Self::T, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
+    fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
 
-    fn delete(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn delete(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    fn update(&self, tx:&Self::T, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    fn update(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    // fn start_transaction(&self, conn: &mut Self::C) -> Result<Self::T, DatabaseError>;
-    //
-    // fn commit(&self, tx:&Self::T) -> Result<(),DatabaseError>;
-    //
-    // fn rollback(&self, tx:&Self::T) -> Result<(),DatabaseError>;
+    fn start_transaction(&self) -> Result<(), DatabaseError>;
+    
+    fn commit(&self) -> Result<(),DatabaseError>;
+    
+    fn rollback(&self) -> Result<(),DatabaseError>;
 
 }

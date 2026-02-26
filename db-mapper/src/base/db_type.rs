@@ -1,11 +1,15 @@
 use crate::base::entity::Entity;
+use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
+use crate::db::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
 use crate::db::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
 use crate::db::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
 use crate::db::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
+use crate::db::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
 use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 use crate::db::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 use crate::db::sqlserver::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
+use crate::sql::executor::Executor;
 
 #[derive(Debug,Clone,Copy)]
 pub enum DbType{
@@ -89,4 +93,119 @@ impl PageSqlGenerator for DbType {
 impl BaseSqlGenerator for DbType {
     impl_db_method_generic!(gen_insert_and_get_id_sql<E>(e: &E) -> (String, Vec<ParamValue>)where E: Entity);
     impl_db_method_generic!(gen_insert_batch_sql<E>(e_vec: &Vec<E>) -> (String, Vec<ParamValue>)where E: Entity);
+}
+
+impl Executor for DbType {
+
+    fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    where
+        E: Entity
+    {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.query_some(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.query_some(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn query_one<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    where
+        E: Entity
+    {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.query_one(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.query_one(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn query_count(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.query_count(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.query_count(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn insert<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError>
+    where
+        E: Entity
+    {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.insert::<E>(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.insert::<E>(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    where
+        E: Entity
+    {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.insert_batch::<E>(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.insert_batch::<E>(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.delete(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.delete(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }       
+    }
+
+    fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.update(sql, params),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.update(sql, params),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn start_transaction(&self) -> Result<(), DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.start_transaction(),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.start_transaction(),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn commit(&self) -> Result<(), DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.commit(),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.commit(),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
+
+    fn rollback(&self) -> Result<(), DatabaseError> {
+        match self { 
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.rollback(),
+            DbType::Sqlite => SQLITE_SQL_EXECUTOR.rollback(),
+            DbType::Oracle => todo!(),
+            DbType::Postgres => todo!(),
+            DbType::SqlServer => todo!(),
+        }
+    }
 }

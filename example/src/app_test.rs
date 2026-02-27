@@ -116,12 +116,12 @@ pub async fn test(){
                 SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
                     conn_rc.borrow_mut().as_mut().unwrap().execute_batch("BEGIN IMMEDIATE").unwrap();
 
-                    AppMapper::update_by_key(&AppEntity{ id: Some("3".to_string()), app_secret: Some("11221".to_string()), ..Default::default() }).await;
-                    AppMapper::update_by_key(&AppEntity{ id: Some("13".to_string()), app_secret: Some("22222".to_string()), ..Default::default() }).await;
+                    AppMapper::update_by_key(&AppEntity{ id: Some("3".to_string()), app_secret: Some("11221222".to_string()), ..Default::default() }).await;
+                    AppMapper::update_by_key(&AppEntity{ id: Some("13".to_string()), app_secret: Some("22222222".to_string()), ..Default::default() }).await;
                     let res = AppMapper::select_one(&QueryWrapper::new().eq("id", ParamValue::String("3".to_string()))).await;
                     // insert
                     let mut entity = AppEntity::new();
-                    entity.id = Some("13".to_string());
+                    entity.id = Some("113".to_string());
                     entity.app_name = Some("test".to_string());
                     entity.app_key = Some("test".to_string());
                     entity.app_secret = Some("test".to_string());

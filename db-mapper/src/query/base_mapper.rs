@@ -20,7 +20,8 @@ async fn exec<E,F,P,BF,T>(f:F,bf:BF) -> Result<T, DatabaseError> where F:FnOnce(
     let db_operation = move || -> Result<T, DatabaseError> {
         bf(p)
     } ;
-    spawn_blocking(db_operation).await.unwrap_or_else(|join_error| Err(DatabaseError::CommonError(format!("Task execution failed: {}", join_error))))
+    db_operation()
+    // spawn_blocking(db_operation).await.unwrap_or_else(|join_error| Err(DatabaseError::CommonError(format!("Task execution failed: {}", join_error))))
 }
 
 #[allow(async_fn_in_trait)]

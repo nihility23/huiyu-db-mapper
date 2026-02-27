@@ -1,157 +1,275 @@
-// use crate::base::db_type::DbType;
-// use crate::base::entity::Entity;
-// use crate::base::error::DatabaseError;
-// use crate::base::page::{Page, PageRes};
-// use crate::pool::datasource::get_datasource_type;
-// use crate::pool::db_manager::DbManager;
-// use crate::pool::transactional::get_transaction_id;
-// use crate::query::query_wrapper::QueryWrapper;
-// use r2d2::PooledConnection;
-// use r2d2_mysql::MySqlConnectionManager;
-// use r2d2_sqlite::SqliteConnectionManager;
-// use crate::{exec_tx, exec_tx_with};
-// use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
-//
-// pub trait BaseMapperTx<E, Tx>
-// where
-//     E: Entity,
-// {
-//     // select * from $table_name where $id = ?
-//     async fn select_by_key(&self, tx: &Tx, key: &E::K) -> Result<Option<E>, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_select_by_key_sql::<E>(key.clone());
-//         exec_tx_with!(tx, db_type, sql.as_str(), &vec![param_vec.clone()], query_one)
-//     }
-//
-//     // select * from $table_name where $id in (?,...)
-//     async fn select_by_keys(&self, tx: &Tx, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_select_by_keys_sql::<E>(keys.clone());
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_some)
-//     }
-//
-//     // delete from $table_name where $id = ?
-//     async fn delete_by_key(&self, tx: &Tx, key: &E::K) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_delete_by_key_sql::<E>(&key);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &vec![param_vec.clone()], delete)
-//     }
-//
-//     // delete from $table_name where $id in (?,...)
-//     async fn delete_by_keys(&self, tx: &Tx, keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_delete_by_keys_sql::<E>(keys);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, delete)
-//     }
-//
-//     // update $table_name set $column_name = ? where id = ?
-//     async fn update_by_key(&self, tx: &Tx, e: &E) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_update_by_key_sql(e, false);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
-//     }
-//
-//     // insert $table_name into ($id,$column,...) values (?,?,...)
-//     async fn insert(&self, tx: &Tx, entity: &E) -> Result<Option<E::K>, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(entity);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, E, insert)
-//     }
-//
-//     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
-//     async fn insert_batch(&self, tx: &Tx, entities: &Vec<E>) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(entities);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, E, insert_batch)
-//     }
-//
-//     // select count(*) from (select * from $table_name where $column = ? ...)
-//     // select * from $table_name where $column = ? ... limit ?,?
-//     async fn select_page(
-//         &self,
-//         tx: &Tx,
-//         page: Page,
-//         query_wrapper: &QueryWrapper<'_, E>,
-//     ) -> Result<PageRes<E>, DatabaseError> {
-//         // let param_vec = vec![key.into()];
-//         Ok(PageRes::new())
-//     }
-//
-//     // select * from $table_name where $column = ? ...
-//     async fn select(
-//         &self,
-//         tx: &Tx,
-//         query_wrapper: &QueryWrapper<'_, E>,
-//     ) -> Result<Vec<E>, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_some)
-//     }
-//
-//     // select * from $table_name where $column = ? ... limit 1
-//     async fn select_one(
-//         &self,
-//         tx: &Tx,
-//         query_wrapper: &QueryWrapper<'_, E>,
-//     ) -> Result<Option<E>, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, query_one)
-//     }
-//
-//     // update $table_name set $column_name = ? where $column = ? ...
-//     async fn update<'a>(
-//         &self,
-//         tx: &Tx,
-//         entity: &E,
-//         query_wrapper: &QueryWrapper<'a,E>,
-//     ) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_update_sql::<E>(entity, query_wrapper, false);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
-//     }
-//
-//     async fn update_with_null<'a>(
-//         &self,
-//         tx: &Tx,
-//         entity: &E,
-//         query_wrapper: &QueryWrapper<'a, E>,
-//     ) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_update_sql(entity, query_wrapper, true);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, update)
-//     }
-//
-//     // delete from $table_name where $column = ? ...
-//     async fn delete<'a>(&self, tx: &Tx, query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
-//         let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-//             "datasource type is null".to_string(),
-//         ))?;
-//         let (sql, param_vec) = db_type.gen_delete_sql(query_wrapper);
-//         exec_tx_with!(tx, db_type, sql.as_str(), &param_vec, delete)
-//     }
-//
-//
-// }
+use std::cmp::PartialEq;
+use rusqlite::Transaction;
+use rustlog::info;
+use tokio::task::spawn_blocking;
+use crate::base::db_type::DbType;
+use crate::base::entity::{Entity, KeyGenerateType};
+use crate::base::error::DatabaseError;
+use crate::base::page::{Page, PageRes};
+use crate::base::param::ParamValue;
+use crate::db::mysql::mysql_executor_tx::MYSQL_SQL_EXECUTOR_TX;
+use crate::db::sqlite::sqlite_executor_tx::SQLITE_SQL_EXECUTOR_TX;
+use crate::exec_tx;
+use crate::pool::datasource::get_datasource_type;
+use crate::pool::transactional::TransactionType;
+use crate::query::query_wrapper::QueryWrapper;
+use crate::sql::executor::Executor;
+use crate::sql::executor_tx::ExecutorTx;
+use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
+
+async fn exec<E,F,P,BF,T>(tx:&TransactionType<'_>,f:F,bf:BF) -> Result<T, DatabaseError> where F:FnOnce(DbType)->P  ,BF:FnOnce(&TransactionType,P)->Result<T, DatabaseError>{
+    let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+        "datasource type is null".to_string(),
+    ))?;
+    let p = f(db_type);
+    bf(tx,p)
+}
+
+#[allow(async_fn_in_trait)]
+pub trait BaseMapperTx<E>
+where
+    E: Entity,
+{
+    // select * from $table_name where $id = ?
+    async fn select_by_key_tx(tx:&TransactionType<'_>, key: &E::K) -> Result<Option<E>, DatabaseError> {
+        let k = key.clone();
+        exec::<E, _,_,_, Option<E>>(tx,|db_type: DbType|{
+            let (sql, param_vec) = db_type.gen_select_by_key_sql::<E>(k);
+            (db_type,sql,param_vec)
+        },|tx,(db_type,sql,param_vec)|{
+            match db_type {
+                DbType::Mysql => {
+                    MYSQL_SQL_EXECUTOR_TX.query_one_tx(tx.get_mysql_tx(),sql.as_str(), &vec![param_vec.clone()])
+                }
+                DbType::Sqlite => {
+                    SQLITE_SQL_EXECUTOR_TX.query_one_tx(tx.get_sqlite_tx(),sql.as_str(), &vec![param_vec.clone()])
+                }
+                _ => {
+                    return Err(DatabaseError::CommonError(format!("not support")));
+                }
+            }
+
+        }).await
+    }
+
+    // select * from $table_name where $id in (?,...)
+    // async fn select_by_keys(tx:&TransactionType<'_>, keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
+    //     let ks = keys.clone();
+    //     exec::<E, _,_,_, Vec<E>>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_select_by_keys_sql::<E>(ks);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.query_some(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // // delete from $table_name where $id = ?
+    // async fn delete_by_key(tx:&TransactionType<'_>, key: &E::K) -> Result<u64, DatabaseError> {
+    //     let k = key.clone();
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_delete_by_key_sql::<E>(&k);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.delete(sql.as_str(),&vec![param_vec.clone()])
+    //     }).await
+    // }
+    // 
+    // // delete from $table_name where $id in (?,...)
+    // async fn delete_by_keys(tx:&TransactionType<'_>, keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
+    //     let ks = keys.clone();
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_delete_by_keys_sql::<E>(&ks);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.delete(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // // update $table_name set $column_name = ? where id = ?
+    // async fn update_by_key(tx:&TransactionType<'_>, e: &E) -> Result<u64, DatabaseError> {
+    //     let e = e.clone();
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_update_by_key_sql::<E>(&e,false);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.update(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // // insert $table_name into ($id,$column,...) values (?,?,...)
+    // async fn insert(tx:&TransactionType<'_>, e: &mut E) -> Result<Option<E::K>, DatabaseError> {
+    // 
+    //     let key_info = E::key_info();
+    //     if key_info.is_none() {
+    //         // exec::<E, _,_,_, Option<E::K>>(|db_type: DbType|{
+    //         //     let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(e);
+    //         //     db_type.insert::<E>(sql.as_str(), &param_vec)
+    //         // }).await;
+    //         exec::<E, _,_,_, Option<E::K>>(|db_type: DbType|{
+    //             let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(&e);
+    //             (db_type,sql,param_vec)
+    //         },|(db_type,sql,param_vec)|{
+    //             db_type.insert::<E>(sql.as_str(),&param_vec)
+    //         }).await;
+    //     }
+    //     let key_info = key_info.unwrap();
+    //     let mut key = None;
+    //     let key_generate_type = key_info.key_generate_type;
+    // 
+    //     // 有自增
+    //     if key_info.is_auto_increment{
+    //         return exec::<E, _,_,_, Option<E::K>>(|db_type: DbType|{
+    //             let (sql, param_vec) = db_type.gen_insert_and_get_id_sql::<E>(&e);
+    //             (db_type,sql,param_vec)
+    //         },|(db_type,sql,param_vec)|{
+    //             db_type.insert::<E>(sql.as_str(),&param_vec)
+    //         }).await;
+    //     }
+    // 
+    //     // 无自增:uuid
+    //     if key_generate_type == KeyGenerateType::UUID {
+    //         let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
+    //         e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
+    // 
+    //         exec::<E, _,_,_, Option<E::K>>(|db_type: DbType|{
+    //             let (sql, param_vec) = db_type.gen_insert_and_get_id_sql::<E>(&e);
+    //             (db_type,sql,param_vec)
+    //         },|(db_type,sql,param_vec)|{
+    //             db_type.insert::<E>(sql.as_str(),&param_vec)
+    //         }).await;
+    //         key = Some(ParamValue::String(uuid).into());
+    //     }
+    //     Ok(key)
+    // }
+    // 
+    // // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
+    // async fn insert_batch(tx:&TransactionType<'_>, entities: Vec<E>) -> Result<u64, DatabaseError> {
+    //     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+    //     //     "datasource type is null".to_string(),
+    //     // ))?;
+    //     // let (sql, param_vec) = db_type.gen_insert_batch_sql(entities);
+    //     // exec_tx!(db_type, sql.as_str(), &param_vec, E, insert_batch)
+    // 
+    //     // exec::<E, _, u64>(|db_type: DbType|{
+    //     //     let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(entities);
+    //     //     db_type.insert_batch::<E>(sql.as_str(),&param_vec)
+    //     // }).await
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(&entities);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.insert_batch::<E>(sql.as_str(),&param_vec)
+    //     }).await
+    // 
+    // }
+    // 
+    // // select count(*) from (select * from $table_name where $column = ? ...)
+    // // select * from $table_name where $column = ? ... limit ?,?
+    // async fn select_page<'a>(tx:&TransactionType<'_>,
+    //                          page: Page,
+    //     query_wrapper: &QueryWrapper<'a, E>,
+    // ) -> Result<PageRes<E>, DatabaseError> {
+    //     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+    //     //     "datasource type is null".to_string(),
+    //     // ))?;
+    //     // let (query_sql, total_sql, param_vec) = db_type.gen_page_sql(&page, query_wrapper);
+    //     // let p1 = param_vec.clone();
+    //     // let total = exec_tx!(db_type, total_sql.as_str(), &param_vec, query_count)?;
+    //     // let list = exec_tx!(db_type, query_sql.as_str(), &p1, query_some)?;
+    //     // Ok(PageRes::new_from_records(total, page.page_size, list))
+    // 
+    //     // exec::<E, _, PageRes<E>>(|db_type: DbType|{
+    //     //     // let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(entities);
+    //     //     // db_type.insert_batch::<E>(sql.as_str(),&param_vec)
+    //     //
+    //     //     let (query_sql, total_sql, param_vec) = db_type.gen_page_sql(&page, query_wrapper);
+    //     //     let p1 = param_vec.clone();
+    //     //     let total = db_type.query_count(total_sql.as_str(), &p1)?;
+    //     //     let list = db_type.query_some(query_sql.as_str(), &p1)?;
+    //     //     // let total = exec_tx!(db_type, total_sql.as_str(), &param_vec, query_count)?;
+    //     //     // let list = exec_tx!(db_type, query_sql.as_str(), &p1, query_some)?;
+    //     //     Ok(PageRes::new_from_records(total, page.page_size, list))
+    //     // }).await
+    //     exec::<E, _,_,_, PageRes<E>>(|db_type: DbType|{
+    //         let (query_sql, total_sql, param_vec) = db_type.gen_page_sql::<E>(&page, query_wrapper);
+    //         (db_type,query_sql,total_sql,param_vec,page.page_size)
+    //     },|(db_type,query_sql,total_sql,param_vec,page_size)|{
+    //         let total = db_type.query_count(total_sql.as_str(), &param_vec)?;
+    //         let list = db_type.query_some(query_sql.as_str(), &param_vec)?;
+    //         Ok(PageRes::new_from_records(total, page_size, list))
+    //     }).await
+    // }
+    // 
+    // // select * from $table_name where $column = ? ...
+    // async fn select<'a>(tx:&TransactionType<'_>,
+    //                     query_wrapper: &QueryWrapper<'a, E>,
+    // ) -> Result<Vec<E>, DatabaseError> {
+    //     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+    //     //     "datasource type is null".to_string(),
+    //     // ))?;
+    //     // let (query_sql, param_vec) = db_type.gen_query_sql(query_wrapper);
+    //     // exec_tx!(db_type, query_sql.as_str(), &param_vec, query_some)
+    // 
+    //     // exec::<E, _, u64>(|db_type: DbType|{
+    //     //     let (sql, param_vec) = db_type.gen_query_sql::<E>(entities);
+    //     //     db_type.insert_batch::<E>(sql.as_str(),&param_vec)
+    //     // }).await
+    //     exec::<E, _,_,_, Vec<E>>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
+    //         info!("sql: {}, param_vec: {:?}", sql, param_vec);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.query_some(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // // select * from $table_name where $column = ? ... limit 1
+    // async fn select_one<'a>(tx:&TransactionType<'_>,
+    //     query_wrapper: &QueryWrapper<'a, E>,
+    // ) -> Result<Option<E>, DatabaseError> {
+    //     exec::<E, _,_,_, Option<E>>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
+    //         info!("sql: {}, param_vec: {:?}", sql, param_vec);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.query_one(sql.as_str(),&param_vec)
+    //     }).await
+    // 
+    // }
+    // 
+    // // update $table_name set $column_name = ? where $column = ? ...
+    // async fn update<'a>(tx:&TransactionType<'_>,
+    //     e: &E,
+    //     query_wrapper: &QueryWrapper<'a, E>,
+    // ) -> Result<u64, DatabaseError> {
+    // 
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_update_sql::<E>(&e, query_wrapper, false);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.update(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // async fn update_with_null<'a>(tx:&TransactionType<'_>,
+    //     e: &E,
+    //     query_wrapper: &QueryWrapper<'a, E>,
+    // ) -> Result<u64, DatabaseError> {
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_update_sql::<E>(e, query_wrapper, true);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.update(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+    // 
+    // // delete from $table_name where $column = ? ...
+    // async fn delete<'a>(tx:&TransactionType<'_>, query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
+    //     exec::<E, _,_,_, u64>(|db_type: DbType|{
+    //         let (sql, param_vec) = db_type.gen_delete_sql::<E>(query_wrapper);
+    //         (db_type,sql,param_vec)
+    //     },|(db_type,sql,param_vec)|{
+    //         db_type.delete(sql.as_str(),&param_vec)
+    //     }).await
+    // }
+}

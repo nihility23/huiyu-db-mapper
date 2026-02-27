@@ -42,5 +42,5 @@ async fn main() {
     // println!("Oracle total sql: {}",total_sql);
     // println!("Oracle params: {:?}",params);
 
-    sleep(time::Duration::from_secs(5)).await;
+    sleep(time::Duration::from_millis(5)).await;
 }

@@ -3,6 +3,7 @@ use db_mapper::base::param::{get_param_value, ParamValue};
 use db_mapper::query::base_mapper::BaseMapper;
 pub struct UserMapper;
 
+#[derive(Clone)]
 pub struct UserEntity{
     id: Option<i64>,
     name: Option<String>,

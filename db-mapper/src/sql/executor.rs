@@ -230,27 +230,28 @@ macro_rules! exec {
 //     QF(&tx,sql,param_vec)
 // }
 
+
 pub(crate) trait Executor{
     
-    fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
+    async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 
     // 查询单个结果
-    fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
+    async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
 
-    fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
     // 执行插入操作，返回主键
-    fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
+    async fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
 
-    fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
+    async fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
 
-    fn delete(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn delete(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    fn update(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn update(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
-    fn start_transaction(&self) -> Result<(), DatabaseError>;
+    async fn start_transaction(&self) -> Result<(), DatabaseError>;
     
-    fn commit(&self) -> Result<(),DatabaseError>;
+    async fn commit(&self) -> Result<(),DatabaseError>;
     
-    fn rollback(&self) -> Result<(),DatabaseError>;
+    async fn rollback(&self) -> Result<(),DatabaseError>;
 
 }

@@ -13,12 +13,13 @@ use std::rc::Rc;
 use std::sync::Mutex;
 use std::sync::Arc;
 use rustlog::info;
+use tokio::task::spawn_blocking;
 use tokio::task_local;
 
 task_local! {
     // pub static SQLITE_TX_REGISTER : Arc<Mutex<(PooledConnection<SqliteConnectionManager>, Transaction<'static>)>>;
     // pub static SQLITE_CONN_REGISTER : Arc<Mutex<(PooledConnection<SqliteConnectionManager>)>>;
-    pub static SQLITE_CONN_REGISTER : Arc<RefCell<Option<PooledConnection<SqliteConnectionManager>>>>;
+    pub static SQLITE_CONN_REGISTER : Arc<PooledConnection<SqliteConnectionManager>>;
     // pub static SQLITE_CONN_REGISTER : Arc<Mutex<PooledConnection<SqliteConnectionManager>>>;
 }
 #[derive(Clone)]
@@ -60,98 +61,155 @@ fn execute(
 
 
 // 查询基本实现
-fn query_basic<T, R>(
-    sql: &str,
-    params: &Vec<ParamValue>,
+async fn query_basic<T, R>(
+    sql: String,
+    params: Vec<ParamValue>,
     f: fn(&Row) -> rusqlite::Result<T>,
     q: fn(Vec<T>) -> Result<R, DatabaseError>,
-) -> Result<R, DatabaseError> {
-    let res = SQLITE_CONN_REGISTER.try_with(|conn| {
-        info!("conn: {:?}", conn);
-        // conn 是 &RefCell<Option<PooledConnection<SqliteConnectionManager>>>
-        // 需要先 borrow，然后判断 Option
-        let conn_opt = conn.borrow();
-        if let Some(conn_ref) = conn_opt.as_ref() {
-            // 这里返回 conn_ref 的引用，但不能带生命周期
-            // 所以我们需要在闭包内完成操作
-            query(conn_ref, sql, params, f, q)
+) -> Result<R, DatabaseError> where T: Send + 'static, R:Send + 'static{
+    // let res = SQLITE_CONN_REGISTER.try_with(|conn| {
+    //     info!("conn: {:?}", conn);
+    //     // conn 是 &RefCell<Option<PooledConnection<SqliteConnectionManager>>>
+    //     // 需要先 borrow，然后判断 Option
+    //     let conn_opt = conn;
+    //     if let Some(conn_ref) = conn_opt.as_ref() {
+    //         // 这里返回 conn_ref 的引用，但不能带生命周期
+    //         // 所以我们需要在闭包内完成操作
+    //         query(conn_ref, sql, params, f, q)
+    //     } else {
+    //         Err(DatabaseError::CommonError(
+    //             "No connection available".to_string(),
+    //         ))
+    //     }
+    // });
+    //
+    // match res {
+    //     Ok(r) => r,
+    //     Err(_) => {
+    //         let conn = DbManager::get_instance().unwrap().get_conn()?;
+    //         query(&conn, sql, params, f, q)
+    //     }
+    // }
+    let db_operate = move || {
+        let conn_ref = SQLITE_CONN_REGISTER.try_get();
+        if conn_ref.is_ok() {
+            let conn = conn_ref.unwrap();
+            let conn = conn.as_ref();
+            query(conn, &sql, &params,f,q)  // 现在可以借用
         } else {
-            Err(DatabaseError::CommonError(
-                "No connection available".to_string(),
-            ))
-        }
-    });
-
-    match res {
-        Ok(r) => r,
-        Err(_) => {
             let conn = DbManager::get_instance().unwrap().get_conn()?;
-            query(&conn, sql, params, f, q)
+            query(&conn, &sql, &params,f,q)
         }
-    }
+    };
+
+    spawn_blocking(db_operate)
+        .await
+        .unwrap_or_else(|e| {
+            eprintln!("Error: {}", e);
+            Err(DatabaseError::CommonError("Blocking task failed".to_string()))
+        })
 }
 
+async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    let db_operate = move || {
+        let conn_ref = SQLITE_CONN_REGISTER.try_get();
+        if conn_ref.is_ok() {
+            let conn = conn_ref.unwrap();
+            let conn = conn.as_ref();
+            execute(conn, &sql, &params)  // 现在可以借用
+        } else {
+            let conn = DbManager::get_instance().unwrap().get_conn()?;
+            execute(&conn, &sql, &params)
+        }
+    };
+
+    spawn_blocking(db_operate)
+        .await
+        .unwrap_or_else(|e| {
+            eprintln!("Error: {}", e);
+            Err(DatabaseError::CommonError("Blocking task failed".to_string()))
+        })
+}
 // 执行基本实现
-fn exec_basic(sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-    let res = SQLITE_CONN_REGISTER.try_with(|conn| {
-        // conn 是 &RefCell<Option<PooledConnection<SqliteConnectionManager>>>
-        // 需要先 borrow，然后判断 Option
-        let conn_opt = conn.borrow();
-        if let Some(conn_ref) = conn_opt.as_ref() {
-            // 这里返回 conn_ref 的引用，但不能带生命周期
-            // 所以我们需要在闭包内完成操作
-            execute(conn_ref, sql, params)
-        } else {
-            Err(DatabaseError::CommonError(
-                "No connection available".to_string(),
-            ))
-        }
-    });
-
-    match res {
-        Ok(r) => r,
-        Err(_) => {
-            let conn = DbManager::get_instance().unwrap().get_conn()?;
-            execute(&conn, sql, params)
-        }
-    }
-}
+// async fn exec_basic(sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+//     let db_operate = move || {
+//         let  conn_ref = SQLITE_CONN_REGISTER.try_get();
+//         if(conn_ref.is_ok()){
+//             let conn = conn_ref.unwrap();
+//             let conn = conn.as_ref();
+//             execute(conn, sql, params)
+//         }else {
+//             let conn = DbManager::get_instance().unwrap().get_conn()?;
+//             execute(&conn, sql, params)
+//         }
+//     };
+//     spawn_blocking(db_operate).await.unwrap_or_else(|e| {
+//         eprintln!("Error: {}", e);
+//         Err(DatabaseError::CommonError("Blocking task failed".to_string()))
+//     })
+//
+//     // let res = SQLITE_CONN_REGISTER.try_with(async |conn| {
+//         // conn 是 &RefCell<Option<PooledConnection<SqliteConnectionManager>>>
+//         // 需要先 borrow，然后判断 Option
+//         // let conn_opt = conn.borrow();
+//         // if let Some(conn_ref) = conn_opt.as_ref() {
+//         //     // 这里返回 conn_ref 的引用，但不能带生命周期
+//         //     // 所以我们需要在闭包内完成操作
+//         //     spawn_blocking(move || {
+//         //         execute(conn_ref, sql, params)
+//         //     }).await
+//         //
+//         // } else {
+//         //     Err(DatabaseError::CommonError(
+//         //         "No connection available".to_string(),
+//         //     ))
+//         // }
+//     // });
+//
+//     // match res {
+//     //     Ok(r) => r,
+//     //     Err(_) => {
+//     //         let conn = DbManager::get_instance().unwrap().get_conn()?;
+//     //         execute(&conn, sql, params)
+//     //     }
+//     // }
+// }
 
 impl Executor for SqliteSqlExecutor {
-    fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity,
     {
-        query_basic::<E, Vec<E>>(sql, params, entity_mapper::<E>, |results: Vec<E>| {
+        query_basic::<E, Vec<E>>(sql.to_string(), params.to_vec(), entity_mapper::<E>, |results: Vec<E>| {
             Ok(results)
-        })
+        }).await
     }
 
-    fn query_one<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
+    async fn query_one<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
         E: Entity,
     {
-        query_basic(sql, params, entity_mapper::<E>, |results: Vec<E>| {
+        query_basic(sql.to_string(), params.to_vec(), entity_mapper::<E>, |results: Vec<E>| {
             Ok(results.into_iter().next())
-        })
+        }).await
     }
 
-    fn query_count(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn query_count(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         query_basic(
-            sql,
-            params,
+            sql.to_string(),
+            params.to_vec(),
             |row| Ok(row.get(0)?),
             |results: Vec<u64>| Ok(results.into_iter().sum()),
-        )
+        ).await
     }
 
-    fn insert<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError>
+    async fn insert<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError>
     where
         E: Entity,
     {
         query_basic(
-            sql,
-            params,
+            sql.to_string(),
+            params.to_vec(),
             |row| {
                 let val = row.get_ref(0)?;
                 value_to_param_value(val)
@@ -163,33 +221,33 @@ impl Executor for SqliteSqlExecutor {
                     Ok(Some(results[0].clone().into()))
                 }
             },
-        )
+        ).await
     }
 
-    fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    async fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
     where
         E: Entity,
     {
-        exec_basic(sql, params)
+        exec_basic(sql.to_string(), params.clone()).await
     }
 
-    fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        exec_basic(sql, params)
+    async fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        exec_basic(sql.to_string(), params.clone()).await
     }
 
-    fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        exec_basic(sql, params)
+    async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        exec_basic(sql.to_string(), params.clone()).await
     }
 
-    fn start_transaction(&self) -> Result<(), DatabaseError> {
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
         todo!()
     }
 
-    fn commit(&self) -> Result<(), DatabaseError> {
+    async fn commit(&self) -> Result<(), DatabaseError> {
         todo!()
     }
 
-    fn rollback(&self) -> Result<(), DatabaseError> {
+    async fn rollback(&self) -> Result<(), DatabaseError> {
         todo!()
     }
 }

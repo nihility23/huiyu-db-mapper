@@ -112,7 +112,7 @@ pub async fn test(){
             DbType::Sqlite=>{
                 let db_manager = DbManager::<SqliteConnectionManager>::get_instance().unwrap();
                 let mut conn: PooledConnection<SqliteConnectionManager> = db_manager.get_conn().unwrap();
-                let mut conn_rc = Arc::new(RefCell::new(Some(conn)));
+                let mut conn_rc = Arc::new(Some(conn));
                 SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
                     conn_rc.borrow_mut().as_mut().unwrap().execute_batch("BEGIN IMMEDIATE").unwrap();
 

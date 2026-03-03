@@ -57,10 +57,10 @@ where
     // delete from $table_name where $id = ?
     async fn delete_by_key(key: &E::K) -> Result<u64, DatabaseError> {
         let k = key.clone();
-        exec::<E, _,_,_, u64>(|db_type: DbType|{
+        exec::<E, _,_,_,_, u64>(|db_type: DbType|{
             let (sql, param_vec) = db_type.gen_delete_by_key_sql::<E>(&k);
             (db_type,sql,param_vec)
-        }, |(db_type,sql,param_vec)|{
+        }, async |(db_type,sql,param_vec)|{
             db_type.delete(sql.as_str(),&vec![param_vec.clone()]).await    
         }).await
     }

@@ -13,7 +13,7 @@ lazy_static! {
     static ref DB_TYPE_REGISTRY: RwLock<HashMap<String, DbType>> = RwLock::new(HashMap::new());
 }
 
-pub fn get_datasource_id() -> Option<String> {
+pub fn get_datasource_name() -> Option<String> {    
     if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
         name.borrow().clone()
     } else {
@@ -30,7 +30,7 @@ pub fn get_datasource_type_by_name(name: &str) -> Option<DbType> {
 }
 
 pub fn get_datasource_type() -> Option<DbType> {
-    if let Some(name) = get_datasource_id() {
+    if let Some(name) = get_datasource_name() {
         get_datasource_type_by_name(name.as_str())
     } else {
         None

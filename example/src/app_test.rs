@@ -60,7 +60,7 @@ mod tests{
     #[test]
     fn test(){
         let db_config = DbConfig::new(DbType::Sqlite, None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()), None, None, None, "default".to_string());
-        DbManager::register_db(&db_config, |db_config|{
+        DbManager::initialize(&vec![db_config], |db_config|{
             let manager = SqliteConnectionManager::file(db_config.database.clone().unwrap().to_string());
             let pool = r2d2::Pool::new(manager).expect("Failed to create pool");
             pool
@@ -73,7 +73,7 @@ mod tests{
 
 pub async fn test(){
     let db_config = DbConfig::new(DbType::Sqlite, None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()), None, None, None, "default".to_string());
-    DbManager::register_db(&db_config, |db_config|{
+    DbManager::initialize(&vec![db_config], |db_config|{
     let manager = SqliteConnectionManager::file(db_config.database.clone().unwrap().to_string());
     let pool = r2d2::Pool::new(manager).expect("Failed to create pool");
     pool
@@ -110,11 +110,12 @@ pub async fn test(){
         )).unwrap();
         match db_type {
             DbType::Sqlite=>{
-                let db_manager = DbManager::<SqliteConnectionManager>::get_instance().unwrap();
-                let mut conn: PooledConnection<SqliteConnectionManager> = db_manager.get_conn().unwrap();
-                let mut conn_rc = Arc::new(Some(conn));
+                // let db_manager = DbManager::<SqliteConnectionManager>::get_instance().unwrap();
+                // let mut conn: PooledConnection<SqliteConnectionManager> = db_manager.get_inner_conn().unwrap();
+                let conn:PooledConnection<SqliteConnectionManager> = DbManager::get_conn().unwrap();
+                let mut conn_rc = Arc::new(conn);
                 SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
-                    conn_rc.borrow_mut().as_mut().unwrap().execute_batch("BEGIN IMMEDIATE").unwrap();
+                    conn_rc.execute_batch("BEGIN IMMEDIATE").unwrap();
 
                     AppMapper::update_by_key(&AppEntity{ id: Some("3".to_string()), app_secret: Some("11221222".to_string()), ..Default::default() }).await;
                     AppMapper::update_by_key(&AppEntity{ id: Some("13".to_string()), app_secret: Some("22222222".to_string()), ..Default::default() }).await;
@@ -129,10 +130,10 @@ pub async fn test(){
                     let res = AppMapper::insert(&mut entity).await;
                     if res.is_err(){
                         error!("rollback Error: {}", res.err().unwrap());
-                        conn_rc.borrow_mut().as_mut().unwrap().execute_batch("ROLLBACK").unwrap();
+                        conn_rc.execute_batch("ROLLBACK").unwrap();
                     }else{
                         info!("commit transaction");
-                        conn_rc.borrow_mut().as_mut().unwrap().execute_batch("COMMIT").unwrap();
+                        conn_rc.execute_batch("COMMIT").unwrap();
                     }
 
                 }).await;

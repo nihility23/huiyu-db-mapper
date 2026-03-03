@@ -97,7 +97,7 @@ async fn query_basic<T, R>(
             let conn = conn.as_ref();
             query(conn, &sql, &params,f,q)  // 现在可以借用
         } else {
-            let conn = DbManager::get_instance().unwrap().get_conn()?;
+            let conn = DbManager::get_conn()?;
             query(&conn, &sql, &params,f,q)
         }
     };
@@ -111,14 +111,14 @@ async fn query_basic<T, R>(
 }
 
 async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    let conn_ref = SQLITE_CONN_REGISTER.try_get();
     let db_operate = move || {
-        let conn_ref = SQLITE_CONN_REGISTER.try_get();
         if conn_ref.is_ok() {
             let conn = conn_ref.unwrap();
             let conn = conn.as_ref();
             execute(conn, &sql, &params)  // 现在可以借用
         } else {
-            let conn = DbManager::get_instance().unwrap().get_conn()?;
+            let conn = DbManager::get_conn()?;
             execute(&conn, &sql, &params)
         }
     };

@@ -4,8 +4,6 @@ use crate::base::error::DatabaseError::CommonError;
 use crate::base::param::ParamValue;
 use crate::pool::db_manager::DbManager;
 use crate::sql::executor::Executor;
-use r2d2::PooledConnection;
-use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::types::{Type, ValueRef};
 use rusqlite::{Error, Row, ToSql, Transaction};
 use std::cell::RefCell;
@@ -19,7 +17,7 @@ use tokio::task_local;
 task_local! {
     // pub static SQLITE_TX_REGISTER : Arc<Mutex<(PooledConnection<SqliteConnectionManager>, Transaction<'static>)>>;
     // pub static SQLITE_CONN_REGISTER : Arc<Mutex<(PooledConnection<SqliteConnectionManager>)>>;
-    pub static SQLITE_CONN_REGISTER : Arc<PooledConnection<SqliteConnectionManager>>;
+    pub static SQLITE_CONN_REGISTER : Arc<String>;
     // pub static SQLITE_CONN_REGISTER : Arc<Mutex<PooledConnection<SqliteConnectionManager>>>;
 }
 #[derive(Clone)]

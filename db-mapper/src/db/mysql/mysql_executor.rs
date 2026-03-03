@@ -2,12 +2,11 @@ use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 use crate::sql::executor::Executor;
-use r2d2_mysql::mysql::Transaction;
 use std::sync::{Arc, Mutex};
 use tokio::task_local;
 
 task_local! {
-    pub static TX_REGISTER : Arc<Mutex<Transaction>>;
+    // pub static TX_REGISTER : Arc<Mutex<Transaction>>;
 }
 pub const MYSQL_SQL_EXECUTOR: MysqlSqlExecutor = MysqlSqlExecutor;
 

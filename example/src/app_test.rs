@@ -116,7 +116,7 @@ pub async fn test(){
                 let mut conn_rc = Arc::new(conn);
                 SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
                     conn_rc.execute_batch("BEGIN IMMEDIATE").unwrap();
-
+                    conn_rc.transaction();
                     AppMapper::update_by_key(&AppEntity{ id: Some("3".to_string()), app_secret: Some("11221222".to_string()), ..Default::default() }).await;
                     AppMapper::update_by_key(&AppEntity{ id: Some("13".to_string()), app_secret: Some("22222222".to_string()), ..Default::default() }).await;
                     let res = AppMapper::select_one(&QueryWrapper::new().eq("id", ParamValue::String("3".to_string()))).await;

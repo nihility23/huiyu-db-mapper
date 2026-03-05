@@ -12,7 +12,6 @@ pub enum ParamValue {
     U16(u16),
     U32(u32),
     U64(u64),
-    USize(usize),
     F32(f32),
     F64(f64),
     Bool(bool),
@@ -83,7 +82,6 @@ impl_param_value! {
     u16 => U16,
     u32 => U32,
     u64 => U64,
-    usize => USize,
     f32 => F32,
     f64 => F64,
     bool => Bool,
@@ -215,7 +213,7 @@ impl_numeric_conversions!(i8: I8, U8);
 impl_numeric_conversions!(i16: I8, I16, U8, U16);
 impl_numeric_conversions!(i32: I8, I16, I32, U8, U16, U32);
 impl_numeric_conversions!(i64: I8, I16, I32, I64, U8, U16, U32, U64);
-impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32, USize);
+impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32);
 impl_numeric_conversions!(u8: U8);
 impl_numeric_conversions!(u16: U8, U16);
 impl_numeric_conversions!(u32: U8, U16, U32);
@@ -299,7 +297,6 @@ impl ParamValue {
             ParamValue::I32(x) => x.to_string(),
             ParamValue::I16(x) => x.to_string(),
             ParamValue::I8(x) => x.to_string(),
-            ParamValue::USize(x) => x.to_string(),
             ParamValue::Bool(x) => x.to_string(),
             ParamValue::String(x) => x.to_string(),
             ParamValue::DateTime(x) => x.to_string(),

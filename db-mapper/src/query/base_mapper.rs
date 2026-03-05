@@ -15,7 +15,7 @@ use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
 where
     F: FnOnce(DbType) -> P,
-    BF: FnOnce(P) -> Fut,  // BF 返回 Future
+    BF: FnOnce(P) -> Fut + Send,  // BF 返回 Future
     Fut: Future<Output = Result<T, DatabaseError>> + Send,
     T: Send + 'static,
     P: Send + 'static,
@@ -38,7 +38,7 @@ where
         exec::<E, _,_,_,_, Option<E>>(|db_type: DbType|{
             let (sql, param_vec) = db_type.gen_select_by_key_sql::<E>(k);
             (db_type,sql,param_vec)
-        },async |(db_type,sql,param_vec)| {
+        },async move|(db_type,sql,param_vec)| {
             db_type.query_one(sql.as_str(),&vec![param_vec.clone()]).await
         }).await
     }
@@ -92,10 +92,6 @@ where
 
         let key_info = E::key_info();
         if key_info.is_none() {
-            // exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-            //     let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(e);
-            //     db_type.insert::<E>(sql.as_str(), &param_vec)
-            // }).await;
             exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
                 let (sql, param_vec) = db_type.gen_insert_one_sql::<E>(&e);
                 (db_type,sql,param_vec)

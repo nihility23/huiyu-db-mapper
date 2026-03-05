@@ -17,4 +17,6 @@ pub enum DatabaseError {
     RusqliteError(#[from] rusqlite::Error),
     #[error("FromUtf8Error Error: {0}")]
     StringConvertError(#[from] FromUtf8Error),
+    #[error("InteractError Error: {0}")]
+    InteractError(#[from] deadpool_sqlite::InteractError),  
 }

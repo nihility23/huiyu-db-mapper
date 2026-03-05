@@ -8,6 +8,7 @@ chrono = "0.4.42"
 db-macros = {path = "../db-macros"}
 deadpool = "0.13.0"
 deadpool-sqlite = "0.13.0"
+deadpool-sync = "0.2.0"
 lazy_static = "1.5.0"
 rusqlite = { workspace = true }
 rustlog = "0.3.1"

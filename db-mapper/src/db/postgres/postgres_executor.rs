@@ -26,19 +26,10 @@ async fn query<T, R>(
     q: fn(Vec<T>) -> Result<R, DatabaseError>,
 ) -> Result<R, DatabaseError> where R: Send + 'static, T: Send + 'static
 {
-        let mut stmt = conn.prepare(sql.as_str()).await?;
+        let stmt = conn.prepare(sql.as_str()).await?;
         let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect();
-        // let mut param_refs: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> = Vec::new();
-        // for param in params {
-        //     param_refs.push(param.clone() as &(dyn tokio_postgres::types::ToSql + Sync));
-        // }
 
         let results = conn.query(&stmt, &param_refs).await?.iter().map(|row| f(row)).collect::<Result<Vec<_>, _>>()?;
-
-        // let mut results = Vec::new();
-        // for row in rows {
-        //     results.push(row);
-        // }
 
         q(results)
 
@@ -64,15 +55,15 @@ async fn query_basic<T, R>(
 ) -> Result<R, DatabaseError> where T: Send + 'static, R:Send + 'static{
 
         let conn_ref = POSTGRES_CONN_REGISTER.try_get();
-        // if conn_ref.is_ok() {
-        //     let conn_ref = conn_ref.unwrap().clone();
-        //     let conn = conn_ref.lock().await;
-        //     let conn = conn.as_ref();
-        //     query(conn, sql, params,f,q).await // 现在可以借用
-        // } else {
+        if conn_ref.is_ok() {
+            let conn_ref = conn_ref.unwrap().clone();
+            let conn = conn_ref.lock().await;
+            let conn = conn.as_ref();
+            query(conn, sql, params,f,q).await // 现在可以借用
+        } else {
             let conn = get_conn().await;
             query(&conn, sql, params,f,q).await
-        // }
+        }
 
 }
 

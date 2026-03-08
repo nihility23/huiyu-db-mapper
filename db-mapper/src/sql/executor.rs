@@ -232,7 +232,7 @@ macro_rules! exec {
 
 
 pub(crate) trait Executor{
-    
+
     async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
 
     // 查询单个结果
@@ -249,9 +249,9 @@ pub(crate) trait Executor{
     async fn update(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
 
     async fn start_transaction(&self) -> Result<(), DatabaseError>;
-    
+
     async fn commit(&self) -> Result<(),DatabaseError>;
-    
+
     async fn rollback(&self) -> Result<(),DatabaseError>;
 
 }

@@ -73,40 +73,40 @@ pub async fn test(){
     let value = res.unwrap();
     println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
 
-    let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-            "datasource type is null".to_string(),
-        )).unwrap();
-        match db_type {
-            DbType::Sqlite=>{
-                // let db_manager = DbManager::<SqliteConnectionManager>::get_instance().unwrap();
-                // let mut conn: PooledConnection<SqliteConnectionManager> = db_manager.get_inner_conn().unwrap();
-                let conn:Object = DbManager::get_conn().await.unwrap();
-                let mut conn_rc = Arc::new(Mutex::new(conn));
-                SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
-                    conn_rc.lock().await.interact(|conn| conn.execute("BEGIN IMMEDIATE", [])).await.unwrap();
-                    AppMapper::update_by_key(&AppEntity{ id: Some("3223".to_string()), app_secret: Some("AAAAAA".to_string()), ..Default::default() }).await;
-                    AppMapper::update_by_key(&AppEntity{ id: Some("113".to_string()), app_secret: Some("DDDFDD".to_string()), ..Default::default() }).await;
-                    let res = AppMapper::select_one(&QueryWrapper::new().eq("id", ParamValue::String("3".to_string()))).await;
-                    // insert
-                    let mut entity = AppEntity::new();
-                    entity.id = Some("88c1f0c8843448e589fe0854f96b93a4".to_string());
-                    entity.app_name = Some("test".to_string());
-                    entity.app_key = Some("test".to_string());
-                    entity.app_secret = Some("test".to_string());
-                    entity.create_time = Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64);
-                    let res = AppMapper::insert(&mut entity).await;
-                    if res.is_err(){
-                        error!("rollback Error: {}", res.err().unwrap());
-                        conn_rc.lock().await.interact(|conn| conn.execute("ROLLBACK", [])).await.unwrap();
-                    }else{
-                        info!("commit transaction");
-                        conn_rc.lock().await.interact(|conn| conn.execute("COMMIT", [])).await.unwrap();
-                    }
-
-                }).await;
-            }
-            _=>{}
-        }
+    // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
+    //         "datasource type is null".to_string(),
+    //     )).unwrap();
+    //     match db_type {
+    //         DbType::Sqlite=>{
+    //             // let db_manager = DbManager::<SqliteConnectionManager>::get_instance().unwrap();
+    //             // let mut conn: PooledConnection<SqliteConnectionManager> = db_manager.get_inner_conn().unwrap();
+    //             let conn:Object = DbManager::get_instance().await.unwrap();
+    //             let mut conn_rc = Arc::new(Mutex::new(conn));
+    //             SQLITE_CONN_REGISTER.scope(conn_rc.clone(), async {
+    //                 conn_rc.lock().await.interact(|conn| conn.execute("BEGIN IMMEDIATE", [])).await.unwrap();
+    //                 AppMapper::update_by_key(&AppEntity{ id: Some("3223".to_string()), app_secret: Some("AAAAAA".to_string()), ..Default::default() }).await;
+    //                 AppMapper::update_by_key(&AppEntity{ id: Some("113".to_string()), app_secret: Some("DDDFDD".to_string()), ..Default::default() }).await;
+    //                 let res = AppMapper::select_one(&QueryWrapper::new().eq("id", ParamValue::String("3".to_string()))).await;
+    //                 // insert
+    //                 let mut entity = AppEntity::new();
+    //                 entity.id = Some("88c1f0c8843448e589fe0854f96b93a4".to_string());
+    //                 entity.app_name = Some("test".to_string());
+    //                 entity.app_key = Some("test".to_string());
+    //                 entity.app_secret = Some("test".to_string());
+    //                 entity.create_time = Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64);
+    //                 let res = AppMapper::insert(&mut entity).await;
+    //                 if res.is_err(){
+    //                     error!("rollback Error: {}", res.err().unwrap());
+    //                     conn_rc.lock().await.interact(|conn| conn.execute("ROLLBACK", [])).await.unwrap();
+    //                 }else{
+    //                     info!("commit transaction");
+    //                     conn_rc.lock().await.interact(|conn| conn.execute("COMMIT", [])).await.unwrap();
+    //                 }
+    //
+    //             }).await;
+    //         }
+    //         _=>{}
+    //     }
     // // update by key
     // let mut entity = AppEntity::new();
     // entity.app_secret = Some(uuid::Uuid::new_v4().to_string().replace("-", ""));

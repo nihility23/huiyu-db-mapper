@@ -11,7 +11,7 @@ use std::rc::Rc;
 use tokio::sync::Mutex;
 use std::sync::Arc;
 use deadpool::managed::Object;
-use deadpool_sqlite::Manager;
+use deadpool_sqlite::{Manager, Pool};
 use rustlog::info;
 use tokio::task::spawn_blocking;
 use tokio::task_local;
@@ -77,7 +77,7 @@ async fn query_basic<T, R>(
             let conn = conn.as_ref();
             query(conn, sql, params,f,q).await // 现在可以借用
         } else {
-            let conn:Object<Manager> = DbManager::get_conn().await?;
+            let conn:Object<Manager> = get_conn().await;
             query(conn.as_ref(), sql, params,f,q).await
         }
 
@@ -90,7 +90,7 @@ async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, Databas
         let conn = conn_ref.lock().await;
         execute(conn.as_ref(), sql, params).await
     } else {
-        let conn:Object<Manager> = DbManager::get_conn().await?;
+        let conn:Object<Manager> = get_conn().await;
         execute(conn.as_ref(), sql, params).await
     }
 
@@ -250,4 +250,10 @@ pub fn to_sql(param_value: & ParamValue) -> & dyn ToSql {
         ParamValue::DateTime(_) => &rusqlite::types::Null as &dyn ToSql,
         _ => panic!("Unsupported parameter type"),
     }
+}
+
+async fn get_conn()->Object<Manager>{
+    let p:Arc<DbManager<Pool>> = DbManager::get_instance().unwrap();
+    let conn = p.get_pool().get().await.unwrap();
+    conn
 }

@@ -18,5 +18,7 @@ pub enum DatabaseError {
     #[error("FromUtf8Error Error: {0}")]
     StringConvertError(#[from] FromUtf8Error),
     #[error("InteractError Error: {0}")]
-    InteractError(#[from] deadpool_sqlite::InteractError),  
+    InteractError(#[from] deadpool_sqlite::InteractError),
+    #[error("Postgres Error: {0}")]
+    PostgresError(#[from] tokio_postgres::Error),
 }

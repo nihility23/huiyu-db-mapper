@@ -2,7 +2,23 @@
 name = "huiyu-db-util"
 version = "0.1.0"
 edition = "2024"
-members = ["db-macros", "db-mapper", "example"]
+members = ["db-macros", "db-mapper", "db-mapper-mysql", "db-mapper-postgres", "db-mapper-sqlite", "example"]
 
 [workspace.dependencies]
+chrono = "0.4.42"
+lazy_static = "1.5.0"
+rustlog = "0.3.1"
+thiserror = "2.0.17"
+uuid = { version = "1.18.1",features = ["v4"] }
+tokio = { version = "1.49.0" ,features = ["full"]}
+deadpool = "=0.13.0"
+deadpool-sync = "=0.2.0"
+
+
+#### postgresql
+deadpool-postgres = "0.14.1"
+tokio-postgres = "0.7.16"
+
+### sqlite
+deadpool-sqlite = "0.13.0"
 rusqlite = { version = "0.38" ,features = ["bundled"] }

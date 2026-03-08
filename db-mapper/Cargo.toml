@@ -4,14 +4,21 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-chrono = "0.4.42"
 db-macros = {path = "../db-macros"}
-deadpool = "0.13.0"
-deadpool-sqlite = "0.13.0"
-deadpool-sync = "0.2.0"
-lazy_static = "1.5.0"
+
+chrono = { workspace = true }
+rustlog = {workspace = true}
+thiserror = {workspace = true}
+tokio = {workspace = true}
+uuid = {workspace = true}
+lazy_static = {workspace = true}
+deadpool = { workspace = true }
+deadpool-sync = {workspace = true}
+
+### postgres
+tokio-postgres = {workspace = true}
+deadpool-postgres = { workspace = true }
+
+### sqlite
+deadpool-sqlite = { workspace = true }
 rusqlite = { workspace = true }
-rustlog = "0.3.1"
-thiserror = "2.0.17"
-tokio = { version = "1.49.0" ,features = ["full"]}
-uuid = { version = "1.18.1",features = ["v4"] }

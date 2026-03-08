@@ -69,7 +69,7 @@ pub async fn test(){
     }
 
     // select_by_key
-    let res = AppMapper::select_by_key(&"13".to_string()).await;
+    let res = AppMapper::select_by_key(&"113".to_string()).await;
     let value = res.unwrap();
     println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
 

@@ -50,7 +50,13 @@ impl Executor for PostgresSqlExecutor {
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
-        let stmt = conn.prepare(sql.as_str()).await?;
+
+        let mut str = sql.to_string();
+        for i in 0..params.len() {
+            str = str.replacen("?", &format!("${}", i+1), 1);
+            println!("{}", str);
+        }
+        let stmt = conn.prepare(str.as_str()).await?;
         let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
 
         let results = conn.query(&stmt, &param_refs).await?.iter().map(|row| mapper(row)).collect::<Result<Vec<_>, _>>()?;
@@ -59,8 +65,13 @@ impl Executor for PostgresSqlExecutor {
     }
 
     async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        let mut str = sql.to_string();
+        for i in 0..params.len() {
+            str = str.replacen("?", &format!("${}", i+1), 1);
+            println!("{}", str);
+        }
         let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
-        let res = conn.execute(sql.as_str(), &*param_refs).await?;
+        let res = conn.execute(str.as_str(), &*param_refs).await?;
         Ok(res as u64)
     }
 
@@ -114,6 +125,6 @@ impl FromSql<'_> for ParamValue {
     }
 
     fn accepts(ty: &Type) -> bool {
-        todo!()
+        true
     }
 }

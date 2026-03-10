@@ -6,6 +6,7 @@ use crate::base::param::ParamValue;
 use crate::db::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
 use crate::db::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
 use crate::db::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
+use crate::db::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
 use crate::db::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
 use crate::db::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
 use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
@@ -105,7 +106,7 @@ macro_rules! impl_executor_methods {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method($($arg),*).await,
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method($($arg),*).await,
             DbType::Oracle => todo!(),
-            DbType::Postgres => todo!(),
+            DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method($($arg),*).await,
             DbType::SqlServer => todo!(),
         }
     };
@@ -116,7 +117,7 @@ macro_rules! impl_executor_methods {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             DbType::Oracle => todo!(),
-            DbType::Postgres => todo!(),
+            DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             DbType::SqlServer => todo!(),
         }
     };
@@ -151,7 +152,7 @@ impl Executor for DbType {
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
     type ConnWrapper = DbTypeOccupy;
-    
+
     async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,

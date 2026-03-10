@@ -5,6 +5,12 @@ use crate::base::param::ParamValue;
 
 use rusqlite::Row;
 use std::option::Option;
+use std::sync::Arc;
+use deadpool_postgres::{ClientWrapper, Object};
+use deadpool_sqlite::Pool;
+use tokio::sync::Mutex;
+use crate::db::postgres::postgres_executor::POSTGRES_CONN_REGISTER;
+use crate::pool::db_manager::DbManager;
 
 #[macro_export]
 macro_rules! exec_tx_with {
@@ -237,7 +243,43 @@ pub(crate) trait RowType{
 
 pub(crate) trait Executor{
     type Row<'a>: RowType + 'a;
-    async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError>;
+    type Conn: AsRef<Self::ConnWrapper>;
+    type ConnWrapper;
+
+    async fn query<T, R, F, Q>(
+        &self,
+        conn: &Self::ConnWrapper,
+        sql: String,
+        params: Vec<ParamValue>,
+        mapper: F,
+        processor: Q,
+    ) -> Result<R, DatabaseError>
+    where
+        T: Send + 'static,
+        R: Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
+    async fn execute(
+        &self,
+        conn: &Self::ConnWrapper,
+        sql: String,
+        params: Vec<ParamValue>,
+    ) -> Result<u64, DatabaseError>;
+
+
+    async fn exec_basic(&self, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        let conn_ref = self.get_conn_ref();
+        if conn_ref.is_ok() {
+            let conn_ref = conn_ref.unwrap().clone();
+            let conn = conn_ref.lock().await;
+            let conn = conn.as_ref();
+            self.execute(conn, sql, params).await
+        } else {
+            let conn: Self::Conn = self.get_conn().await;
+            self.execute(conn.as_ref(), sql, params).await
+        }
+    }
+
 
     async fn query_basic<T, R, F, Q>(
         &self,
@@ -250,9 +292,25 @@ pub(crate) trait Executor{
         T: Send + 'static,
         R: Send + 'static,
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
-        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static{
 
-    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError> where E:Entity;
+        let conn_ref = self.get_conn_ref();
+        if conn_ref.is_ok() {
+            let conn_ref = conn_ref.unwrap().clone();
+            let conn = conn_ref.lock().await;
+            let conn = conn.as_ref();
+            self.query(conn, sql, params, mapper, processor).await // 现在可以借用
+        } else {
+            let conn = self.get_conn().await;
+            self.query(conn.as_ref(), sql, params, mapper, processor).await
+        }
+    }
+
+    fn row_to_e<E>(row: &Self::Row<'_>) -> Result<E, DatabaseError> where E:Entity;
+
+    fn get_conn_ref(&self)-> Result<Arc<Mutex<Self::Conn>>,DatabaseError> ;
+
+    async fn get_conn(&self)-> Self::Conn;
 
     async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
         self.query_basic::<E, Vec<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
@@ -306,21 +364,15 @@ pub(crate) trait Executor{
     where
         E: Entity,
     {
-        Self::exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql.to_string(), params.clone()).await
     }
 
     async fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        Self::exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql.to_string(), params.clone()).await
     }
 
     async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        Self::exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql.to_string(), params.clone()).await
     }
-
-    // async fn start_transaction(&self) -> Result<(), DatabaseError>;
-    // 
-    // async fn commit(&self) -> Result<(),DatabaseError>;
-    // 
-    // async fn rollback(&self) -> Result<(),DatabaseError>;
 
 }

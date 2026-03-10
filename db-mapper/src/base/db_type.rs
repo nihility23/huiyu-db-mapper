@@ -1,3 +1,5 @@
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
@@ -119,29 +121,52 @@ macro_rules! impl_executor_methods {
         }
     };
 }
-pub struct DbTypeRow;
-impl RowType for DbTypeRow {
+
+pub struct DbTypeOccupy;
+impl RowType for DbTypeOccupy {
     fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError>
     where
         Self: Sized
     {
-        Err(DatabaseError::CommonError("DbTypeRow::col_to_v_by_index".to_string()))
+        Err(DatabaseError::CommonError("DbTypeOccupy::col_to_v_by_index".to_string()))
     }
 
     fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
     where
         Self: Sized
     {
-        Err(DatabaseError::CommonError("DbTypeRow::col_to_v_by_name".to_string()))
+        Err(DatabaseError::CommonError("DbTypeOccupy::col_to_v_by_name".to_string()))
     }
 }
-// 然后可以更简洁地实现
-impl Executor for DbType {
-    type Row<'a> = DbTypeRow;
 
-    async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+impl AsRef<DbTypeOccupy> for DbTypeOccupy {
+    fn as_ref(&self) -> &DbTypeOccupy {
         todo!()
     }
+}
+
+
+// 然后可以更简洁地实现
+impl Executor for DbType {
+    type Row<'a> = DbTypeOccupy;
+    type Conn = DbTypeOccupy;
+    type ConnWrapper = DbTypeOccupy;
+    
+    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    where
+        T: Send + 'static,
+        R: Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
+    {
+        todo!()
+    }
+
+    async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        todo!()
+    }
+
+
 
     async fn query_basic<T, R, F, Q>(&self, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
@@ -158,6 +183,14 @@ impl Executor for DbType {
     where
         E: Entity
     {
+        todo!()
+    }
+
+    fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {
+        todo!()
+    }
+
+    async fn get_conn(&self) -> Self::Conn {
         todo!()
     }
 

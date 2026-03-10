@@ -11,7 +11,10 @@ pub enum DatabaseError {
     UnKnowError(String),
     #[error("Convert Error : {0}")]
     ConvertError(String),
-
+    #[error("Access Error: {0}")]
+    AccessError(String),
+    
+    
     // 三方库异常
     #[error("RusqliteError Error: {0}")]
     RusqliteError(#[from] rusqlite::Error),
@@ -22,3 +25,5 @@ pub enum DatabaseError {
     #[error("Postgres Error: {0}")]
     PostgresError(#[from] tokio_postgres::Error),
 }
+
+unsafe impl Sync for DatabaseError {}

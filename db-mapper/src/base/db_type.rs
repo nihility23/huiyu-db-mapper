@@ -202,17 +202,17 @@ impl Executor for DbType {
         impl_executor_methods!(self, update(sql, params))
     }
 
-    async fn start_transaction(&self) -> Result<(), DatabaseError> {
-        impl_executor_methods!(self, start_transaction())
-    }
-
-    async fn commit(&self) -> Result<(), DatabaseError> {
-        impl_executor_methods!(self, commit())
-    }
-
-    async fn rollback(&self) -> Result<(), DatabaseError> {
-        impl_executor_methods!(self, rollback())
-    }
+    // async fn start_transaction(&self) -> Result<(), DatabaseError> {
+    //     impl_executor_methods!(self, start_transaction())
+    // }
+    //
+    // async fn commit(&self) -> Result<(), DatabaseError> {
+    //     impl_executor_methods!(self, commit())
+    // }
+    //
+    // async fn rollback(&self) -> Result<(), DatabaseError> {
+    //     impl_executor_methods!(self, rollback())
+    // }
 }
 // impl Executor for DbType {
 //

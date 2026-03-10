@@ -254,10 +254,6 @@ pub(crate) trait Executor{
 
     fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError> where E:Entity;
 
-    // fn col_to_v_by_index<Row>(row: &Row, col_index: usize) -> Result<ParamValue, DatabaseError> where Row:?Sized;
-
-    // fn col_to_v_by_name<Row>(row: &Row, col_name: &str) -> Result<ParamValue, DatabaseError>;
-
     async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
         self.query_basic::<E, Vec<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
             Ok(results)
@@ -321,10 +317,10 @@ pub(crate) trait Executor{
         Self::exec_basic(sql.to_string(), params.clone()).await
     }
 
-    async fn start_transaction(&self) -> Result<(), DatabaseError>;
-
-    async fn commit(&self) -> Result<(),DatabaseError>;
-
-    async fn rollback(&self) -> Result<(),DatabaseError>;
+    // async fn start_transaction(&self) -> Result<(), DatabaseError>;
+    // 
+    // async fn commit(&self) -> Result<(),DatabaseError>;
+    // 
+    // async fn rollback(&self) -> Result<(),DatabaseError>;
 
 }

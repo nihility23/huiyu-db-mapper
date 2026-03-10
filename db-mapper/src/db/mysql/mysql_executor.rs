@@ -54,16 +54,16 @@ impl Executor for MysqlSqlExecutor{
         todo!()
     }
 
-    async fn start_transaction(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
-
-    async fn commit(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
-
-    async fn rollback(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
+    // async fn start_transaction(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+    // 
+    // async fn commit(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+    // 
+    // async fn rollback(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
 }
 //

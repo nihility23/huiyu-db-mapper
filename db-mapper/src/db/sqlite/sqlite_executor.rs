@@ -219,17 +219,17 @@ impl Executor for SqliteSqlExecutor {
             Ok(e)
     }
 
-    async fn start_transaction(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
-
-    async fn commit(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
-
-    async fn rollback(&self) -> Result<(), DatabaseError> {
-        todo!()
-    }
+    // async fn start_transaction(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+    //
+    // async fn commit(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
+    //
+    // async fn rollback(&self) -> Result<(), DatabaseError> {
+    //     todo!()
+    // }
 
     // async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     // where

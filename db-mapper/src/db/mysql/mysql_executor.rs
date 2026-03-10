@@ -1,60 +1,53 @@
 use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
-use crate::sql::executor::Executor;
-use std::sync::{Arc, Mutex};
-use tokio::task_local;
+use crate::sql::executor::{Executor, RowType};
 
-task_local! {
-    // pub static TX_REGISTER : Arc<Mutex<Transaction>>;
-}
+// use crate::base::entity::Entity;
+// use crate::base::error::DatabaseError;
+// use crate::base::param::ParamValue;
+// use crate::sql::executor::Executor;
+// use std::sync::{Arc, Mutex};
+// use tokio::task_local;
+//
+// task_local! {
+//     // pub static TX_REGISTER : Arc<Mutex<Transaction>>;
+// }
 pub const MYSQL_SQL_EXECUTOR: MysqlSqlExecutor = MysqlSqlExecutor;
 
+pub struct MysqlRowType;
+impl RowType for MysqlRowType {
+    fn col_to_v_by_index(&self, index: usize) -> Result<ParamValue, DatabaseError> {
+        todo!()
+    }
+}
 pub struct MysqlSqlExecutor;
-
+//
 impl Executor for MysqlSqlExecutor{
+    type Row<'a> = MysqlRowType;
 
-    async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
+    async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        todo!()
+    }
+
+    async fn query_basic<T, R, F, Q>(&self, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    where
+        T: Send + 'static,
+        R: Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
+    {
+        todo!()
+    }
+
+    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError>
     where
         E: Entity
     {
         todo!()
     }
 
-    async fn query_one<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn query_count(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
-    }
-
-    async fn insert<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E::K>, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
-
-    async fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
-    }
-
-    async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
-    }
-
-    async fn start_transaction(&self) -> Result<(),DatabaseError> {
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
         todo!()
     }
 
@@ -66,4 +59,4 @@ impl Executor for MysqlSqlExecutor{
         todo!()
     }
 }
-
+//

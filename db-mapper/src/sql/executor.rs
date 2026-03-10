@@ -3,9 +3,8 @@ use crate::base::entity::Entity;
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 
+use rusqlite::Row;
 use std::option::Option;
-use crate::base::db_type::DbType;
-use crate::pool::datasource::get_datasource_type;
 
 #[macro_export]
 macro_rules! exec_tx_with {
@@ -230,23 +229,95 @@ macro_rules! exec {
 //     QF(&tx,sql,param_vec)
 // }
 
+pub(crate) trait RowType{
+    fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError> where Self: Sized ;
+}
 
 pub(crate) trait Executor{
+    type Row<'a>: RowType + 'a;
+    async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError>;
 
-    async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity;
+    async fn query_basic<T, R, F, Q>(
+        &self,
+        sql: String,
+        params: Vec<ParamValue>,
+        mapper: F,
+        processor: Q,
+    ) -> Result<R, DatabaseError>
+    where
+        T: Send + 'static,
+        R: Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
+
+    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError> where E:Entity;
+
+    // fn col_to_v_by_index<Row>(row: &Row, col_index: usize) -> Result<ParamValue, DatabaseError> where Row:?Sized;
+
+    // fn col_to_v_by_name<Row>(row: &Row, col_name: &str) -> Result<ParamValue, DatabaseError>;
+
+    async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
+        self.query_basic::<E, Vec<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
+            Ok(results)
+        }).await
+    }
 
     // 查询单个结果
-    async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity;
+    async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity{
+        {
+            self.query_basic::<E, Option<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
+                Ok(results.into_iter().next())
+            }).await
+        }
+    }
 
-    async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>{
+        self.query_basic::<i64, u64, _, _>(
+            sql.to_string(),
+            params.to_vec(),
+            |row| {
+                let v = (row).col_to_v_by_index(0).unwrap();
+                Ok(v.into())
+            },
+            |results: Vec<i64>| Ok(results[0] as u64),
+        ).await
+    }
     // 执行插入操作，返回主键
-    async fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity;
+    async fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity{
+        self.query_basic::<ParamValue, Option<E::K>, _, _>(
+            sql.to_string(),
+            params.to_vec(),
+            |row| {
+                let val = (row).col_to_v_by_index(0);
+                match val {
+                    Ok(v) => return Ok(v),
+                    Err(e) => return Ok(ParamValue::Null),
+                }
+            },
+            |results: Vec<ParamValue>| {
+                if results.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(results[0].clone().into()))
+                }
+            },
+        ).await
+    }
 
-    async fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> where E: Entity;
+     async fn insert_batch<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError>
+    where
+        E: Entity,
+    {
+        Self::exec_basic(sql.to_string(), params.clone()).await
+    }
 
-    async fn delete(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        Self::exec_basic(sql.to_string(), params.clone()).await
+    }
 
-    async fn update(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>;
+    async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        Self::exec_basic(sql.to_string(), params.clone()).await
+    }
 
     async fn start_transaction(&self) -> Result<(), DatabaseError>;
 

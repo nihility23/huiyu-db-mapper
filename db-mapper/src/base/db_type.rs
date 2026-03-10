@@ -9,7 +9,7 @@ use crate::db::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
 use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 use crate::db::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 use crate::db::sqlserver::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
-use crate::sql::executor::Executor;
+use crate::sql::executor::{Executor, RowType};
 
 #[derive(Debug,Clone,Copy)]
 pub enum DbType{
@@ -119,9 +119,42 @@ macro_rules! impl_executor_methods {
         }
     };
 }
-
+pub struct DbTypeRow;
+impl RowType for DbTypeRow {
+    fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError>
+    where
+        Self: Sized
+    {
+        Err(DatabaseError::CommonError("DbTypeRow::col_to_v_by_index".to_string()))
+    }
+}
 // 然后可以更简洁地实现
 impl Executor for DbType {
+    type Row<'a> = DbTypeRow;
+
+    async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        todo!()
+    }
+
+    async fn query_basic<T, R, F, Q>(&self, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    where
+        T: Send + 'static,
+        R: Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
+    {
+        //impl_executor_methods!(self, query_basic(sql, params,mapper, processor))
+        Err(DatabaseError::CommonError(format!("DbType::query_basic")))
+    }
+
+    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError>
+    where
+        E: Entity
+    {
+        todo!()
+    }
+
+
     async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity

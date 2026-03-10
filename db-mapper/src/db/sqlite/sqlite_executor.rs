@@ -66,7 +66,16 @@ impl<'a> RowType for rusqlite::Row<'a> {
     where
         Self: Sized
     {
-        todo!()
+        let val = self.get_ref(col_index)?;
+        Ok(value_to_param_value(val)?)
+    }
+
+    fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
+    where
+        Self: Sized
+    {
+        let val = self.get_ref(col_name)?;
+        Ok(value_to_param_value(val)?)
     }
 }
 
@@ -201,8 +210,13 @@ impl Executor for SqliteSqlExecutor {
     where
         E: Entity
     {
-        row.col_to_v_by_index(0);
-        todo!()
+            let mut e = E::new();
+            for col in E::column_names() {
+                let val = row.get_ref(col)?;
+                let param_value = value_to_param_value(val)?;
+                e.set_value_by_column_name(col, param_value);
+            }
+            Ok(e)
     }
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {

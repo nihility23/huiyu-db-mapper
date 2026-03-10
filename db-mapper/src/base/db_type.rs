@@ -127,6 +127,13 @@ impl RowType for DbTypeRow {
     {
         Err(DatabaseError::CommonError("DbTypeRow::col_to_v_by_index".to_string()))
     }
+
+    fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
+    where
+        Self: Sized
+    {
+        Err(DatabaseError::CommonError("DbTypeRow::col_to_v_by_name".to_string()))
+    }
 }
 // 然后可以更简洁地实现
 impl Executor for DbType {

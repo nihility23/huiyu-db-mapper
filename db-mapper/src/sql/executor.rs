@@ -231,6 +231,8 @@ macro_rules! exec {
 
 pub(crate) trait RowType{
     fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError> where Self: Sized ;
+
+    fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError> where Self: Sized ;
 }
 
 pub(crate) trait Executor{

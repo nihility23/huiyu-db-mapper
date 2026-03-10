@@ -20,6 +20,13 @@ impl RowType for MysqlRowType {
     fn col_to_v_by_index(&self, index: usize) -> Result<ParamValue, DatabaseError> {
         todo!()
     }
+
+    fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
+    where
+        Self: Sized
+    {
+        todo!()
+    }
 }
 pub struct MysqlSqlExecutor;
 //

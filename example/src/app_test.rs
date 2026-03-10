@@ -1,13 +1,18 @@
+use crate::mapper::{AppMapper, BedMapper};
 use db_macros::Entity;
 use db_mapper::base::config::DbConfig;
 use db_mapper::base::db_type;
 use db_mapper::base::db_type::DbType;
 use db_mapper::base::error::DatabaseError;
+use db_mapper::base::param::ParamValue;
 use db_mapper::db::sqlite::sqlite_executor::{to_sql, SQLITE_CONN_REGISTER};
-use db_mapper::pool::datasource::get_datasource_type;
+use db_mapper::pool::datasource::{get_datasource_type, DB_NAME_REGISTRY};
 use db_mapper::pool::db_manager::DbManager;
 use db_mapper::query::base_mapper::BaseMapper;
 use db_mapper::query::query_wrapper::QueryWrapper;
+use deadpool_postgres::tokio_postgres::NoTls;
+use deadpool_postgres::{tokio_postgres, ManagerConfig, RecyclingMethod, Runtime};
+use deadpool_sqlite::{Config, Manager, Object};
 use rusqlite::fallible_iterator::FallibleIterator;
 use rusqlite::{ToSql, TransactionBehavior};
 use rustlog::{error, info};
@@ -15,36 +20,23 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::{Arc};
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use uuid::Uuid;
-use deadpool_sqlite::{Config, Runtime, Object, Manager};
 use tokio::sync::Mutex;
-
-#[derive(Clone, Debug,Entity,Serialize,Deserialize)]
-#[table(name = "t_app")]
-#[derive(Default)]
-pub struct AppEntity{
-    #[id(column = "id", auto_increment = true)]
-    pub id: Option<String>,
-    #[field(column = "app_name")]
-    pub app_name: Option<String>,
-    #[field(column = "app_key")]
-    pub app_key: Option<String>,
-    #[field(column = "app_secret")]
-    pub app_secret: Option<String>,
-    #[field(column = "create_time")]
-    pub create_time: Option<i64>,
-}
-
-pub struct AppMapper;
-
-impl BaseMapper<AppEntity> for AppMapper {}
+use uuid::Uuid;
 
 pub async fn test(){
-    let db_config = DbConfig::new(DbType::Sqlite, None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()), None, None, None, "default".to_string());
-    DbManager::initialize(&vec![db_config], |db_config| {
-        Config::new(db_config.database.clone().expect("Database URL is missing")).create_pool(Runtime::Tokio1).expect("Failed to create pool")
+    let db_config_sqlite = DbConfig::new(DbType::Sqlite, None, None,None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()),  None, "default".to_string());
+    let db_config_postgres = DbConfig::new(DbType::Postgres,
+                                  Some("10.150.2.200".to_string()),
+                                  Some(5432),
+                                  Some("postgres".to_string()),
+                                  Some("123456".to_string()),
+                                  Some("postgres".to_string()),
+                                  Some("fhds".to_string()),
+                                  "postgres".to_string());
+    DbManager::initialize(&db_config_sqlite, |db_config| {
+        Config::new(db_config.database.clone().expect("Database URL is missing")).create_pool(deadpool_sqlite::Runtime::Tokio1).expect("Failed to create pool")
     }).expect("TODO: panic message");
 
     //query one
@@ -72,6 +64,39 @@ pub async fn test(){
     let res = AppMapper::select_by_key(&"113".to_string()).await;
     let value = res.unwrap();
     println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
+
+
+
+    DbManager::initialize(&db_config_postgres, |db_config| {
+        let mut cfg = deadpool_postgres::Config::new();
+        cfg.dbname = Some("postgres".to_string());
+        cfg.manager = Some(ManagerConfig {
+            recycling_method: RecyclingMethod::Fast,
+        });
+        cfg.user = Some("postgres".to_string());
+        cfg.password = Some("123456".to_string());
+        cfg.host = Some(String::from("10.150.2.200"));
+        cfg.port = Some(5432);
+        // // 或者
+        cfg.options = Some("--search_path=fhds".to_string());
+        let pool:deadpool_postgres::Pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls ).unwrap();
+        pool
+    }).expect("TODO: panic message");
+
+
+
+    DB_NAME_REGISTRY.scope(RefCell::new(Some("postgres".to_string())), async {
+
+        let res = BedMapper::select_by_key(&"1".to_string()).await;
+        if res.is_err(){
+            error!("Error: {}", res.err().unwrap());
+        }else {
+            let value = res.unwrap();
+            println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
+        }
+
+
+    });
 
     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
     //         "datasource type is null".to_string(),

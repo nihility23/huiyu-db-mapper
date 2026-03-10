@@ -2,14 +2,14 @@ use crate::base::db_type::DbType;
 
 #[derive(Debug, Clone)]
 pub struct DbConfig {
+    pub db_type: DbType,
     pub host: Option<String>,
     pub port: Option<u32>,
-    pub database: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
+    pub database: Option<String>,
     pub schema: Option<String>,
     pub name: String,
-    pub db_type: DbType,
 }
 
 impl DbConfig {
@@ -17,9 +17,9 @@ impl DbConfig {
         db_type: DbType,
         host: Option<String>,
         port: Option<u32>,
-        database: Option<String>,
         username: Option<String>,
         password: Option<String>,
+        database: Option<String>,
         schema: Option<String>,
         name: String,
     ) -> Self {

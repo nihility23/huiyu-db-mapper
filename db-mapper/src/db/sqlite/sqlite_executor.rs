@@ -115,19 +115,6 @@ impl Executor for SqliteSqlExecutor {
             Ok(res as u64)
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
-    
-    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError>
-    where
-        E: Entity
-    {
-            let mut e = E::new();
-            for col in E::column_names() {
-                let val = row.get_ref(col)?;
-                let param_value = value_to_param_value(val)?;
-                e.set_value_by_column_name(col, param_value);
-            }
-            Ok(e)
-    }
 
     fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {
         let c = SQLITE_CONN_REGISTER.try_get();

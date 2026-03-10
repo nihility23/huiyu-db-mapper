@@ -96,10 +96,10 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
 
-        use db_mapper::base::entity::ColumnType;
-        use db_mapper::base::entity::Entity;
-        use db_mapper::base::entity::ColumnInfo;
-        use db_mapper::base::param::ParamValue;
+        // use db_mapper::base::entity::ColumnType;
+        // use db_mapper::base::entity::Entity;
+        // use db_mapper::base::entity::ColumnInfo;
+        // use db_mapper::base::param::ParamValue;
 
         impl Entity for #name {
             type K = #key_type;
@@ -366,134 +366,6 @@ fn parse_bool_lit(meta: &ParseNestedMeta) -> Result<bool, syn::Error> {
         _ => Err(meta.error("expected boolean literal")),
     }
 }
-// 解析字段属性
-// fn parse_fields(fields: &Fields) -> Vec<FieldInfo> {
-//     let mut fields_info = Vec::new();
-//
-//     for field in fields.iter() {
-//         let field_name = field.ident.as_ref().unwrap().to_string();
-//         let mut column_name = field_name.clone();
-//         let mut is_id = false;
-//         let mut is_auto_increment = false;
-//         let mut is_nullable = true;
-//
-//         let field_type = field.ty.clone();
-//         let field_span = field.span();
-//         let is_option = is_option_type(&field_type);
-//         let inner_type = if is_option {
-//             Some(extract_inner_type(&field_type))
-//         } else {
-//             None
-//         };
-//         let original_type_name = get_type_name(&field_type);
-//
-//         // 解析字段属性
-//         for attr in &field.attrs {
-//             if attr.path().is_ident("id") {
-//                 is_id = true;
-//                 is_nullable = false;
-//
-//                 // 解析 id 属性参数
-//                 if attr.meta.require_list().is_ok() {
-//                     let _ = attr.parse_nested_meta(|meta| {
-//                         if meta.path.is_ident("column") {
-//                             let value = meta.value()?;
-//                             let lit: Lit = value.parse()?;
-//                             if let Lit::Str(lit_str) = lit {
-//                                 column_name = lit_str.value();
-//                             }
-//                         } else if meta.path.is_ident("auto_increment") {
-//                             let value = meta.value()?;
-//                             let lit: Lit = value.parse()?;
-//                             if let Lit::Bool(lit_bool) = lit {
-//                                 is_auto_increment = lit_bool.value();
-//                             }
-//                         }
-//                         Ok(())
-//                     });
-//                 }
-//             } else if attr.path().is_ident("field") {
-//                 // 解析 field 属性参数
-//                 if attr.meta.require_list().is_ok() {
-//                     let _ = attr.parse_nested_meta(|meta| {
-//                         if meta.path.is_ident("column") {
-//                             let value = meta.value()?;
-//                             let lit: Lit = value.parse()?;
-//                             if let Lit::Str(lit_str) = lit {
-//                                 column_name = lit_str.value();
-//                             }
-//                         } else if meta.path.is_ident("nullable") {
-//                             let value = meta.value()?;
-//                             let lit: Lit = value.parse()?;
-//                             if let Lit::Bool(lit_bool) = lit {
-//                                 is_nullable = lit_bool.value();
-//                             }
-//                         }
-//                         Ok(())
-//                     });
-//                 }
-//             }
-//         }
-//
-//         fields_info.push(FieldInfo {
-//             field_name,
-//             column_name,
-//             field_type,
-//             original_type_name,
-//             field_span,
-//             is_option,
-//             inner_type,
-//             is_id,
-//             is_auto_increment,
-//             is_nullable,
-//         });
-//     }
-//
-//     fields_info
-// }
-
-// 生成 ColumnInfo
-// fn generate_column_infos(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStream> {
-//     fields_info
-//         .iter()
-//         .map(|f| {
-//             let field_name_lit = LitStr::new(&f.field_name, proc_macro2::Span::call_site());
-//             let column_name_lit = LitStr::new(&f.column_name, proc_macro2::Span::call_site());
-//
-//             let is_nullable = f.is_nullable;
-//             let is_auto_increment = f.is_auto_increment;
-//             let is_id = f.is_id;
-//             let fill_on_update = f.fill_on_update;
-//             let fill_on_insert = f.fill_on_insert;
-//
-//             let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
-//             let column_type = infer_column_type(ty);
-//
-//             // 主键生成策略（保持为 Option<String>）
-//             let key_generate_type = match &f.key_generate_type {
-//                 Some(s) => {
-//                     let s_lit = LitStr::new(s, proc_macro2::Span::call_site());
-//                     quote! { Some(#s_lit.to_string()) }
-//                 }
-//                 None => quote! { None },
-//             };
-//
-//             quote! {
-//                 ColumnInfo {
-//                     field_name: #field_name_lit,
-//                     column_name: #column_name_lit,
-//                     column_type: #column_type,
-//                     is_nullable: #is_nullable,
-//                     is_auto_increment: #is_auto_increment,
-//                     is_primary_key: #is_id,
-//                     key_generate_type: #key_generate_type.into(),
-//                     fill_on_update: #fill_on_update,
-//                     fill_on_insert: #fill_on_insert,
-//                 }
-//             }
-//         })
-//         .collect()
-// }
 
 fn generate_column_infos(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStream> {
     fields_info

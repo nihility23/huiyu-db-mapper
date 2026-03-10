@@ -306,7 +306,14 @@ pub(crate) trait Executor{
         }
     }
 
-    fn row_to_e<E>(row: &Self::Row<'_>) -> Result<E, DatabaseError> where E:Entity;
+    fn row_to_e<E>(row: &Self::Row<'_>) -> Result<E, DatabaseError> where E:Entity{
+        let mut e = E::new();
+        for col in E::column_names() {
+            let val = row.col_to_v_by_name(col)?;
+            e.set_value_by_column_name(col, val);
+        }
+        Ok(e)
+    }
 
     fn get_conn_ref(&self)-> Result<Arc<Mutex<Self::Conn>>,DatabaseError> ;
 

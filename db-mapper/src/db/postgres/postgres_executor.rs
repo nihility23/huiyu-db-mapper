@@ -17,68 +17,6 @@ task_local! {
 pub struct PostgresSqlExecutor;
 // 全局单例
 pub const POSTGRES_SQL_EXECUTOR: PostgresSqlExecutor = PostgresSqlExecutor;
-// 提取公共函数避免重复
-async fn query<T, R>(
-    conn: &ClientWrapper,
-    sql: String,
-    params: Vec<ParamValue>,
-    f: fn(&Row) -> Result<T,DatabaseError>,
-    q: fn(Vec<T>) -> Result<R, DatabaseError>,
-) -> Result<R, DatabaseError> where R: Send + 'static, T: Send + 'static
-{
-        let stmt = conn.prepare(sql.as_str()).await?;
-        let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
-
-        let results = conn.query(&stmt, &param_refs).await?.iter().map(|row| f(row)).collect::<Result<Vec<_>, _>>()?;
-
-        q(results)
-
-}
-
-async fn execute(
-    conn: &ClientWrapper,
-    sql: String,
-    params: Vec<ParamValue>,
-) -> Result<u64, DatabaseError>{
-    let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
-    let res = conn.execute(sql.as_str(), &*param_refs).await?;
-    Ok(res as u64)
-}
-
-
-// 查询基本实现
-// async fn query_basic<T, R>(
-//     sql: String,
-//     params: Vec<ParamValue>,
-//     f: fn(&Row) -> Result<T,DatabaseError>,
-//     q: fn(Vec<T>) -> Result<R, DatabaseError>,
-// ) -> Result<R, DatabaseError> where T: Send + 'static, R:Send + 'static{
-//
-//         let conn_ref = get_conn_ref();
-//         if conn_ref.is_ok() {
-//             let conn_ref = conn_ref.unwrap().clone();
-//             let conn = conn_ref.lock().await;
-//             let conn = conn.as_ref();
-//             query(conn, sql, params,f,q).await // 现在可以借用
-//         } else {
-//             let conn = get_conn().await;
-//             query(&conn, sql, params,f,q).await
-//         }
-//
-// }
-//
-// async fn exec_basic(sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
-//     let conn_ref = get_conn_ref();
-//     if conn_ref.is_ok() {
-//         let conn_ref = conn_ref.unwrap().clone();
-//         let conn = conn_ref.lock().await;
-//         let conn = conn.as_ref();
-//         execute(conn, sql, params).await
-//     } else {
-//         let conn:Object = get_conn().await;
-//         execute(conn.as_ref(), sql, params).await
-//     }
-// }
 
 impl RowType for Row {
     fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError>
@@ -112,20 +50,20 @@ impl Executor for PostgresSqlExecutor {
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
-        todo!()
+        let stmt = conn.prepare(sql.as_str()).await?;
+        let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
+
+        let results = conn.query(&stmt, &param_refs).await?.iter().map(|row| mapper(row)).collect::<Result<Vec<_>, _>>()?;
+
+        processor(results)
     }
 
     async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
+        let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
+        let res = conn.execute(sql.as_str(), &*param_refs).await?;
+        Ok(res as u64)
     }
 
-
-    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
-    }
 
     fn get_conn_ref(&self)-> Result<Arc<Mutex<Object>>,DatabaseError> {
         let c = POSTGRES_CONN_REGISTER.try_get();
@@ -163,14 +101,6 @@ pub fn to_sql(param_value: & ParamValue) -> Result<&(dyn ToSql +Sync), DatabaseE
         _ => Err(DatabaseError::ConvertError("Unsupported parameter type".to_string())),
     }
 }
-
-async fn get_conn()-> Object {
-    let p:Arc<DbManager<Pool>> = DbManager::get_instance().unwrap();
-    let conn = p.get_pool().get().await.unwrap();
-    conn
-}
-
-
 
 impl FromSql<'_> for ParamValue {
     fn from_sql(ty: &tokio_postgres::types::Type, _bytes: &[u8]) -> Result<ParamValue, Box<(dyn std::error::Error + Send + Sync + 'static)>> {

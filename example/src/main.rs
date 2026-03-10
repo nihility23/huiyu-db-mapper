@@ -6,6 +6,7 @@ mod user_mapper;
 mod app_test;
 mod student_test;
 mod transaction_test;
+mod mapper;
 
 use crate::app_test::test;
 use rustlog::*;

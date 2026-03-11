@@ -56,6 +56,14 @@ pub trait WhereSqlGenerator{
     fn apply_sql(&self, sql: &str, vec_size: usize)->String{
         sql.to_string()
     }
+    
+    fn exist(&self, sql:&str)->String{
+        format!("exists ({})", sql)
+    }
+    
+    fn not_exist(&self, sql:&str)->String{
+        format!("not exists ({})", sql)
+    }
 }
 
 pub trait PageSqlGenerator{
@@ -303,6 +311,15 @@ pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + Where
                         }
                         QueryItem::ApplySql(sql,param_values)=>{
                             where_sql_vec.push(self.apply_sql(sql,param_values.len()));
+                                query_value_vec.extend(param_values.to_vec());
+                        }
+                        QueryItem::ExistsSql(sql,param_values)=>{
+                            where_sql_vec.push(self.exist(sql));
+                            query_value_vec.extend(param_values.to_vec());
+                        }
+                        QueryItem::NotExistsSql(sql,param_values)=>{
+                            where_sql_vec.push(self.not_exist(sql));
+                            query_value_vec.extend(param_values.to_vec());
                         }
                     }
                 }

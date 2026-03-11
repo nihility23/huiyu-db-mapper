@@ -14,6 +14,7 @@ pub trait RowType{
     fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError> where Self: Sized ;
 }
 
+#[allow(async_fn_in_trait)]
 pub trait Executor{
     type Row<'a>: RowType + 'a;
     type Conn: AsRef<Self::ConnWrapper>;

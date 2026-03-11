@@ -279,6 +279,14 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.add_condition(QueryItem::ApplySql(sql,params))
     }
 
+    pub fn exists(self, sql:&'a str, params: Vec<ParamValue>)->Self{
+        self.add_condition(QueryItem::ExistsSql(sql,params))
+    }
+
+    pub fn not_exists(self, sql:&'a str, params: Vec<ParamValue>)->Self{
+        self.add_condition(QueryItem::NotExistsSql(sql,params))
+    }
+
     pub fn clear(mut self)->Self{
         self.query.clear();
         self

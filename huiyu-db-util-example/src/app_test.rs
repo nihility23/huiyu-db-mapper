@@ -67,7 +67,9 @@ pub async fn test(){
 
 
     //query one
-    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()));
+    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()))
+        .exists("select 1 from t_app where id = '1'", Vec::new())
+        .like("app_name", ParamValue::String("f".to_string()));
     let res = AppMapper::select_one(&query_wrapper).await;
     if res.is_err(){
         error!("Error: {}", res.err().unwrap());

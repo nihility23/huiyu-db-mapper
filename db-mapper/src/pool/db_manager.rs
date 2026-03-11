@@ -3,17 +3,11 @@ use crate::base::db_type::DbType;
 use crate::base::error::DatabaseError;
 use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
-use deadpool::managed::{Manager, Object, Pool};
-use deadpool_postgres::{ManagerConfig, RecyclingMethod, Runtime};
-use deadpool_sqlite::Config;
 use rustlog::info;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::error::Error;
-use std::fmt;
 use std::sync::{Arc, OnceLock};
-use std::time::Duration;
-use tokio_postgres::NoTls;
 
 /// 使用 OnceLock 存储注册表，内部使用 DashMap 实现高性能并发访问
 static DB_REGISTRY: OnceLock<Arc<DatabaseRegistry>> = OnceLock::new();
@@ -188,7 +182,7 @@ impl<M: Send + Sync + 'static> DbManager<M> {
     pub fn init_registry() {
         DB_REGISTRY.get_or_init(|| Arc::new(DatabaseRegistry::new()));
     }
-    
+
     /// 注册新的数据库实例（可以多次调用）
     pub fn register<F>(config: &DbConfig, factory: F) -> Result<Arc<Self>, DatabaseError>
     where
@@ -356,6 +350,6 @@ impl<M: Send + Sync + 'static> DatabaseManagerExt<M> for DbManager<M> {
 
 pub trait DbRegister{
     fn register_db(config: &DbConfig) -> Result<(), DatabaseError>;
-    
+
     fn check_config(config: &DbConfig) -> Result<(), DatabaseError>;
 }

@@ -14,12 +14,20 @@ uuid = {workspace = true}
 lazy_static = {workspace = true}
 deadpool = { workspace = true }
 deadpool-sync = {workspace = true}
+dashmap = {workspace = true }
 
 ### postgres
-tokio-postgres = {workspace = true}
-deadpool-postgres = { workspace = true }
+tokio-postgres = {workspace = true, optional = true}
+deadpool-postgres = { workspace = true, optional = true}
 
 ### sqlite
-deadpool-sqlite = { workspace = true }
-rusqlite = { workspace = true }
-dashmap = "6.1.0"
+deadpool-sqlite = { workspace = true, optional = true}
+rusqlite = { workspace = true , optional = true}
+
+[features]
+default = ["sqlite"]
+postgres = ["tokio-postgres", "deadpool-postgres"]
+sqlite = ["deadpool-sqlite", "rusqlite"]
+
+
+

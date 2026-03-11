@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 db-macros = {path = "../db-macros"}
-db-mapper = {path = "../db-mapper"}
+db-mapper = {path = "../db-mapper", features = ["postgres", "sqlite"]}
 rusqlite = {workspace = true}
 
 chrono = "0.4.42"

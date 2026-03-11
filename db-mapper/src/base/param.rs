@@ -1,7 +1,5 @@
 use crate::base::error::DatabaseError;
-use crate::base::error::DatabaseError::ConvertError;
 use chrono::{DateTime, Local};
-use tokio_postgres::types::{FromSql, Type};
 
 #[derive(Clone, Debug)]
 pub enum ParamValue {

@@ -6,10 +6,15 @@ use crate::base::param::ParamValue;
 use crate::db::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
 use crate::db::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
 use crate::db::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
+#[cfg(feature = "postgres")]
 use crate::db::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
+#[cfg(feature = "postgres")]
 use crate::db::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
+#[cfg(feature = "sqlite")]
 use crate::db::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
+#[cfg(feature = "sqlite")]
 use crate::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+#[cfg(feature = "sqlite")]
 use crate::db::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 use crate::db::sqlserver::sqlserver_sql_generator::SQL_SERVER_SQL_GENERATOR;
 use crate::sql::executor::{Executor, RowType};
@@ -17,8 +22,10 @@ use crate::sql::executor::{Executor, RowType};
 #[derive(Debug,Clone,Copy)]
 pub enum DbType{
     Mysql,
+    #[cfg(feature = "sqlite")]
     Sqlite,
     Oracle,
+    #[cfg(feature = "postgres")]
     Postgres,
     SqlServer,
 }
@@ -28,8 +35,10 @@ macro_rules! impl_db_method_generic {
         fn $method(&self, $($param: $param_type),*) -> $ret {
             match self {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
             }
@@ -42,8 +51,10 @@ macro_rules! impl_db_method_generic {
         {
             match self {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
             }
@@ -57,8 +68,10 @@ macro_rules! impl_db_method_generic {
         {
             match self {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
             }
@@ -70,8 +83,9 @@ macro_rules! impl_db_method_generic {
         fn $method <$g> (&self, $($param: $param_type),*) -> $ret {
             match self {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
-                DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
             }
@@ -104,8 +118,10 @@ macro_rules! impl_executor_methods {
     ($self:ident, $method:ident($($arg:ident),*)) => {
         match $self {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method($($arg),*).await,
+            #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method($($arg),*).await,
             DbType::Oracle => todo!(),
+            #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method($($arg),*).await,
             DbType::SqlServer => todo!(),
         }
@@ -115,8 +131,10 @@ macro_rules! impl_executor_methods {
     ($self:ident, $method:ident<$($gen:ident),*>($($arg:ident),*)) => {
         match $self {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             DbType::Oracle => todo!(),
+            #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             DbType::SqlServer => todo!(),
         }

@@ -25,6 +25,7 @@ pub enum DatabaseError {
     StringConvertError(#[from] FromUtf8Error),
     #[error("InteractError Error: {0}")]
     InteractError(#[from] deadpool_sqlite::InteractError),
+    #[cfg(feature = "postgres")]
     #[error("Postgres Error: {0}")]
     PostgresError(#[from] tokio_postgres::Error),
 }

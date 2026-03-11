@@ -9,7 +9,6 @@ use rusqlite::{Row, ToSql};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task_local;
-use crate::db::postgres::postgres_executor::POSTGRES_CONN_REGISTER;
 use crate::pool::datasource::get_datasource_name;
 
 task_local! {

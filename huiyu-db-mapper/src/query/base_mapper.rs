@@ -13,10 +13,9 @@ use crate::query::db_type::QueryDbType;
 async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
 where
     F: FnOnce(DbType) -> P,
-    BF: FnOnce(P) -> Fut + Send,  // BF 返回 Future
-    Fut: Future<Output = Result<T, DatabaseError>> + Send,
-    T: Send + 'static,
-    P: Send + 'static,
+    BF: FnOnce(P) -> Fut ,  // BF 返回 Future
+    Fut: Future<Output = Result<T, DatabaseError>>,
+
 {
     let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
         "datasource type is null".to_string(),
@@ -59,7 +58,7 @@ where
             let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_delete_by_key_sql::<E>(&k);
             (db_type,sql,param_vec)
         }, async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).delete(sql.as_str(),&vec![param_vec.clone()]).await    
+            <DbType as Into<QueryDbType>>::into(db_type).delete(sql.as_str(),&vec![param_vec.clone()]).await
         }).await
     }
 

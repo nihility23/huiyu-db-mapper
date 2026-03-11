@@ -1,16 +1,13 @@
-use std::cmp::PartialEq;
-use rustlog::info;
-use tokio::task::spawn_blocking;
 use crate::base::db_type::DbType;
 use crate::base::entity::{Entity, KeyGenerateType};
 use crate::base::error::DatabaseError;
 use crate::base::page::{Page, PageRes};
 use crate::base::param::ParamValue;
-use crate::exec_tx;
 use crate::pool::datasource::get_datasource_type;
 use crate::query::query_wrapper::QueryWrapper;
 use crate::sql::executor::Executor;
 use crate::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
+use rustlog::info;
 
 async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
 where
@@ -156,27 +153,6 @@ where
         page: Page,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<PageRes<E>, DatabaseError> {
-        // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-        //     "datasource type is null".to_string(),
-        // ))?;
-        // let (query_sql, total_sql, param_vec) = db_type.gen_page_sql(&page, query_wrapper);
-        // let p1 = param_vec.clone();
-        // let total = exec_tx!(db_type, total_sql.as_str(), &param_vec, query_count)?;
-        // let list = exec_tx!(db_type, query_sql.as_str(), &p1, query_some)?;
-        // Ok(PageRes::new_from_records(total, page.page_size, list))
-
-        // exec::<E, _, PageRes<E>>(|db_type: DbType|{
-        //     // let (sql, param_vec) = db_type.gen_insert_batch_sql::<E>(entities);
-        //     // db_type.insert_batch::<E>(sql.as_str(),&param_vec)
-        //
-        //     let (query_sql, total_sql, param_vec) = db_type.gen_page_sql(&page, query_wrapper);
-        //     let p1 = param_vec.clone();
-        //     let total = db_type.query_count(total_sql.as_str(), &p1)?;
-        //     let list = db_type.query_some(query_sql.as_str(), &p1)?;
-        //     // let total = exec_tx!(db_type, total_sql.as_str(), &param_vec, query_count)?;
-        //     // let list = exec_tx!(db_type, query_sql.as_str(), &p1, query_some)?;
-        //     Ok(PageRes::new_from_records(total, page.page_size, list))
-        // }).await
         exec::<E, _,_,_, _, PageRes<E>>(|db_type: DbType|{
             let (query_sql, total_sql, param_vec) = db_type.gen_page_sql::<E>(&page, query_wrapper);
             (db_type,query_sql,total_sql,param_vec,page.page_size)
@@ -191,16 +167,6 @@ where
     async fn select<'a>(
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Vec<E>, DatabaseError> {
-        // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-        //     "datasource type is null".to_string(),
-        // ))?;
-        // let (query_sql, param_vec) = db_type.gen_query_sql(query_wrapper);
-        // exec_tx!(db_type, query_sql.as_str(), &param_vec, query_some)
-
-        // exec::<E, _, u64>(|db_type: DbType|{
-        //     let (sql, param_vec) = db_type.gen_query_sql::<E>(entities);
-        //     db_type.insert_batch::<E>(sql.as_str(),&param_vec)
-        // }).await
         exec::<E, _,_,_, _, Vec<E>>(|db_type: DbType|{
             let (sql, param_vec) = db_type.gen_query_sql::<E>(query_wrapper);
             info!("sql: {}, param_vec: {:?}", sql, param_vec);

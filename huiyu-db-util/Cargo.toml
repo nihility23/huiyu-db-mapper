@@ -13,6 +13,6 @@ huiyu-db-mapper = {path = "../huiyu-db-mapper"}
 
 [features]
 default = ["sqlite"]
-postgres = ["huiyu-db-mapper-postgres"]
-sqlite = ["huiyu-db-mapper-sqlite"]
+postgres = ["huiyu-db-mapper-postgres", "huiyu-db-mapper/postgres"]
+sqlite = ["huiyu-db-mapper-sqlite", "huiyu-db-mapper/sqlite"]
 

@@ -1,0 +1,16 @@
+[package]
+name = "huiyu-db-mapper-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { workspace = true }
+rustlog = {workspace = true}
+thiserror = {workspace = true}
+tokio = {workspace = true}
+uuid = {workspace = true}
+lazy_static = {workspace = true}
+deadpool = { workspace = true }
+deadpool-sync = {workspace = true}
+dashmap = {workspace = true }
+

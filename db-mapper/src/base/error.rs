@@ -13,7 +13,10 @@ pub enum DatabaseError {
     ConvertError(String),
     #[error("Access Error: {0}")]
     AccessError(String),
-    
+    #[error("Instance Already Exists: {0}")]
+    InstanceAlreadyExistsError(String),
+    #[error("Config Not Found: {0}")]
+    ConfigNotFoundError(String),
     
     // 三方库异常
     #[error("RusqliteError Error: {0}")]

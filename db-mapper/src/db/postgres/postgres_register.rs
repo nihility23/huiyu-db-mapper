@@ -1,0 +1,50 @@
+use crate::base::config::DbConfig;
+use crate::base::error::DatabaseError;
+use crate::pool::db_manager::{DbManager, DbRegister};
+use deadpool_postgres::{ManagerConfig, RecyclingMethod, Runtime};
+use tokio_postgres::NoTls;
+
+pub const POSTGRES_REGISTER: PostgresDbRegister = PostgresDbRegister;
+pub struct PostgresDbRegister;
+
+impl DbRegister for PostgresDbRegister{
+    fn register_db(config: &DbConfig) -> Result<(), DatabaseError> {
+        Self::check_config(config)?;
+        DbManager::register(config, |config| {
+            let mut cfg = deadpool_postgres::Config::new();
+            cfg.dbname = Some(config.database.clone().expect("Database name is missing").to_string());
+            cfg.manager = Some(ManagerConfig {
+                recycling_method: RecyclingMethod::Fast,
+            });
+            cfg.user = Some(config.username.clone().expect("Username is missing").to_string());
+            cfg.password = Some(config.password.clone().expect("Password is missing").to_string());
+            cfg.host = Some(config.host.clone().expect("Host is missing").to_string());
+            cfg.port = Some(config.port.expect("Port is missing") as u16);
+            if config.schema.is_some() {
+                cfg.options = Some(format!("--search_path={}",config.schema.clone().unwrap()));
+            }
+            let pool:deadpool_postgres::Pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls ).unwrap();
+            pool
+        })?;
+        Ok(())
+    }
+
+    fn check_config(config: &DbConfig) -> Result<(), DatabaseError> {
+        if config.database.is_none() {
+            return Err(DatabaseError::ConfigNotFoundError("Database is missing".to_string()));
+        }
+        if config.username.is_none() {
+            return Err(DatabaseError::ConfigNotFoundError("Username is missing".to_string()));
+        }
+        if config.password.is_none() {
+            return Err(DatabaseError::ConfigNotFoundError("Password is missing".to_string()));
+        }
+        if config.host.is_none() {
+            return Err(DatabaseError::ConfigNotFoundError("Host is missing".to_string()));
+        }
+        if config.port.is_none() {
+            return Err(DatabaseError::ConfigNotFoundError("Port is missing".to_string()));
+        }
+        Ok(())
+    }
+}

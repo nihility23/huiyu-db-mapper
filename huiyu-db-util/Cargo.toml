@@ -1,0 +1,14 @@
+[package]
+name = "huiyu-db-util"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+db-macros={path = "../db-macros"}
+db-mapper={path = "../db-mapper"}
+
+[features]
+default = ["db-mapper/default"]
+postgres = ["db-mapper/postgres"]
+sqlite = ["db-mapper/sqlite"]
+

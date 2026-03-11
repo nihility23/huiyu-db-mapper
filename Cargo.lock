@@ -447,6 +447,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "huiyu-db-util"
+version = "0.1.0"
+dependencies = [
+ "db-macros",
+ "db-mapper",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"

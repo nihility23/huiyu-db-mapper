@@ -2,7 +2,7 @@
 name = "huiyu-db-util"
 version = "0.1.0"
 edition = "2024"
-members = ["db-macros", "db-mapper", "db-mapper-mysql", "db-mapper-postgres", "db-mapper-sqlite", "example"]
+members = ["db-macros", "db-mapper", "db-mapper-mysql", "db-mapper-postgres", "db-mapper-sqlite", "example", "huiyu-db-util"]
 
 [workspace.dependencies]
 chrono = "0.4.42"

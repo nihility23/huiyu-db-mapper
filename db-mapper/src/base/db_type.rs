@@ -153,7 +153,7 @@ impl Executor for DbType {
     type Conn = DbTypeOccupy;
     type ConnWrapper = DbTypeOccupy;
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -163,13 +163,13 @@ impl Executor for DbType {
         todo!()
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 
 
 
-    async fn query_basic<T, R, F, Q>(&self, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query_basic<T, R, F, Q>(&self, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,

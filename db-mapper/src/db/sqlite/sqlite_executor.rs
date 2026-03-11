@@ -87,13 +87,15 @@ impl Executor for SqliteSqlExecutor {
     type ConnWrapper = deadpool_sync::SyncWrapper<rusqlite::Connection>;
     
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
+        let sql = sql.to_string();
+        let params = params.clone();
         conn.interact(move |conn| {
             let mut stmt = conn.prepare(sql.as_str())?;
             let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
@@ -108,7 +110,9 @@ impl Executor for SqliteSqlExecutor {
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        let sql = sql.to_string();
+        let params = params.clone();
         conn.interact(move |conn| {
             let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
             let res = conn.execute(sql.as_str(), &*param_refs)?;

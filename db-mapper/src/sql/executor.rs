@@ -249,8 +249,8 @@ pub(crate) trait Executor{
     async fn query<T, R, F, Q>(
         &self,
         conn: &Self::ConnWrapper,
-        sql: String,
-        params: Vec<ParamValue>,
+        sql: &str,
+        params: &Vec<ParamValue>,
         mapper: F,
         processor: Q,
     ) -> Result<R, DatabaseError>
@@ -262,12 +262,12 @@ pub(crate) trait Executor{
     async fn execute(
         &self,
         conn: &Self::ConnWrapper,
-        sql: String,
-        params: Vec<ParamValue>,
+        sql: &str,
+        params: &Vec<ParamValue>,
     ) -> Result<u64, DatabaseError>;
 
 
-    async fn exec_basic(&self, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn exec_basic(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
@@ -283,8 +283,8 @@ pub(crate) trait Executor{
 
     async fn query_basic<T, R, F, Q>(
         &self,
-        sql: String,
-        params: Vec<ParamValue>,
+        sql: &str,
+        params: &Vec<ParamValue>,
         mapper: F,
         processor: Q,
     ) -> Result<R, DatabaseError>
@@ -320,7 +320,7 @@ pub(crate) trait Executor{
     async fn get_conn(&self)-> Self::Conn;
 
     async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
-        self.query_basic::<E, Vec<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
+        self.query_basic::<E, Vec<E>, _, _>(sql, params, |row|Self::row_to_e(row), |results: Vec<E>| {
             Ok(results)
         }).await
     }
@@ -328,7 +328,7 @@ pub(crate) trait Executor{
     // 查询单个结果
     async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity{
         {
-            self.query_basic::<E, Option<E>, _, _>(sql.to_string(), params.to_vec(), |row|Self::row_to_e(row), |results: Vec<E>| {
+            self.query_basic::<E, Option<E>, _, _>(sql, params, |row|Self::row_to_e(row), |results: Vec<E>| {
                 Ok(results.into_iter().next())
             }).await
         }
@@ -336,8 +336,8 @@ pub(crate) trait Executor{
 
     async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>{
         self.query_basic::<i64, u64, _, _>(
-            sql.to_string(),
-            params.to_vec(),
+            sql,
+            params,
             |row| {
                 let v = (row).col_to_v_by_index(0).unwrap();
                 Ok(v.into())
@@ -348,8 +348,8 @@ pub(crate) trait Executor{
     // 执行插入操作，返回主键
     async fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity{
         self.query_basic::<ParamValue, Option<E::K>, _, _>(
-            sql.to_string(),
-            params.to_vec(),
+            sql,
+            params,
             |row| {
                 let val = (row).col_to_v_by_index(0);
                 match val {
@@ -371,15 +371,15 @@ pub(crate) trait Executor{
     where
         E: Entity,
     {
-        self.exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql, params).await
     }
 
     async fn delete(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        self.exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql, params).await
     }
 
     async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        self.exec_basic(sql.to_string(), params.clone()).await
+        self.exec_basic(sql, params).await
     }
 
 }

@@ -43,7 +43,7 @@ impl Executor for PostgresSqlExecutor {
     type ConnWrapper = ClientWrapper;
 
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -64,7 +64,7 @@ impl Executor for PostgresSqlExecutor {
         processor(results)
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: String, params: Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
@@ -120,6 +120,8 @@ impl FromSql<'_> for ParamValue {
             &Type::INT4 => Ok(ParamValue::I32(i32::from_sql(ty, _bytes)?)),
             &Type::INT2 => Ok(ParamValue::I16(i16::from_sql(ty, _bytes)?)),
             &Type::BOOL => Ok(ParamValue::Bool(bool::from_sql(ty, _bytes)?)),
+            &Type::TEXT => Ok(ParamValue::String(String::from_sql(ty, _bytes)?)),
+            &Type::VARCHAR => Ok(ParamValue::String(String::from_sql(ty, _bytes)?)),
             _ => Err(Box::new(DatabaseError::ConvertError(format!("Unsupported type {}", ty.name())))),
         }
     }

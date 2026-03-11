@@ -13,12 +13,14 @@ lazy_static! {
     static ref DB_TYPE_REGISTRY: RwLock<HashMap<String, DbType>> = RwLock::new(HashMap::new());
 }
 
-pub fn get_datasource_name() -> Option<String> {    
+pub fn get_datasource_name() -> String {
     if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
-        name.borrow().clone()
-    } else {
-        Some("default".to_string())
+        let name = name.borrow().clone();
+        if name.is_some() {
+            return name.unwrap();
+        }
     }
+    "default".to_string()
 }
 
 pub(crate) fn set_datasource_type(name: String, data_type: DbType) {
@@ -30,9 +32,5 @@ pub fn get_datasource_type_by_name(name: &str) -> Option<DbType> {
 }
 
 pub fn get_datasource_type() -> Option<DbType> {
-    if let Some(name) = get_datasource_name() {
-        get_datasource_type_by_name(name.as_str())
-    } else {
-        None
-    }
+    get_datasource_type_by_name(&get_datasource_name())
 }

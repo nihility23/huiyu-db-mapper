@@ -26,7 +26,7 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 pub async fn test(){
-    // let db_config_sqlite = DbConfig::new(DbType::Sqlite, None, None,None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()),  None, "default".to_string());
+    let db_config_sqlite = DbConfig::new(DbType::Sqlite, None, None,None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()),  None, "default".to_string());
     let db_config_postgres = DbConfig::new(DbType::Postgres,
                                   Some("10.150.2.200".to_string()),
                                   Some(5432),
@@ -35,21 +35,21 @@ pub async fn test(){
                                   Some("postgres".to_string()),
                                   Some("fhds".to_string()),
                                   "postgres".to_string());
-    // DbManager::initialize(&db_config_sqlite, |db_config| {
-    //     Config::new(db_config.database.clone().expect("Database URL is missing")).create_pool(deadpool_sqlite::Runtime::Tokio1).expect("Failed to create pool")
-    // }).expect("TODO: panic message");
+    DbManager::register(&db_config_sqlite, |db_config| {
+        Config::new(db_config.database.clone().expect("Database URL is missing")).create_pool(deadpool_sqlite::Runtime::Tokio1).expect("Failed to create pool")
+    }).expect("TODO: panic message");
     //
-    // //query one
-    // let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("3".to_string()));
-    // let res = AppMapper::select_one(&query_wrapper).await;
-    // if res.is_err(){
-    //     error!("Error: {}", res.err().unwrap());
-    // }else {
-    //
-    //     let value = res.unwrap();
-    //     println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
-    // }
-    //
+    //query one
+    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()));
+    let res = AppMapper::select_one(&query_wrapper).await;
+    if res.is_err(){
+        error!("Error: {}", res.err().unwrap());
+    }else {
+
+        let value = res.unwrap();
+        println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
+    }
+
     // // query list
     // let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
     // let res = AppMapper::select(&query_wrapper).await;
@@ -67,7 +67,7 @@ pub async fn test(){
 
 
 
-    DbManager::initialize(&db_config_postgres, |db_config| {
+    DbManager::register(&db_config_postgres, |db_config| {
         let mut cfg = deadpool_postgres::Config::new();
         cfg.dbname = Some("postgres".to_string());
         cfg.manager = Some(ManagerConfig {

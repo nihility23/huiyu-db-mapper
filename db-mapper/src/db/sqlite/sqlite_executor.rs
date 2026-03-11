@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task_local;
 use crate::db::postgres::postgres_executor::POSTGRES_CONN_REGISTER;
+use crate::pool::datasource::get_datasource_name;
 
 task_local! {
     pub static SQLITE_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -129,7 +130,7 @@ impl Executor for SqliteSqlExecutor {
     }
 
     async fn get_conn(&self) -> Self::Conn {
-        let p:Arc<DbManager<Pool>> = DbManager::get_instance().unwrap();
+        let p:Arc<DbManager<Pool>> = DbManager::get_instance(get_datasource_name().as_str()).unwrap();
         let conn = p.get_pool().get().await.unwrap();
         conn
     }

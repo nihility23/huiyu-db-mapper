@@ -22,3 +22,4 @@ deadpool-postgres = { workspace = true }
 ### sqlite
 deadpool-sqlite = { workspace = true }
 rusqlite = { workspace = true }
+dashmap = "6.1.0"

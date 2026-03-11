@@ -9,6 +9,7 @@ use tokio::sync::Mutex;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
+use crate::pool::datasource::get_datasource_name;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -85,7 +86,7 @@ impl Executor for PostgresSqlExecutor {
     }
 
     async fn get_conn(&self) -> Self::Conn {
-        DbManager::<Pool>::get_instance().unwrap().get_pool().get().await.unwrap()
+        DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap().get_pool().get().await.unwrap()
     }
 }
 

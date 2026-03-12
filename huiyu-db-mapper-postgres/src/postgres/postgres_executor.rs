@@ -1,15 +1,13 @@
-
-use deadpool_postgres::{ClientWrapper, Object, Pool};
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tokio::task_local;
-use tokio_postgres::types::{FromSql, ToSql, Type};
-use tokio_postgres::Row;
+use deadpool_postgres::{Object, Pool};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
+use std::sync::Arc;
+use tokio::task_local;
+use tokio_postgres::types::{FromSql, ToSql, Type};
+use tokio_postgres::Row;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
@@ -120,7 +118,7 @@ pub fn to_sql(param_value: & ParamValue) -> Result<&(dyn ToSql +Sync), DatabaseE
 
 pub struct PostgresParamValue(ParamValue);
 impl FromSql<'_> for PostgresParamValue {
-    fn from_sql(ty: &tokio_postgres::types::Type, _bytes: &[u8]) -> Result<PostgresParamValue, Box<(dyn std::error::Error + Send + Sync + 'static)>> {
+    fn from_sql(ty: &Type, _bytes: &[u8]) -> Result<PostgresParamValue, Box<dyn std::error::Error + Send + Sync + 'static>> {
         match ty {
             &Type::INT8 => Ok(PostgresParamValue(ParamValue::I64(i64::from_sql(ty, _bytes)?))),
             &Type::INT4 => Ok(PostgresParamValue(ParamValue::I32(i32::from_sql(ty, _bytes)?))),
@@ -128,11 +126,20 @@ impl FromSql<'_> for PostgresParamValue {
             &Type::BOOL => Ok(PostgresParamValue(ParamValue::Bool(bool::from_sql(ty, _bytes)?))),
             &Type::TEXT => Ok(PostgresParamValue(ParamValue::String(String::from_sql(ty, _bytes)?))),
             &Type::VARCHAR => Ok(PostgresParamValue(ParamValue::String(String::from_sql(ty, _bytes)?))),
+            &Type::FLOAT4 => Ok(PostgresParamValue(ParamValue::F32(f32::from_sql(ty, _bytes)?))),
+            &Type::FLOAT8 => Ok(PostgresParamValue(ParamValue::F64(f64::from_sql(ty, _bytes)?))),
+            &Type::BYTEA => Ok(PostgresParamValue(ParamValue::Blob(Vec::<u8>::from_sql(ty, _bytes)?))),
+            &Type::DATE => {
+                Ok(PostgresParamValue(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
+            },
+            &Type::TIMESTAMP => {
+                Ok(PostgresParamValue(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
+            },
             _ => Err(Box::new(DatabaseError::ConvertError(format!("Unsupported type {}", ty.name())))),
         }
     }
 
-    fn accepts(ty: &Type) -> bool {
+    fn accepts(_: &Type) -> bool {
         true
     }
 }

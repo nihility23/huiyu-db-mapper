@@ -1,15 +1,13 @@
-use deadpool_sqlite::{Manager, Object, Pool};
-use rusqlite::types::ValueRef;
-use rusqlite::{Row, ToSql};
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tokio::task_local;
-use huiyu_db_mapper_core::base::entity::Entity;
+use deadpool_sqlite::{Object, Pool};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
+use rusqlite::types::ValueRef;
+use rusqlite::ToSql;
+use std::sync::Arc;
+use tokio::task_local;
 
 task_local! {
     pub static SQLITE_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
@@ -18,47 +16,6 @@ task_local! {
 pub struct SqliteSqlExecutor;
 // 全局单例
 pub const SQLITE_SQL_EXECUTOR: SqliteSqlExecutor = SqliteSqlExecutor;
-// 提取公共函数避免重复
-async fn query<T, R, F, Q>(
-    conn: &deadpool_sync::SyncWrapper<rusqlite::Connection>,
-    sql: String,
-    params: Vec<ParamValue>,
-    mapper: F,
-    processor: Q,
-) -> Result<R, DatabaseError>
-where
-    T: Send + 'static,
-    R: Send + 'static,
-    F: for<'a> Fn(&rusqlite::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
-    Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
-{
-    conn.interact(move |conn| {
-        let mut stmt = conn.prepare(sql.as_str()).map_err(|e| DatabaseError::CommonError(format!("Failed to prepare statement: {:?}", e)))?;
-        let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
-
-        let mut rows = stmt.query(&*param_refs).map_err(|e| DatabaseError::CommonError(format!("Failed to execute query: {:?}", e)))?;
-        let mut results = Vec::new();
-        while let Some(row) = rows.next().map_err(|e| DatabaseError::CommonError(format!("Failed to fetch row: {:?}", e)))? {
-            results.push(mapper(&row)?);
-        }
-
-        processor(results)
-    }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
-
-}
-
-async fn execute(
-    conn: &deadpool_sync::SyncWrapper<rusqlite::Connection>,
-    sql: String,
-    params: Vec<ParamValue>,
-) -> Result<u64, DatabaseError>
-{   conn.interact(move |conn| {
-        let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
-        let res = conn.execute(sql.as_str(), &*param_refs).map_err(|e| DatabaseError::CommonError(format!("Failed to execute statement: {:?}", e)))?;
-        Ok(res as u64)
-    }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
-
-}
 
 pub struct SqliteRow<'a>(&'a rusqlite::Row<'a>);
 

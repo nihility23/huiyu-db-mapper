@@ -8,7 +8,9 @@ huiyu-db-mapper-core = { path = "../huiyu-db-mapper-core" }
 tokio = { version = "1.49.0" ,features = ["full"]}
 deadpool = "=0.13.0"
 deadpool-sync = "=0.2.0"
+chrono = {workspace = true}
 
 ### postgres
 tokio-postgres = {workspace = true}
 deadpool-postgres = { workspace = true}
+postgres-types = { version = "0.2.12", features = ["with-chrono-0_4"] }

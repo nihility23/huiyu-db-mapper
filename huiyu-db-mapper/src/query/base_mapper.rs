@@ -75,7 +75,6 @@ where
 
     // update $table_name set $column_name = ? where id = ?
     async fn update_by_key(e: &E) -> Result<u64, DatabaseError> {
-        let e = e.clone();
         exec::<E, _,_,_,_, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_update_by_key_sql::<E>(&e,false);
             (db_type,sql,param_vec)
@@ -86,7 +85,6 @@ where
 
     // insert $table_name into ($id,$column,...) values (?,?,...)
     async fn insert(e: &mut E) -> Result<Option<E::K>, DatabaseError> {
-
         let key_info = E::key_info();
         if key_info.is_none() {
             exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
@@ -94,36 +92,49 @@ where
                 (db_type,sql,param_vec)
             },async |(db_type,sql,param_vec)|{
                 <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
-            }).await;
+            }).await?;
+            return Ok(None);
         }
         let key_info = key_info.unwrap();
-        let mut key = None;
         let key_generate_type = key_info.key_generate_type;
+        match key_generate_type {
+            KeyGenerateType::None => {
+                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_one_sql::<E>(&e);
+                    (db_type,sql,param_vec)
+                },async |(db_type,sql,param_vec)|{
+                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                }).await?;
+                Ok(None)
+            }
+            KeyGenerateType::AutoIncrement => {
+                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
+                    (db_type,sql,param_vec)
+                },async |(db_type,sql,param_vec)|{
+                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                }).await
+            }
+            KeyGenerateType::UUID => {
+                let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
+                e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
 
-        // 有自增
-        if key_info.is_auto_increment{
-            return exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
-                (db_type,sql,param_vec)
-            },async |(db_type,sql,param_vec)|{
-                <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
-            }).await;
+                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_one_sql::<E>(&e);
+                    (db_type,sql,param_vec)
+                },async |(db_type,sql,param_vec)|{
+                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                }).await?;
+                let key = Some(ParamValue::String(uuid).into());
+                Ok(key)
+            }
+            KeyGenerateType::UseGeneratedKeys => {
+                Err(DatabaseError::NotSupportedError("Key Generate Type [UseGeneratedKeys]".to_string()))
+            }
+            KeyGenerateType::Sequence => {
+                Err(DatabaseError::NotSupportedError("Key Generate Type UseGeneratedKeys [Sequence]".to_string()))
+            }
         }
-
-        // 无自增:uuid
-        if key_generate_type == KeyGenerateType::UUID {
-            let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
-            e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
-
-            exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
-                (db_type,sql,param_vec)
-            },async |(db_type,sql,param_vec)|{
-                <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
-            }).await;
-            key = Some(ParamValue::String(uuid).into());
-        }
-        Ok(key)
     }
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)

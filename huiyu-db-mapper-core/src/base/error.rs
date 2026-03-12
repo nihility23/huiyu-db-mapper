@@ -1,4 +1,3 @@
-use std::string::FromUtf8Error;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -23,19 +22,8 @@ pub enum DatabaseError {
     ConnectCanNotGetError(String),
     #[error("Row Convert Error: {0}")]
     RowConvertError(String),
-    
-    // 三方库异常
-    #[cfg(feature = "sqlite")]
-    #[error("RusqliteError Error: {0}")]
-    RusqliteError(#[from] rusqlite::Error),
-    #[error("FromUtf8Error Error: {0}")]
-    StringConvertError(#[from] FromUtf8Error),
-    #[cfg(feature = "sqlite")]
-    #[error("InteractError Error: {0}")]
-    InteractError(#[from] deadpool_sqlite::InteractError),
-    #[cfg(feature = "postgres")]
-    #[error("Postgres Error: {0}")]
-    PostgresError(#[from] tokio_postgres::Error),
+    #[error("Not Supported Error: {0}")]
+    NotSupportedError(String),
 }
 
 unsafe impl Sync for DatabaseError {}

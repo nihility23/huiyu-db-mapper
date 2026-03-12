@@ -26,23 +26,4 @@ impl DbRegister for PostgresDbRegister{
         })?;
         Ok(())
     }
-
-    fn check_config(config: &DbConfig) -> Result<(), DatabaseError> {
-        if config.database.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Database is missing".to_string()));
-        }
-        if config.username.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Username is missing".to_string()));
-        }
-        if config.password.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Password is missing".to_string()));
-        }
-        if config.host.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Host is missing".to_string()));
-        }
-        if config.port.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Port is missing".to_string()));
-        }
-        Ok(())
-    }
 }

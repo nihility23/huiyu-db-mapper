@@ -5,7 +5,6 @@ use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
 use rustlog::{info, warn};
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
 use std::error::Error;
 use std::sync::{Arc, OnceLock};
 
@@ -18,24 +17,24 @@ struct DatabaseRegistry {
     instances: DashMap<(String, TypeId), Arc<dyn Any + Send + Sync>>,
     /// 默认实例映射
     defaults: DashMap<TypeId, Arc<dyn Any + Send + Sync>>,
-    /// 实例元数据（可选，用于存储额外信息）
-    metadata: DashMap<String, InstanceMetadata>,
+    // 实例元数据（可选，用于存储额外信息）
+    // metadata: DashMap<String, InstanceMetadata>,
 }
 
 /// 实例元数据
-#[derive(Debug, Clone)]
-struct InstanceMetadata {
-    db_type: DbType,
-    created_at: std::time::SystemTime,
-    config: HashMap<String, String>,
-}
+// #[derive(Debug, Clone)]
+// pub struct InstanceMetadata {
+//     // db_type: DbType,
+//     // created_at: std::time::SystemTime,
+//     config: HashMap<String, String>,
+// }
 
 impl DatabaseRegistry {
     fn new() -> Self {
         Self {
             instances: DashMap::new(),
             defaults: DashMap::new(),
-            metadata: DashMap::new(),
+            // metadata: DashMap::new(),
         }
     }
 
@@ -44,7 +43,7 @@ impl DatabaseRegistry {
         &self,
         name: String,
         instance: Arc<DbManager<M>>,
-        config: &DbConfig,
+        // config: &DbConfig,
     ) {
         let type_id = TypeId::of::<M>();
         let key = (name.clone(), type_id);
@@ -53,25 +52,25 @@ impl DatabaseRegistry {
         self.instances.insert(key, instance.clone() as Arc<dyn Any + Send + Sync>);
 
         // 存储元数据
-        let metadata = InstanceMetadata {
-            db_type: config.db_type,
-            created_at: std::time::SystemTime::now(),
-            config: HashMap::new(), // 可以根据需要填充配置信息
-        };
-        self.metadata.insert(name.clone(), metadata);
+        // let metadata = InstanceMetadata {
+            // db_type: config.db_type,
+            // created_at: std::time::SystemTime::now(),
+            // config: HashMap::new(), // 可以根据需要填充配置信息
+        // };
+        // self.metadata.insert(name.clone(), metadata);
 
         // 设置默认实例（如果没有该类型的默认实例）
         self.defaults.entry(type_id).or_insert(instance as Arc<dyn Any + Send + Sync>);
     }
 
     /// 更新默认实例
-    fn set_default<M: Send + Sync + 'static>(
-        &self,
-        instance: Arc<DbManager<M>>
-    ) {
-        let type_id = TypeId::of::<M>();
-        self.defaults.insert(type_id, instance as Arc<dyn Any + Send + Sync>);
-    }
+    // fn set_default<M: Send + Sync + 'static>(
+    //     &self,
+    //     instance: Arc<DbManager<M>>
+    // ) {
+    //     let type_id = TypeId::of::<M>();
+    //     self.defaults.insert(type_id, instance as Arc<dyn Any + Send + Sync>);
+    // }
 
     /// 获取实例
     fn get_instance<M: Send + Sync + 'static>(
@@ -108,7 +107,7 @@ impl DatabaseRegistry {
         // 从 instances 中移除
         if let Some((_, instance)) = self.instances.remove(&key) {
             // 也从 metadata 中移除
-            self.metadata.remove(name);
+            // self.metadata.remove(name);
 
             // 如果这是默认实例，需要处理默认实例的更新
             let type_id = TypeId::of::<M>();
@@ -155,17 +154,17 @@ impl DatabaseRegistry {
         self.instances.len()
     }
 
-    /// 获取实例元数据
-    fn get_metadata(&self, name: &str) -> Option<InstanceMetadata> {
-        self.metadata.get(name).map(|entry| entry.clone())
-    }
+    // 获取实例元数据
+    // fn get_metadata(&self, name: &str) -> Option<InstanceMetadata> {
+    //     self.metadata.get(name).map(|entry| entry.clone())
+    // }
 
-    /// 清空所有实例（谨慎使用）
-    fn clear(&self) {
-        self.instances.clear();
-        self.defaults.clear();
-        self.metadata.clear();
-    }
+    // 清空所有实例（谨慎使用）
+    // fn clear(&self) {
+    //     self.instances.clear();
+    //     self.defaults.clear();
+    //     // self.metadata.clear();
+    // }
 }
 
 /// 数据库管理器
@@ -213,7 +212,8 @@ impl<M: Send + Sync + 'static> DbManager<M> {
         });
 
         // 插入到注册表
-        registry.insert(config.name.clone(), instance.clone(), config);
+        registry.insert(config.name.clone(), instance.clone());
+        // registry.insert(config.name.clone(), instance.clone(), config);
 
 
         Ok(instance)
@@ -293,13 +293,13 @@ impl<M: Send + Sync + 'static> DbManager<M> {
     }
 
     /// 获取实例元数据
-    pub fn get_metadata(name: &str) -> Option<InstanceMetadata> {
-        if let Some(registry) = DB_REGISTRY.get() {
-            registry.get_metadata(name)
-        } else {
-            None
-        }
-    }
+    // pub fn get_metadata(name: &str) -> Option<InstanceMetadata> {
+    //     if let Some(registry) = DB_REGISTRY.get() {
+    //         registry.get_metadata(name)
+    //     } else {
+    //         None
+    //     }
+    // }
 
     /// 获取连接池的引用
     #[inline]

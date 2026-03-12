@@ -20,7 +20,8 @@ impl BaseSqlGenerator for PostgresSqlGenerator{
     where
         E: Entity
     {
-        todo!()
+        let (sql,params) = self.gen_insert_one_sql(e);
+        (format!("{} returning {}", sql, E::key_name()), params)
     }
 }
 

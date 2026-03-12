@@ -53,7 +53,7 @@ pub trait WhereSqlGenerator{
         format!("{} not in ({})", column,sql)
     }
 
-    fn apply_sql(&self, sql: &str, vec_size: usize)->String{
+    fn apply_sql(&self, sql: &str, _: usize)->String{
         sql.to_string()
     }
     

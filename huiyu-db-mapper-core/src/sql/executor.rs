@@ -4,9 +4,8 @@ use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 
 use std::option::Option;
-use std::sync::{Arc};
-use tokio::sync::Mutex;
-
+use std::sync::Arc;
+use rustlog::error;
 
 pub trait RowType{
     fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError> where Self: Sized ;
@@ -18,7 +17,6 @@ pub trait RowType{
 pub trait Executor{
     type Row<'a>: RowType + 'a;
     type Conn;
-    // type ConnWrapper;
 
     async fn query<T, R, F, Q>(
         &self,
@@ -45,14 +43,9 @@ pub trait Executor{
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
-            // let conn = conn_ref.lock().await;
-            // // let conn = conn.as_ref();
-            // let mut conn = conn_ref.lock().await;
-            // // let conn = conn.as_ref();
-            // let ref_mut: &mut Self::Conn = &mut *conn;
             self.execute(conn_ref, sql, params).await
         } else {
-            let mut conn: Self::Conn = self.get_conn().await?;
+            let conn: Self::Conn = self.get_conn().await?;
             self.execute(Arc::new(std::sync::Mutex::new(conn)), sql, params).await
         }
     }
@@ -74,15 +67,10 @@ pub trait Executor{
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
-            // let mut conn = conn_ref.lock().await;
-            // let conn = conn.as_ref();
-            // let ref_mut: &mut Self::Conn = &mut *conn;
-            // let mut c = ref_mut;
             self.query(conn_ref, sql, params, mapper, processor).await // 现在可以借用
         } else {
-            let mut conn = self.get_conn().await?;
+            let conn = self.get_conn().await?;
             self.query(Arc::new(std::sync::Mutex::new(conn)), sql, params, mapper, processor).await
-            // Err(DatabaseError::ConnectCanNotGetError("No connection".to_string()))
         }
     }
 
@@ -132,9 +120,12 @@ pub trait Executor{
             params,
             |row| {
                 let val = (row).col_to_v_by_index(0);
-                match val {
-                    Ok(v) => return Ok(v),
-                    Err(e) => return Ok(ParamValue::Null),
+                return match val {
+                    Ok(v) => Ok(v),
+                    Err(e) => {
+                        error!("Error: {}", e);
+                        Ok(ParamValue::Null)
+                    },
                 }
             },
             |results: Vec<ParamValue>| {

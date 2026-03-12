@@ -1,26 +1,16 @@
 use crate::mapper::{AppMapper, BedMapper, UserMapper};
-use deadpool_postgres::{ManagerConfig, RecyclingMethod, Runtime};
-use deadpool_sqlite::Config;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
-use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::{DbManager, DbRegister};
+use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::{ DbRegister};
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
-use rustlog::error;
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::Mutex;
-use tokio_postgres::NoTls;
-use uuid::Uuid;
-use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper;
 use huiyu_db_util::huiyu_db_mapper_mysql::mysql::mysql_register::MysqlDbRegister;
 use huiyu_db_util::huiyu_db_mapper_postgres::postgres::postgres_register::PostgresDbRegister;
-use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SqliteRow;
 use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_register::SqliteDbRegister;
+use rustlog::error;
+use std::cell::RefCell;
 
 pub async fn test(){
     let db_config_sqlite = DbConfig::new(DbType::Sqlite, None, None,None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()),  None, "default".to_string());
@@ -59,52 +49,51 @@ pub async fn test(){
 
     //
 
-    // // query list
-    // let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
-    // let res = AppMapper::select(&query_wrapper).await;
-    // if res.is_err(){
-    //     error!("Error: {}", res.err().unwrap());
-    // }else {
-    //     let value = res.unwrap();
-    //     println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
-    // }
-    //
-    // // select_by_key
-    // let res = AppMapper::select_by_key(&"113".to_string()).await;
-    // let value = res.unwrap();
-    // println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
+    // query list
+    let query_wrapper = QueryWrapper::new().like("app_name", ParamValue::String("f".to_string()));
+    let res = AppMapper::select(&query_wrapper).await;
+    if res.is_err(){
+        error!("Error: {}", res.err().unwrap());
+    }else {
+        let value = res.unwrap();
+        println!("query list {}", serde_json::to_string_pretty(&value).unwrap());
+    }
+
+    // select_by_key
+    let res = AppMapper::select_by_key(&"113".to_string()).await;
+    let value = res.unwrap();
+    println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
 
 
 
 
 
 
-    //query one
-    // let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()))
-    //     .exists("select 1 from t_app where id = '1'", Vec::new())
-    //     .like("app_name", ParamValue::String("f".to_string()));
-    // let res = AppMapper::select_one(&query_wrapper).await;
-    // if res.is_err(){
-    //     error!("Error: {}", res.err().unwrap());
-    // }else {
-    //
-    //     let value = res.unwrap();
-    //     println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
-    // }
+    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()))
+        .exists("select 1 from t_app where id = '1'", Vec::new())
+        .like("app_name", ParamValue::String("f".to_string()));
+    let res = AppMapper::select_one(&query_wrapper).await;
+    if res.is_err(){
+        error!("Error: {}", res.err().unwrap());
+    }else {
+
+        let value = res.unwrap();
+        println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
+    }
 
 
-    // DB_NAME_REGISTRY.scope(RefCell::new(Some("postgres".to_string())), async {
-    //
-    //     let res = BedMapper::select_by_key(&"bed014".to_string()).await;
-    //     if res.is_err(){
-    //         error!("Error: {}", res.err().unwrap());
-    //     }else {
-    //         let value = res.unwrap();
-    //         println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
-    //     }
-    //
-    //
-    // }).await;
+    DB_NAME_REGISTRY.scope(RefCell::new(Some("postgres".to_string())), async {
+
+        let res = BedMapper::select_by_key(&"bed014".to_string()).await;
+        if res.is_err(){
+            error!("Error: {}", res.err().unwrap());
+        }else {
+            let value = res.unwrap();
+            println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
+        }
+
+
+    }).await;
 
     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
     //         "datasource type is null".to_string(),

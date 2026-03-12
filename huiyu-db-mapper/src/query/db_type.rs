@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_mapper_core::base::entity::Entity;
@@ -7,18 +6,18 @@ use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+#[cfg(feature = "mysql")]
+use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
+#[cfg(feature = "mysql")]
+use huiyu_db_mapper_mysql::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
+#[cfg(feature = "postgres")]
+use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
 #[cfg(feature = "sqlite")]
-use huiyu_db_mapper_sqlite::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
-#[cfg(feature = "postgres")]
-use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
-#[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
-#[cfg(feature = "mysql")]
-use huiyu_db_mapper_mysql::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
-#[cfg(feature = "mysql")]
-use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
+#[cfg(feature = "sqlite")]
+use huiyu_db_mapper_sqlite::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 
 macro_rules! impl_db_method_generic {
     ($method:ident($($param:ident: $param_type:ty),*) -> $ret:ty) => {
@@ -146,7 +145,7 @@ macro_rules! impl_executor_methods {
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             // #[cfg(feature = "oracle")]
-            // DbType::Oracle => todo!(),
+            // DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             // #[cfg(feature = "sqlserver")]
@@ -158,24 +157,18 @@ macro_rules! impl_executor_methods {
 
 pub struct DbTypeOccupy;
 impl RowType for DbTypeOccupy {
-    fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError>
+    fn col_to_v_by_index(&self, _: usize) -> Result<ParamValue, DatabaseError>
     where
         Self: Sized
     {
         Err(DatabaseError::CommonError("DbTypeOccupy::col_to_v_by_index".to_string()))
     }
 
-    fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
+    fn col_to_v_by_name(&self, _: &str) -> Result<ParamValue, DatabaseError>
     where
         Self: Sized
     {
         Err(DatabaseError::CommonError("DbTypeOccupy::col_to_v_by_name".to_string()))
-    }
-}
-
-impl AsRef<DbTypeOccupy> for DbTypeOccupy {
-    fn as_ref(&self) -> &DbTypeOccupy {
-        todo!()
     }
 }
 
@@ -184,48 +177,27 @@ impl AsRef<DbTypeOccupy> for DbTypeOccupy {
 impl Executor for QueryDbType {
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
-    // type ConnWrapper = DbTypeOccupy;
 
-    async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, _: Arc<std::sync::Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>, _: F, _: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
-        todo!()
+        Err(DatabaseError::CommonError("DbType::query not implemented".to_string()))?
     }
 
-    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        todo!()
-    }
-
-
-
-    async fn query_basic<T, R, F, Q>(&self, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
-    where
-        T: Send + 'static,
-        R: Send + 'static,
-        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
-        Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
-    {
-        //impl_executor_methods!(self, query_basic(sql, params,mapper, processor))
-        Err(DatabaseError::CommonError(format!("DbType::query_basic")))
-    }
-
-    fn row_to_e<'a, E>(row: &Self::Row<'a>) -> Result<E, DatabaseError>
-    where
-        E: Entity
-    {
-        todo!()
+    async fn execute(&self, _: Arc<std::sync::Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        Err(DatabaseError::CommonError("DbType::execute not implemented".to_string()))?
     }
 
     fn get_conn_ref(&self) -> Result<Arc<std::sync::Mutex<Self::Conn>>, DatabaseError> {
-        todo!()
+        Err(DatabaseError::CommonError("DbType::get_conn_ref not implemented".to_string()))?
     }
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
-        todo!()
+        Err(DatabaseError::CommonError("DbType::get_conn not implemented".to_string()))?
     }
 
 

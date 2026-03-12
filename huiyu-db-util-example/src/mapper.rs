@@ -33,6 +33,10 @@ pub struct BedEntity{
     pub bed_name: Option<String>,
     #[field(column = "bed_type")]
     pub bed_type: Option<String>,
+    #[field(column = "sort_no")]
+    pub sort_no: Option<i16>,
+    #[field(column = "created_time")]
+    pub created_time: Option<DateTime<Local>>,
 }
 
 #[derive(Clone, Debug,Entity)]
@@ -47,7 +51,7 @@ pub struct UserEntity{
     pub password: Option<String>,
     #[field(column = "login_name")]
     pub login_name: Option<String>,
-    #[field(column = "login_name")]
+    #[field(column = "create_time")]
     pub create_time: Option<DateTime<Local>>,
 }
 

@@ -1,18 +1,17 @@
 use chrono::{Datelike, Timelike};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
-use huiyu_db_mapper_core::base::param::ParamValue::DateTime;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::util::time_util;
-use mysql::prelude::{FromValue, Queryable};
+use mysql::prelude::{Queryable};
 use mysql::Error::FromRowError;
-use mysql::{Conn, FromValueError, Params, Pool, PooledConn, Row, Value};
+use mysql::{Params, Pool, PooledConn, Row, Value};
 use rustlog::info;
-use std::sync::{Arc};
-use std::time;
 use std::sync::Mutex;
+use std::sync::Arc;
+use std::time;
 use tokio::task::spawn_blocking;
 use tokio::task_local;
 
@@ -56,8 +55,6 @@ impl Executor for MysqlSqlExecutor {
 
     type Row<'a> = MysqlRow;
     type Conn = PooledConn;
-    // type ConnWrapper = Conn;
-
 
     async fn query<T, R, F, Q>(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
@@ -75,7 +72,7 @@ impl Executor for MysqlSqlExecutor {
                 vec.push(param_value_to_value(param)?);
             }
             let res = conn.lock().unwrap().exec_map(stat, Params::Positional(vec),|row: Row|{
-                let res = mapper(&MysqlRow{row: row.clone()}).map_err(|e| FromRowError(row));
+                let res = mapper(&MysqlRow{row: row.clone()}).map_err(|_| FromRowError(row));
                 res
             }).map_err(|e| DatabaseError::RowConvertError(e.to_string()))?;
             let mut vec = Vec::new();
@@ -87,7 +84,7 @@ impl Executor for MysqlSqlExecutor {
         }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
     }
 
-    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut vec = Vec::new();
         for param in params.iter() {
             vec.push(param_value_to_value(param)?);
@@ -118,10 +115,6 @@ impl Executor for MysqlSqlExecutor {
         }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
     }
 }
-
-pub struct MysqlParamValue(ParamValue);
-
-
 
 fn param_value_to_value(val: &ParamValue) -> Result<Value, DatabaseError> {
     match val {
@@ -161,7 +154,7 @@ fn value_to_param_value(value: Value) -> Result<ParamValue, DatabaseError> {
         Value::Double(v) => Ok(ParamValue::F64(v)),
         Value::Bytes(v) => Ok(ParamValue::Blob(v)),
         Value::Date(year, month, day, hour, minutes, seconds, micro) => Ok(ParamValue::DateTime(time_util::create_datetime_local(
-            year as i32, month as u32, day as u32, hour as u32, minutes as u32, seconds as u32, micro as u32
+            year as i32, month as u32, day as u32, hour as u32, minutes as u32, seconds as u32, micro
         ))),
         Value::Time(is_negative, days, hours, minutes, seconds, micro_seconds) => {
             let duration = time::Duration::from_days(days as u64)

@@ -1,14 +1,4 @@
-
-use std::sync::Arc;
-use std::time;
 use chrono::{Datelike, Timelike};
-use mysql::prelude::{FromValue, Queryable};
-use mysql::{Conn, FromValueError, Params, Pool, PooledConn, Row, Value};
-use mysql::Error::FromRowError;
-use rustlog::info;
-use tokio::sync::Mutex;
-use tokio::task::spawn_blocking;
-use tokio::task_local;
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::base::param::ParamValue::DateTime;
@@ -16,6 +6,15 @@ use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::util::time_util;
+use mysql::prelude::{FromValue, Queryable};
+use mysql::Error::FromRowError;
+use mysql::{Conn, FromValueError, Params, Pool, PooledConn, Row, Value};
+use rustlog::info;
+use std::sync::{Arc};
+use std::time;
+use std::sync::Mutex;
+use tokio::task::spawn_blocking;
+use tokio::task_local;
 
 task_local! {
     pub static MYSQL_CONN_REGISTER : Arc<Mutex<PooledConn>>;
@@ -60,36 +59,40 @@ impl Executor for MysqlSqlExecutor {
     // type ConnWrapper = Conn;
 
 
-    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
-        let stat = conn.prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
-        let mut vec = Vec::new();
-        for param in params.iter() {
-            vec.push(param_value_to_value(param)?);
-        }
-        let res = conn.exec_map(stat, Params::Positional(vec),|row: Row|{
-            let res = mapper(&MysqlRow{row: row.clone()}).map_err(|e| FromRowError(row));
-            res
-        }).map_err(|e| DatabaseError::RowConvertError(e.to_string()))?;
-        let mut vec = Vec::new();
-        for row in res {
-            let row = row.map_err(|e| DatabaseError::RowConvertError(e.to_string()));
-            vec.push(row?);
-        }
-        processor(vec)
+        let sql = sql.to_string();
+        let params = params.clone();
+        spawn_blocking(move || {
+            let stat = conn.lock().unwrap().prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+            let mut vec = Vec::new();
+            for param in params.iter() {
+                vec.push(param_value_to_value(param)?);
+            }
+            let res = conn.lock().unwrap().exec_map(stat, Params::Positional(vec),|row: Row|{
+                let res = mapper(&MysqlRow{row: row.clone()}).map_err(|e| FromRowError(row));
+                res
+            }).map_err(|e| DatabaseError::RowConvertError(e.to_string()))?;
+            let mut vec = Vec::new();
+            for row in res {
+                let row = row.map_err(|e| DatabaseError::RowConvertError(e.to_string()));
+                vec.push(row?);
+            }
+            processor(vec)
+        }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
     }
 
-    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut vec = Vec::new();
         for param in params.iter() {
             vec.push(param_value_to_value(param)?);
         }
-        let res:Option<Value> = conn.exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let res:Option<Value> = conn.lock().unwrap().exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         if res.is_none() {
             return Ok(0);
         }

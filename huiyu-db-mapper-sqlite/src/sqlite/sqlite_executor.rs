@@ -12,8 +12,7 @@ use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 
 task_local! {
-    pub static SQLITE_CONN_REGISTER : Arc<Mutex<Object>>;
-    pub static SQLITE_TX_REGISTER : Arc<Mutex<Option<rusqlite::Transaction<'static>>>>;
+    pub static SQLITE_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
 }
 #[derive(Clone)]
 pub struct SqliteSqlExecutor;
@@ -89,7 +88,7 @@ impl Executor for SqliteSqlExecutor {
     // type ConnWrapper = deadpool_sync::SyncWrapper<rusqlite::Connection>;
     
 
-    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -98,7 +97,7 @@ impl Executor for SqliteSqlExecutor {
     {
         let sql = sql.to_string();
         let params = params.clone();
-        conn.interact(move |conn| {
+        conn.lock().unwrap().interact(move |conn| {
             let mut stmt = conn.prepare(sql.as_str()).map_err(|e| DatabaseError::CommonError(format!("Failed to prepare statement: {:?}", e)))?;
             let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
 
@@ -113,17 +112,17 @@ impl Executor for SqliteSqlExecutor {
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
 
-    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let sql = sql.to_string();
         let params = params.clone();
-        conn.interact(move |conn| {
+        conn.lock().unwrap().interact(move |conn| {
             let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
             let res = conn.execute(sql.as_str(), &*param_refs).map_err(|e| DatabaseError::CommonError(format!("Failed to execute statement: {:?}", e)))?;
             Ok(res as u64)
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
 
-    fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {
+    fn get_conn_ref(&self) -> Result<Arc<std::sync::Mutex<Self::Conn>>, DatabaseError> {
         let c = SQLITE_CONN_REGISTER.try_get();
         if c.is_err() {
             return Err(DatabaseError::AccessError("SQLITE_CONN_REGISTER is not set".to_string()));

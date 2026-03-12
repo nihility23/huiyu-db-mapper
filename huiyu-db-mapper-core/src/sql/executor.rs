@@ -22,7 +22,7 @@ pub trait Executor{
 
     async fn query<T, R, F, Q>(
         &self,
-        conn: &mut Self::Conn,
+        conn: Arc<std::sync::Mutex<Self::Conn>>,
         sql: &str,
         params: &Vec<ParamValue>,
         mapper: F,
@@ -35,7 +35,7 @@ pub trait Executor{
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
     async fn execute(
         &self,
-        conn: &mut Self::Conn,
+        conn: Arc<std::sync::Mutex<Self::Conn>>,
         sql: &str,
         params: &Vec<ParamValue>,
     ) -> Result<u64, DatabaseError>;
@@ -45,15 +45,15 @@ pub trait Executor{
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
-            let conn = conn_ref.lock().await;
-            // let conn = conn.as_ref();
-            let mut conn = conn_ref.lock().await;
-            // let conn = conn.as_ref();
-            let ref_mut: &mut Self::Conn = &mut *conn;
-            self.execute(ref_mut, sql, params).await
+            // let conn = conn_ref.lock().await;
+            // // let conn = conn.as_ref();
+            // let mut conn = conn_ref.lock().await;
+            // // let conn = conn.as_ref();
+            // let ref_mut: &mut Self::Conn = &mut *conn;
+            self.execute(conn_ref, sql, params).await
         } else {
             let mut conn: Self::Conn = self.get_conn().await?;
-            self.execute(&mut conn, sql, params).await
+            self.execute(Arc::new(std::sync::Mutex::new(conn)), sql, params).await
         }
     }
 
@@ -74,14 +74,14 @@ pub trait Executor{
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
-            let mut conn = conn_ref.lock().await;
+            // let mut conn = conn_ref.lock().await;
             // let conn = conn.as_ref();
-            let ref_mut: &mut Self::Conn = &mut *conn;
-            let mut c = ref_mut;
-            self.query(c, sql, params, mapper, processor).await // 现在可以借用
+            // let ref_mut: &mut Self::Conn = &mut *conn;
+            // let mut c = ref_mut;
+            self.query(conn_ref, sql, params, mapper, processor).await // 现在可以借用
         } else {
             let mut conn = self.get_conn().await?;
-            self.query(&mut conn, sql, params, mapper, processor).await
+            self.query(Arc::new(std::sync::Mutex::new(conn)), sql, params, mapper, processor).await
             // Err(DatabaseError::ConnectCanNotGetError("No connection".to_string()))
         }
     }
@@ -95,7 +95,7 @@ pub trait Executor{
         Ok(e)
     }
 
-    fn get_conn_ref(&self)-> Result<Arc<Mutex<Self::Conn>>,DatabaseError> ;
+    fn get_conn_ref(&self)-> Result<Arc<std::sync::Mutex<Self::Conn>>,DatabaseError> ;
 
     async fn get_conn(&self)-> Result<Self::Conn,DatabaseError>;
 

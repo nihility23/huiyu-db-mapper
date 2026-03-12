@@ -186,7 +186,7 @@ impl Executor for QueryDbType {
     type Conn = DbTypeOccupy;
     // type ConnWrapper = DbTypeOccupy;
 
-    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -196,7 +196,7 @@ impl Executor for QueryDbType {
         todo!()
     }
 
-    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 
@@ -220,7 +220,7 @@ impl Executor for QueryDbType {
         todo!()
     }
 
-    fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {
+    fn get_conn_ref(&self) -> Result<Arc<std::sync::Mutex<Self::Conn>>, DatabaseError> {
         todo!()
     }
 

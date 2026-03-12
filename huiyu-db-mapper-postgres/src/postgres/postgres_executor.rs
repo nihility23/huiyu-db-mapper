@@ -12,7 +12,7 @@ use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 
 task_local! {
-    pub static POSTGRES_CONN_REGISTER : Arc<Mutex<Object>>;
+    pub static POSTGRES_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
 }
 #[derive(Clone)]
 pub struct PostgresSqlExecutor;
@@ -48,7 +48,7 @@ impl Executor for PostgresSqlExecutor {
     // type ConnWrapper = ClientWrapper;
 
 
-    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -61,27 +61,27 @@ impl Executor for PostgresSqlExecutor {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
-        let stmt = conn.prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let stmt = conn.lock().unwrap().prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
 
-        let results = conn.query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
+        let results = conn.lock().unwrap().query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
 
         processor(results)
     }
 
-    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
         let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
-        let res = conn.execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let res = conn.lock().unwrap().execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         Ok(res as u64)
     }
 
 
-    fn get_conn_ref(&self)-> Result<Arc<Mutex<Object>>,DatabaseError> {
+    fn get_conn_ref(&self)-> Result<Arc<std::sync::Mutex<Object>>,DatabaseError> {
         let c = POSTGRES_CONN_REGISTER.try_get();
         if c.is_err() {
             return Err(DatabaseError::AccessError("POSTGRES_CONN_REGISTER is not set".to_string()));

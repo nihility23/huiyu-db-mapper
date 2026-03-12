@@ -299,7 +299,7 @@ impl ParamValue {
             ParamValue::Bool(x) => x.to_string(),
             ParamValue::String(x) => x.to_string(),
             ParamValue::DateTime(x) => x.to_string(),
-            ParamValue::Blob(_) => String::new(),
+            ParamValue::Blob(x) => String::from_utf8(x.to_vec()).unwrap_or_default(),
             ParamValue::Clob(x) => String::from_utf8(x.to_vec()).unwrap(),
             ParamValue::Null => "null".to_string(),
             ParamValue::F32(x) => x.to_string(),

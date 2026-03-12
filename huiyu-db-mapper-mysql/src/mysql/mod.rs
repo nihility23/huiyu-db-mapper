@@ -1,3 +1,3 @@
-mod mysql_executor;
-mod mysql_register;
-mod mysql_sql_generator;
+pub mod mysql_executor;
+pub mod mysql_register;
+pub mod mysql_sql_generator;

@@ -5,6 +5,7 @@ use chrono::{Datelike, Timelike};
 use mysql::prelude::{FromValue, Queryable};
 use mysql::{Conn, FromValueError, Params, Pool, PooledConn, Row, Value};
 use mysql::Error::FromRowError;
+use rustlog::info;
 use tokio::sync::Mutex;
 use tokio::task::spawn_blocking;
 use tokio::task_local;
@@ -66,12 +67,6 @@ impl Executor for MysqlSqlExecutor {
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
-
-        // let mut str = sql.to_string();
-        // for i in 0..params.len() {
-        //     str = str.replacen("?", &format!("${}", i+1), 1);
-        //     println!("{}", str);
-        // }
         let stat = conn.prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         let mut vec = Vec::new();
         for param in params.iter() {
@@ -90,11 +85,6 @@ impl Executor for MysqlSqlExecutor {
     }
 
     async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
-        // let mut str = sql.to_string();
-        // for i in 0..params.len() {
-        //     str = str.replacen("?", &format!("${}", i+1), 1);
-        //     println!("{}", str);
-        // }
         let mut vec = Vec::new();
         for param in params.iter() {
             vec.push(param_value_to_value(param)?);
@@ -116,13 +106,17 @@ impl Executor for MysqlSqlExecutor {
     }
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
-        spawn_blocking(|| {
-            let db_manager = DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap();
+        let db_name = get_datasource_name();
+        spawn_blocking(move || {
+            info!("get_conn: {}", db_name);
+            let db_manager = DbManager::<Pool>::get_instance(db_name.as_str()).unwrap();
             let pool = db_manager.get_pool();
             pool.get_conn().map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
         }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
     }
 }
+
+pub struct MysqlParamValue(ParamValue);
 
 
 

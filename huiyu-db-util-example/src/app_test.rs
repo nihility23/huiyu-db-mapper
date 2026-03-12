@@ -1,4 +1,4 @@
-use crate::mapper::{AppMapper, BedMapper};
+use crate::mapper::{AppMapper, BedMapper, UserMapper};
 use deadpool_postgres::{ManagerConfig, RecyclingMethod, Runtime};
 use deadpool_sqlite::Config;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
@@ -6,7 +6,7 @@ use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
-use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::DbManager;
+use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::{DbManager, DbRegister};
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use rustlog::error;
 use std::cell::RefCell;
@@ -16,6 +16,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
 use tokio_postgres::NoTls;
 use uuid::Uuid;
+use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper;
+use huiyu_db_util::huiyu_db_mapper_mysql::mysql::mysql_register::MysqlDbRegister;
+use huiyu_db_util::huiyu_db_mapper_postgres::postgres::postgres_register::PostgresDbRegister;
+use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SqliteRow;
+use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_register::SqliteDbRegister;
 
 pub async fn test(){
     let db_config_sqlite = DbConfig::new(DbType::Sqlite, None, None,None, None, Some("E:\\test\\tiny-file-manager\\db\\tiny-file-manager.db".to_string()),  None, "default".to_string());
@@ -27,9 +32,31 @@ pub async fn test(){
                                   Some("postgres".to_string()),
                                   Some("fhds".to_string()),
                                   "postgres".to_string());
-    DbManager::register(&db_config_sqlite, |db_config| {
-        Config::new(db_config.database.clone().expect("Database URL is missing")).create_pool(deadpool_sqlite::Runtime::Tokio1).expect("Failed to create pool")
-    }).expect("TODO: panic message");
+    let db_config_mysql = DbConfig::new(DbType::Mysql,
+                                           Some("10.150.6.6".to_string()),
+                                           Some(3306),
+                                           Some("root".to_string()),
+                                           Some("1qaz!QAZ".to_string()),
+                                           Some("test".to_string()),
+                                           Some("test".to_string()),
+                                           "mysql".to_string());
+    SqliteDbRegister::register_db(&db_config_sqlite).expect("Failed to register db");
+
+    PostgresDbRegister::register_db(&db_config_postgres).expect("Failed to register db");
+
+    MysqlDbRegister::register_db(&db_config_mysql).expect("TODO: panic message");
+
+    DB_NAME_REGISTRY.scope(RefCell::new(Some("mysql".to_string())), async {
+        let query_wrapper= QueryWrapper::new().eq("id", ParamValue::String("123".to_string()));
+        let users = UserMapper::select(&query_wrapper).await;
+        if users.is_err(){
+            error!("Error: {}", users.err().unwrap());
+        }else {
+            let value = users.unwrap();
+            println!("query list {:?}", value);
+        }
+    }).await;
+
     //
 
     // // query list
@@ -49,49 +76,35 @@ pub async fn test(){
 
 
 
-    DbManager::register(&db_config_postgres, |db_config| {
-        let mut cfg = deadpool_postgres::Config::new();
-        cfg.dbname = Some("postgres".to_string());
-        cfg.manager = Some(ManagerConfig {
-            recycling_method: RecyclingMethod::Fast,
-        });
-        cfg.user = Some("postgres".to_string());
-        cfg.password = Some("123456".to_string());
-        cfg.host = Some(String::from("10.150.2.200"));
-        cfg.port = Some(5432);
-        // // 或者
-        cfg.options = Some("--search_path=fhds".to_string());
-        let pool:deadpool_postgres::Pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls ).unwrap();
-        pool
-    }).expect("TODO: panic message");
+
 
 
     //query one
-    let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()))
-        .exists("select 1 from t_app where id = '1'", Vec::new())
-        .like("app_name", ParamValue::String("f".to_string()));
-    let res = AppMapper::select_one(&query_wrapper).await;
-    if res.is_err(){
-        error!("Error: {}", res.err().unwrap());
-    }else {
-
-        let value = res.unwrap();
-        println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
-    }
-
-
-    DB_NAME_REGISTRY.scope(RefCell::new(Some("postgres".to_string())), async {
-
-        let res = BedMapper::select_by_key(&"bed014".to_string()).await;
-        if res.is_err(){
-            error!("Error: {}", res.err().unwrap());
-        }else {
-            let value = res.unwrap();
-            println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
-        }
+    // let query_wrapper = QueryWrapper::new().eq("id", ParamValue::String("113".to_string()))
+    //     .exists("select 1 from t_app where id = '1'", Vec::new())
+    //     .like("app_name", ParamValue::String("f".to_string()));
+    // let res = AppMapper::select_one(&query_wrapper).await;
+    // if res.is_err(){
+    //     error!("Error: {}", res.err().unwrap());
+    // }else {
+    //
+    //     let value = res.unwrap();
+    //     println!("select one {}", serde_json::to_string_pretty(&value).unwrap());
+    // }
 
 
-    }).await;
+    // DB_NAME_REGISTRY.scope(RefCell::new(Some("postgres".to_string())), async {
+    //
+    //     let res = BedMapper::select_by_key(&"bed014".to_string()).await;
+    //     if res.is_err(){
+    //         error!("Error: {}", res.err().unwrap());
+    //     }else {
+    //         let value = res.unwrap();
+    //         println!("select_by_key {}", serde_json::to_string_pretty(&value).unwrap());
+    //     }
+    //
+    //
+    // }).await;
 
     // let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
     //         "datasource type is null".to_string(),

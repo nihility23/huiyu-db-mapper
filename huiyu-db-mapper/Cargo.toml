@@ -7,7 +7,7 @@ edition = "2024"
 huiyu-db-mapper-core={path = "../huiyu-db-mapper-core"}
 huiyu-db-mapper-postgres={path = "../huiyu-db-mapper-postgres",optional = true}
 huiyu-db-mapper-sqlite={path = "../huiyu-db-mapper-sqlite", optional = true}
-
+huiyu-db-mapper-mysql={path = "../huiyu-db-mapper-mysql", optional = true}
 
 chrono = { workspace = true }
 rustlog = {workspace = true}
@@ -23,3 +23,4 @@ dashmap = {workspace = true }
 default = ["sqlite"]
 postgres = ["huiyu-db-mapper-postgres"]
 sqlite = ["huiyu-db-mapper-sqlite"]
+mysql = ["huiyu-db-mapper-mysql"]

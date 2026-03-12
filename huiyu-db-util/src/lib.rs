@@ -6,3 +6,5 @@ pub use huiyu_db_mapper_core;
 pub use huiyu_db_mapper_postgres;
 #[cfg(feature = "sqlite")]
 pub use huiyu_db_mapper_sqlite;
+#[cfg(feature = "mysql")]
+pub use huiyu_db_mapper_mysql;

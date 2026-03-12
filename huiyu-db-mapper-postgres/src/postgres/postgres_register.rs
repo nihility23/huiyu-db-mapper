@@ -4,7 +4,6 @@ use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::pool::db_manager::{DbManager, DbRegister};
 
-pub const POSTGRES_REGISTER: PostgresDbRegister = PostgresDbRegister;
 pub struct PostgresDbRegister;
 
 impl DbRegister for PostgresDbRegister{
@@ -23,8 +22,7 @@ impl DbRegister for PostgresDbRegister{
             if config.schema.is_some() {
                 cfg.options = Some(format!("--search_path={}",config.schema.clone().unwrap()));
             }
-            let pool:deadpool_postgres::Pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls ).unwrap();
-            pool
+            cfg.create_pool(Some(Runtime::Tokio1), NoTls ).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
         })?;
         Ok(())
     }

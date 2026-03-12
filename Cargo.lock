@@ -577,6 +577,7 @@ dependencies = [
  "deadpool 0.13.0",
  "deadpool-sync",
  "huiyu-db-mapper-core",
+ "huiyu-db-mapper-mysql",
  "huiyu-db-mapper-postgres",
  "huiyu-db-mapper-sqlite",
  "lazy_static",
@@ -610,6 +611,7 @@ dependencies = [
  "deadpool-sync",
  "huiyu-db-mapper-core",
  "mysql",
+ "rustlog",
  "tokio",
 ]
 
@@ -648,6 +650,7 @@ dependencies = [
  "huiyu-db-macros",
  "huiyu-db-mapper",
  "huiyu-db-mapper-core",
+ "huiyu-db-mapper-mysql",
  "huiyu-db-mapper-postgres",
  "huiyu-db-mapper-sqlite",
 ]

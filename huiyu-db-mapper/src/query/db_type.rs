@@ -15,13 +15,17 @@ use huiyu_db_mapper_sqlite::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
 #[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
-
+#[cfg(feature = "mysql")]
+use huiyu_db_mapper_mysql::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
+#[cfg(feature = "mysql")]
+use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
 
 macro_rules! impl_db_method_generic {
     ($method:ident($($param:ident: $param_type:ty),*) -> $ret:ty) => {
         fn $method(&self, $($param: $param_type),*) -> $ret {
             match self.0 {
-                // DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "mysql")]
+                DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
@@ -38,7 +42,8 @@ macro_rules! impl_db_method_generic {
         where $($where_clause)+
         {
             match self.0 {
-                // DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "mysql")]
+                DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
@@ -56,7 +61,8 @@ macro_rules! impl_db_method_generic {
         where $($where_clause)+
         {
             match self.0 {
-                // DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "mysql")]
+                DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
@@ -72,7 +78,8 @@ macro_rules! impl_db_method_generic {
     ($method:ident <$g:ident> ($($param:ident: $param_type:ty),*) -> $ret:ty) => {
         fn $method <$g> (&self, $($param: $param_type),*) -> $ret {
             match self.0 {
-                // DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "mysql")]
+                DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
@@ -117,8 +124,8 @@ macro_rules! impl_executor_methods {
     // 匹配无泛型参数的方法
     ($self:ident, $method:ident($($arg:ident),*)) => {
         match $self.0 {
-            // #[cfg(feature = "mysql")]
-            // DbType::Mysql => MYSQL_SQL_EXECUTOR.$method($($arg),*).await,
+            #[cfg(feature = "mysql")]
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method($($arg),*).await,
             // #[cfg(feature = "oracle")]
@@ -134,8 +141,8 @@ macro_rules! impl_executor_methods {
     // 匹配有泛型参数的方法
     ($self:ident, $method:ident<$($gen:ident),*>($($arg:ident),*)) => {
         match $self.0 {
-            // #[cfg(feature = "mysql")]
-            // DbType::Mysql => MYSQL_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "mysql")]
+            DbType::Mysql => MYSQL_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             // #[cfg(feature = "oracle")]

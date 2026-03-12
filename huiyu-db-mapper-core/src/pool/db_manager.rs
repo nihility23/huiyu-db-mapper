@@ -3,7 +3,7 @@ use crate::base::db_type::DbType;
 use crate::base::error::DatabaseError;
 use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
-use rustlog::info;
+use rustlog::{info, warn};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::error::Error;
@@ -48,7 +48,7 @@ impl DatabaseRegistry {
     ) {
         let type_id = TypeId::of::<M>();
         let key = (name.clone(), type_id);
-
+        warn!("Inserting instance with key: {:?}", key);
         // 插入实例
         self.instances.insert(key, instance.clone() as Arc<dyn Any + Send + Sync>);
 
@@ -79,6 +79,7 @@ impl DatabaseRegistry {
         name: &str
     ) -> Option<Arc<DbManager<M>>> {
         let key = (name.to_string(), TypeId::of::<M>());
+        warn!("Getting instance with key: {:?}", key);
         self.instances
             .get(&key)
             .and_then(|entry| entry.value().clone().downcast::<DbManager<M>>().ok())
@@ -186,7 +187,7 @@ impl<M: Send + Sync + 'static> DbManager<M> {
     /// 注册新的数据库实例（可以多次调用）
     pub fn register<F>(config: &DbConfig, factory: F) -> Result<Arc<Self>, DatabaseError>
     where
-        F: Fn(&DbConfig) -> M + Sync + Send + 'static,
+        F: Fn(&DbConfig) -> Result<M,DatabaseError> + Sync + Send + 'static,
     {
         // 确保注册表已初始化
         Self::init_registry();
@@ -202,7 +203,7 @@ impl<M: Send + Sync + 'static> DbManager<M> {
         set_datasource_type(config.name.clone(), config.db_type);
 
         // 创建连接池
-        let pool = factory(config);
+        let pool = factory(config)?;
 
         // 创建实例
         let instance = Arc::new(Self {
@@ -221,7 +222,7 @@ impl<M: Send + Sync + 'static> DbManager<M> {
     /// 批量注册多个实例
     pub fn register_batch<F>(configs: Vec<DbConfig>, factory: F) -> Result<Vec<Arc<Self>>, Box<dyn Error>>
     where
-        F: Fn(&DbConfig) -> M + Sync + Send + 'static + Clone,
+        F: Fn(&DbConfig) -> Result<M, DatabaseError> + Sync + Send + 'static + Clone,
     {
         let mut instances = Vec::new();
         for config in configs {

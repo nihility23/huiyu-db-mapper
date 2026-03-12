@@ -17,6 +17,12 @@ pub enum DatabaseError {
     InstanceAlreadyExistsError(String),
     #[error("Config Not Found: {0}")]
     ConfigNotFoundError(String),
+    #[error("Pool Create Error: {0}")]
+    PoolCreateError(String),
+    #[error("Connect Can Not Get Error: {0}")]
+    ConnectCanNotGetError(String),
+    #[error("Row Convert Error: {0}")]
+    RowConvertError(String),
     
     // 三方库异常
     #[cfg(feature = "sqlite")]

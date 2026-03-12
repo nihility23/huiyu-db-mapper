@@ -17,12 +17,12 @@ pub trait RowType{
 #[allow(async_fn_in_trait)]
 pub trait Executor{
     type Row<'a>: RowType + 'a;
-    type Conn: AsRef<Self::ConnWrapper>;
-    type ConnWrapper;
+    type Conn;
+    // type ConnWrapper;
 
     async fn query<T, R, F, Q>(
         &self,
-        conn: &Self::ConnWrapper,
+        conn: &mut Self::Conn,
         sql: &str,
         params: &Vec<ParamValue>,
         mapper: F,
@@ -35,7 +35,7 @@ pub trait Executor{
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
     async fn execute(
         &self,
-        conn: &Self::ConnWrapper,
+        conn: &mut Self::Conn,
         sql: &str,
         params: &Vec<ParamValue>,
     ) -> Result<u64, DatabaseError>;
@@ -46,11 +46,14 @@ pub trait Executor{
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
             let conn = conn_ref.lock().await;
-            let conn = conn.as_ref();
-            self.execute(conn, sql, params).await
+            // let conn = conn.as_ref();
+            let mut conn = conn_ref.lock().await;
+            // let conn = conn.as_ref();
+            let ref_mut: &mut Self::Conn = &mut *conn;
+            self.execute(ref_mut, sql, params).await
         } else {
-            let conn: Self::Conn = self.get_conn().await;
-            self.execute(conn.as_ref(), sql, params).await
+            let mut conn: Self::Conn = self.get_conn().await?;
+            self.execute(&mut conn, sql, params).await
         }
     }
 
@@ -71,12 +74,15 @@ pub trait Executor{
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
             let conn_ref = conn_ref.unwrap().clone();
-            let conn = conn_ref.lock().await;
-            let conn = conn.as_ref();
-            self.query(conn, sql, params, mapper, processor).await // 现在可以借用
+            let mut conn = conn_ref.lock().await;
+            // let conn = conn.as_ref();
+            let ref_mut: &mut Self::Conn = &mut *conn;
+            let mut c = ref_mut;
+            self.query(c, sql, params, mapper, processor).await // 现在可以借用
         } else {
-            let conn = self.get_conn().await;
-            self.query(conn.as_ref(), sql, params, mapper, processor).await
+            let mut conn = self.get_conn().await?;
+            self.query(&mut conn, sql, params, mapper, processor).await
+            // Err(DatabaseError::ConnectCanNotGetError("No connection".to_string()))
         }
     }
 
@@ -91,7 +97,7 @@ pub trait Executor{
 
     fn get_conn_ref(&self)-> Result<Arc<Mutex<Self::Conn>>,DatabaseError> ;
 
-    async fn get_conn(&self)-> Self::Conn;
+    async fn get_conn(&self)-> Result<Self::Conn,DatabaseError>;
 
     async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
         self.query_basic::<E, Vec<E>, _, _>(sql, params, |row|Self::row_to_e(row), |results: Vec<E>| {

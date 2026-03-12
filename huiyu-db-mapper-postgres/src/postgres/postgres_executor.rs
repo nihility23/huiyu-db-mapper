@@ -45,10 +45,10 @@ impl Executor for PostgresSqlExecutor {
 
     type Row<'a> = PostgresRow;
     type Conn = Object;
-    type ConnWrapper = ClientWrapper;
+    // type ConnWrapper = ClientWrapper;
 
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -69,7 +69,7 @@ impl Executor for PostgresSqlExecutor {
         processor(results)
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
@@ -89,8 +89,8 @@ impl Executor for PostgresSqlExecutor {
         Ok(c.unwrap())
     }
 
-    async fn get_conn(&self) -> Self::Conn {
-        DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap().get_pool().get().await.unwrap()
+    async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
+        DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap().get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
     }
 }
 

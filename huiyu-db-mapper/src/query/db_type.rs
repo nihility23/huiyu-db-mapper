@@ -177,9 +177,9 @@ impl AsRef<DbTypeOccupy> for DbTypeOccupy {
 impl Executor for QueryDbType {
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
-    type ConnWrapper = DbTypeOccupy;
+    // type ConnWrapper = DbTypeOccupy;
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -189,7 +189,7 @@ impl Executor for QueryDbType {
         todo!()
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         todo!()
     }
 
@@ -217,7 +217,7 @@ impl Executor for QueryDbType {
         todo!()
     }
 
-    async fn get_conn(&self) -> Self::Conn {
+    async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         todo!()
     }
 

@@ -86,10 +86,10 @@ impl<'a> RowType for SqliteRow<'a> {
 impl Executor for SqliteSqlExecutor {
     type Row<'a> = SqliteRow<'a>;
     type Conn = Object;
-    type ConnWrapper = deadpool_sync::SyncWrapper<rusqlite::Connection>;
+    // type ConnWrapper = deadpool_sync::SyncWrapper<rusqlite::Connection>;
     
 
-    async fn query<T, R, F, Q>(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -113,7 +113,7 @@ impl Executor for SqliteSqlExecutor {
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
 
-    async fn execute(&self, conn: &Self::ConnWrapper, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: &mut Self::Conn, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let sql = sql.to_string();
         let params = params.clone();
         conn.interact(move |conn| {
@@ -131,10 +131,10 @@ impl Executor for SqliteSqlExecutor {
         Ok(c.unwrap())
     }
 
-    async fn get_conn(&self) -> Self::Conn {
+    async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         let p:Arc<DbManager<Pool>> = DbManager::get_instance(get_datasource_name().as_str()).unwrap();
-        let conn = p.get_pool().get().await.unwrap();
-        conn
+        let conn = p.get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(format!("Failed to get database connection: {:?}", e)))?;
+        Ok(conn)
     }
 }
 
@@ -156,32 +156,6 @@ fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, DatabaseError
         ValueRef::Blob(v) => param_value = ParamValue::Blob(v.to_vec()),
     }
     Ok(param_value)
-}
-
-const fn make_e<E>() -> impl FnMut(&Row<'_>) -> Result<E, DatabaseError>
-where
-    E: Entity,
-{
-    |row| {
-        let mut e = E::new();
-        for col in E::column_names() {
-            let val = row.get_ref(col).map_err(|e| DatabaseError::CommonError(format!("Failed to get column {}: {:?}", col, e)))?;
-            let param_value = value_to_param_value(val)?;
-            e.set_value_by_column_name(col, param_value);
-        }
-        Ok(e)
-    }
-}
-
-// 将闭包改为函数指针形式
-fn entity_mapper<'a, E>(row: &Row<'a>) -> Result<E, DatabaseError> where E: Entity {
-    let mut e = E::new();
-    for col in E::column_names() {
-        let val = row.get_ref(col).map_err(|e| DatabaseError::CommonError(format!("Failed to get column {}: {:?}", col, e)))?;
-        let param_value = value_to_param_value(val)?;
-        e.set_value_by_column_name(col, param_value);
-    }
-    Ok(e)
 }
 
 pub fn to_sql(param_value: & ParamValue) -> & dyn ToSql {

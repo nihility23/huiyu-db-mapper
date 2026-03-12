@@ -43,7 +43,6 @@ impl Executor for PostgresSqlExecutor {
 
     type Row<'a> = PostgresRow;
     type Conn = Object;
-    // type ConnWrapper = ClientWrapper;
 
 
     async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
@@ -60,8 +59,17 @@ impl Executor for PostgresSqlExecutor {
             println!("{}", str);
         }
         let stmt = conn.lock().unwrap().prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
-        let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
+        let sql_values: Result<Vec<ToSqlValue>, _> = params.iter()
+            .map(to_sql_value)
+            .collect();
 
+        let sql_values = sql_values?;
+
+        // 获取引用
+        let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
+            .iter()
+            .map(|v| v.as_sql_param())
+            .collect();
         let results = conn.lock().unwrap().query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
 
         processor(results)
@@ -73,11 +81,21 @@ impl Executor for PostgresSqlExecutor {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
-        let param_refs: Vec<&(dyn ToSql+Sync)> = params.iter().map(|x| to_sql(x)).collect::<Result<_, _>>()?;
+        let sql_values: Result<Vec<ToSqlValue>, _> = params.iter()
+            .map(to_sql_value)
+            .collect();
+
+        let sql_values = sql_values?;
+
+        // 获取引用
+        let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
+            .iter()
+            .map(|v| v.as_sql_param())
+            .collect();
+
         let res = conn.lock().unwrap().execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         Ok(res as u64)
     }
-
 
     fn get_conn_ref(&self)-> Result<Arc<std::sync::Mutex<Object>>,DatabaseError> {
         let c = POSTGRES_CONN_REGISTER.try_get();
@@ -93,30 +111,8 @@ impl Executor for PostgresSqlExecutor {
 }
 
 
-
-pub fn to_sql(param_value: & ParamValue) -> Result<&(dyn ToSql +Sync), DatabaseError> {
-    match param_value {
-        // ParamValue::U64(x) => {let v = (*x as i64) ; let vx =  &v; vx as &dyn ToSql},
-        ParamValue::U32(x) => Ok(x as &(dyn ToSql+Sync)),
-        // ParamValue::U16(x) => x as &dyn ToSql,
-        // ParamValue::U8(x) => x as &dyn ToSql,
-        ParamValue::I64(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::I32(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::I16(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::I8(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::String(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::F32(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::F64(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::Bool(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::Blob(x) => Ok(x as &(dyn ToSql+Sync)),
-        ParamValue::Clob(x) => Ok(x as &(dyn ToSql+Sync)),
-        // ParamValue::Null => &tokio_postgres::types::WasNull as &dyn ToSql,
-        // ParamValue::DateTime(x) => x as &dyn ToSql,
-        _ => Err(DatabaseError::ConvertError("Unsupported parameter type".to_string())),
-    }
-}
-
 pub struct PostgresParamValue(ParamValue);
+
 impl FromSql<'_> for PostgresParamValue {
     fn from_sql(ty: &Type, _bytes: &[u8]) -> Result<PostgresParamValue, Box<dyn std::error::Error + Send + Sync + 'static>> {
         match ty {
@@ -141,5 +137,59 @@ impl FromSql<'_> for PostgresParamValue {
 
     fn accepts(_: &Type) -> bool {
         true
+    }
+}
+
+#[derive(Debug)]
+pub enum ToSqlValue {
+    I64(i64),
+    I32(i32),
+    I16(i16),
+    I8(i8),
+    String(String),
+    F32(f32),
+    F64(f64),
+    Bool(bool),
+    Blob(Vec<u8>),
+    Clob(String),
+    DateTime(chrono::DateTime<chrono::Local>),
+}
+
+impl ToSqlValue {
+    pub fn as_sql_param(&self) -> &(dyn ToSql + Sync) {
+        match self {
+            ToSqlValue::I64(v) => v,
+            ToSqlValue::I32(v) => v,
+            ToSqlValue::I16(v) => v,
+            ToSqlValue::I8(v) => v,
+            ToSqlValue::String(v) => v,
+            ToSqlValue::F32(v) => v,
+            ToSqlValue::F64(v) => v,
+            ToSqlValue::Bool(v) => v,
+            ToSqlValue::Blob(v) => v,
+            ToSqlValue::Clob(v) => v,
+            ToSqlValue::DateTime(v) => v,
+        }
+    }
+}
+
+pub fn to_sql_value(param_value: &ParamValue) -> Result<ToSqlValue, DatabaseError> {
+    match param_value {
+        ParamValue::U64(x) => Ok(ToSqlValue::I64(*x as i64)),
+        ParamValue::U32(x) => Ok(ToSqlValue::I32(*x as i32)),
+        ParamValue::U16(x) => Ok(ToSqlValue::I16(*x as i16)),
+        ParamValue::U8(x) => Ok(ToSqlValue::I8(*x as i8)),
+        ParamValue::I64(x) => Ok(ToSqlValue::I64(*x)),
+        ParamValue::I32(x) => Ok(ToSqlValue::I32(*x)),
+        ParamValue::I16(x) => Ok(ToSqlValue::I16(*x)),
+        ParamValue::I8(x) => Ok(ToSqlValue::I8(*x)),
+        ParamValue::String(x) => Ok(ToSqlValue::String(x.to_string())),
+        ParamValue::F32(x) => Ok(ToSqlValue::F32(*x)),
+        ParamValue::F64(x) => Ok(ToSqlValue::F64(*x)),
+        ParamValue::Bool(x) => Ok(ToSqlValue::Bool(*x)),
+        ParamValue::Blob(x) => Ok(ToSqlValue::Blob(x.to_vec())),
+        ParamValue::Clob(x) => Ok(ToSqlValue::Clob(String::from_utf8(x.to_vec()).unwrap())),
+        ParamValue::DateTime(x) => Ok(ToSqlValue::DateTime(*x)),
+        _ => Err(DatabaseError::ConvertError("Unsupported parameter type".to_string())),
     }
 }

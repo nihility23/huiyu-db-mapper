@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::db_type::DbType;
-use huiyu_db_mapper_core::base::entity::{ColumnInfo, Entity};
+use huiyu_db_mapper_core::base::entity::{Entity};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::db_manager::DbRegister;

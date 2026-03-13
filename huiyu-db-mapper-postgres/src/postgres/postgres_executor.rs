@@ -8,7 +8,6 @@ use std::sync::Arc;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
-use huiyu_db_mapper_core::base::entity::ColumnInfo;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;

@@ -80,7 +80,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
         quote! { #name: None }
     });
 
-    // 生成 ColumnInfo 列表
+    // 生成 huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo 列表
     let column_infos = generate_column_infos(&fields_info);
 
     // 生成 get_value 的 match 分支
@@ -96,12 +96,12 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
 
-        // use db_mapper::base::entity::ColumnType;
+        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType;
         // use db_mapper::base::entity::Entity;
-        // use db_mapper::base::entity::ColumnInfo;
-        // use db_mapper::base::param::ParamValue;
+        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo;
+        // use db_mapper::base::param::huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
 
-        impl Entity for #name {
+        impl huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity for #name {
             type K = #key_type;
 
             fn key(&self) -> Self::K {
@@ -112,7 +112,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 #id_column_name_lit
             }
 
-            fn key_info() -> Option<ColumnInfo> {
+            fn key_info() -> Option<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
                 Some(#id_column_info)
             }
 
@@ -134,35 +134,35 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn get_value_by_field_name(&self, field_name: &str) -> ParamValue {
+            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
                 match field_name {
                     #(#get_value_by_field_arms)*
-                    _ => ParamValue::Null,
+                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn get_value_by_column_name(&self, column_name: &str) -> ParamValue {
+            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
                 match column_name {
                     #(#get_value_by_column_arms)*
-                    _ => ParamValue::Null,
+                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue) {
+            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
                     _ => rustlog::error!("Field name not found: {}", field_name),
                 }
             }
 
-            fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue) {
+            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
                     _ => rustlog::error!("Column name not found: {}", column_name),
                 }
             }
 
-            fn get_column_infos() -> Vec<ColumnInfo> {
+            fn get_column_infos() -> Vec<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
                 vec![#(#column_infos),*]
             }
         }
@@ -397,7 +397,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
     };
 
     quote! {
-        ColumnInfo {
+        huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo {
             field_name: #field_name_lit,
             column_name: #column_name_lit,
             column_type: #column_type,
@@ -417,38 +417,38 @@ fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
         Type::Path(type_path) => {
             let segment = type_path.path.segments.last().unwrap();
             match segment.ident.to_string().as_str() {
-                "i8" => quote! { ColumnType::I8 },
-                "i16" => quote! { ColumnType::I16 },
-                "i32" => quote! { ColumnType::I32 },
-                "i64" => quote! { ColumnType::I64 },
-                "u8" => quote! { ColumnType::U8 },
-                "u16" => quote! { ColumnType::U16 },
-                "u32" => quote! { ColumnType::U32 },
-                "u64" => quote! { ColumnType::U64 },
-                "usize" => quote! { ColumnType::USize },
-                "f32" => quote! { ColumnType::F32 },
-                "f64" => quote! { ColumnType::F64 },
-                "bool" => quote! { ColumnType::Bool },
-                "String" => quote! { ColumnType::String },
-                "DateTime" => quote! { ColumnType::DateTime },
+                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I8 },
+                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I16 },
+                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I32 },
+                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I64 },
+                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U8 },
+                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U16 },
+                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U32 },
+                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U64 },
+                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::USize },
+                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F32 },
+                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F64 },
+                "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
+                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::String },
+                "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
                 "Vec" => {
                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                         if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
                             if let Type::Path(inner_path) = inner {
                                 if let Some(inner_seg) = inner_path.path.segments.last() {
                                     if inner_seg.ident == "u8" {
-                                        return quote! { ColumnType::Blob };
+                                        return quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Blob };
                                     }
                                 }
                             }
                         }
                     }
-                    quote! { ColumnType::Clob }
+                    quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Clob }
                 }
-                _ => quote! { ColumnType::Null },
+                _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
             }
         }
-        _ => quote! { ColumnType::Null },
+        _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
     }
 }
 
@@ -469,7 +469,7 @@ fn generate_get_value_arms(fields_info: &[FieldInfo], use_field_name: bool) -> V
 
             let conversion = quote!{
                 {if self.#field_ident.is_none(){
-                    ParamValue::Null
+                    huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null
                 }else{
                     self.#field_ident.clone().unwrap().into()
                 }}

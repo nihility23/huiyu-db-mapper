@@ -24,6 +24,8 @@ pub enum DatabaseError {
     RowConvertError(String),
     #[error("Not Supported Error: {0}")]
     NotSupportedError(String),
+    #[error("Execute Error: {0}")]
+    ExecuteError(String),
 }
 
 unsafe impl Sync for DatabaseError {}

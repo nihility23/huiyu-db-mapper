@@ -9,6 +9,7 @@ use rusqlite::types::ValueRef;
 use rusqlite::ToSql;
 use std::sync::{Arc, Mutex};
 use tokio::task_local;
+use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
     pub static SQLITE_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
@@ -97,24 +98,24 @@ impl Executor for SqliteSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().unwrap().interact(move |conn| {
-            conn.execute("BEGIN TRANSACTION", []).map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {:?}", e)))
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(format!("Failed to lock database connection: {:?}", e)))?.interact(move |conn| {
+            conn.execute("BEGIN TRANSACTION", []).map_err(|e| DatabaseError::ExecuteError(format!("Failed to start transaction: {:?}", e)))
         }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().unwrap().interact(move |conn| {
-            conn.execute("COMMIT", []).map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {:?}", e)))
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(format!("Failed to lock database connection: {:?}", e)))?.interact(move |conn| {
+            conn.execute("COMMIT", []).map_err(|e| DatabaseError::ExecuteError(format!("Failed to start transaction: {:?}", e)))
         }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().unwrap().interact(move |conn| {
-            conn.execute("ROLLBACK", []).map_err(|e| DatabaseError::CommonError(format!("Failed to rollback transaction: {:?}", e)))
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(format!("Failed to lock database connection: {:?}", e)))?.interact(move |conn| {
+            conn.execute("ROLLBACK", []).map_err(|e| DatabaseError::ExecuteError(format!("Failed to rollback transaction: {:?}", e)))
         }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
         Ok(())
     }
@@ -124,11 +125,12 @@ impl Executor for SqliteSqlExecutor {
         F: FnOnce() -> Fut ,  // BF 返回 Future
         Fut: Future<Output = Result<T, DatabaseError>>,
     {
-        let conn = self.get_conn().await?;
-        let res = SQLITE_CONN_REGISTER.scope(Arc::new(Mutex::new(conn)), async {
-            self.transaction_exec_basic(func).await
-        }).await;
-        res
+        // let conn = self.get_conn().await?;
+        // let res = SQLITE_CONN_REGISTER.scope(Arc::new(Mutex::new(conn)), async {
+        //     self.transaction_exec_basic(func).await
+        // }).await;
+        // res
+        with_conn_scope!(SQLITE_CONN_REGISTER, self, func)
     }
 }
 

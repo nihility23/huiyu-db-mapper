@@ -14,6 +14,7 @@ use std::sync::Arc;
 use std::time;
 use tokio::task::spawn_blocking;
 use tokio::task_local;
+use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
     pub static MYSQL_CONN_REGISTER : Arc<Mutex<PooledConn>>;
@@ -113,6 +114,32 @@ impl Executor for MysqlSqlExecutor {
             let pool = db_manager.get_pool();
             pool.get_conn().map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
         }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
+    }
+
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn commit(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn rollback(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn transaction_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output=Result<T, DatabaseError>>
+    {
+        with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
     }
 }
 

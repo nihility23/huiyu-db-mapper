@@ -4,10 +4,11 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
+use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
@@ -98,6 +99,32 @@ impl Executor for PostgresSqlExecutor {
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap().get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
+    }
+
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn commit(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn rollback(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        Ok(())
+    }
+
+    async fn transaction_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output=Result<T, DatabaseError>>
+    {
+        with_conn_scope!(POSTGRES_CONN_REGISTER,self,func)
     }
 }
 

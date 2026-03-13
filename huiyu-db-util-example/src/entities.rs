@@ -133,7 +133,7 @@ pub struct UserRoleEntity {
     pub id: Option<String>,  // 关联ID，varchar主键
 
     #[field(column = "user_id")]
-    pub user_id: Option<i32>,  // 用户ID
+    pub user_id: Option<i64>,  // 用户ID
 
     #[field(column = "role_id")]
     pub role_id: Option<String>,  // 角色ID

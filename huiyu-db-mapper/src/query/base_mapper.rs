@@ -8,7 +8,7 @@ use rustlog::info;
 use huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
-use crate::query::db_type::DbTypeWrapper;
+use crate::query::db_type_wrapper::DbTypeWrapper;
 
 async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
 where

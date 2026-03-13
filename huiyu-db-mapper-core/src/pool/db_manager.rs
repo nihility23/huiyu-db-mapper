@@ -247,9 +247,9 @@ impl<M: Send + Sync + 'static> DbManager<M> {
     }
 
     /// 获取指定名称的实例
-    pub fn get_instance(name: &str) -> Option<Arc<Self>> {
-        let registry = DB_REGISTRY.get()?;
-        registry.get_instance::<M>(name)
+    pub fn get_instance(name: &str) -> Result<Arc<Self>, DatabaseError> {
+        let registry = DB_REGISTRY.get().ok_or(DatabaseError::NotFoundError("Database registry not initialized".to_string()))?;
+        registry.get_instance::<M>(name).ok_or(DatabaseError::NotFoundError(format!("Database instance '{}' not found", name)))
     }
 
     /// 获取当前数据源名称对应的实例

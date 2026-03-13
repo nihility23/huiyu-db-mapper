@@ -7,16 +7,16 @@ impl BaseMapper<UserEntity> for UserMapper {}
 
 pub struct UserRoleMapper;
 
-impl BaseMapper<UserRoleEntity> for UserMapper {}
+impl BaseMapper<UserRoleEntity> for UserRoleMapper {}
 
 pub struct RoleMapper;
 
-impl BaseMapper<RoleEntity> for UserMapper {}
+impl BaseMapper<RoleEntity> for RoleMapper {}
 
 pub struct RolePermissionMapper;
 
-impl BaseMapper<RolePermissionEntity> for UserMapper {}
+impl BaseMapper<RolePermissionEntity> for RolePermissionMapper {}
 
 pub struct PermissionMapper;
 
-impl BaseMapper<PermissionEntity> for UserMapper {}
+impl BaseMapper<PermissionEntity> for PermissionMapper {}

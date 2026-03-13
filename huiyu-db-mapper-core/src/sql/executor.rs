@@ -153,4 +153,35 @@ pub trait Executor{
         self.exec_basic(sql, params).await
     }
 
+    async fn start_transaction(&self)->Result<(),DatabaseError>{
+        Err(DatabaseError::NotSupportedError("start_transaction".to_string()))
+    }
+    async fn commit(&self)->Result<(),DatabaseError>{
+        Err(DatabaseError::NotSupportedError("commit".to_string()))
+    }
+    async fn rollback(&self)->Result<(),DatabaseError>{
+        Err(DatabaseError::NotSupportedError("rollback".to_string()))
+    }
+
+    async fn transaction_exec_basic<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut ,
+        Fut: Future<Output = Result<T, DatabaseError>>{
+            self.start_transaction().await?;
+            let res = func().await;
+            if res.is_err() {
+                self.rollback().await?;
+            }else {
+                self.commit().await?;
+            }
+            res
+    }
+
+    async fn transaction_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut ,  // BF 返回 Future
+        Fut: Future<Output = Result<T, DatabaseError>>,{
+        Err(DatabaseError::NotSupportedError("transaction_exec".to_string()))
+    }
+
 }

@@ -7,7 +7,7 @@ use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::util::time_util;
 use rusqlite::types::ValueRef;
 use rusqlite::ToSql;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::task_local;
 
 task_local! {
@@ -90,9 +90,45 @@ impl Executor for SqliteSqlExecutor {
     }
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
-        let p:Arc<DbManager<Pool>> = DbManager::get_instance(get_datasource_name().as_str()).unwrap();
+        let p:Arc<DbManager<Pool>> = DbManager::get_instance(get_datasource_name().as_str())?;
         let conn = p.get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(format!("Failed to get database connection: {:?}", e)))?;
         Ok(conn)
+    }
+
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().unwrap().interact(move |conn| {
+            conn.execute("BEGIN TRANSACTION", []).map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {:?}", e)))
+        }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
+        Ok(())
+    }
+
+    async fn commit(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().unwrap().interact(move |conn| {
+            conn.execute("COMMIT", []).map_err(|e| DatabaseError::CommonError(format!("Failed to start transaction: {:?}", e)))
+        }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
+        Ok(())
+    }
+
+    async fn rollback(&self) -> Result<(), DatabaseError> {
+        let conn = self.get_conn_ref()?;
+        conn.lock().unwrap().interact(move |conn| {
+            conn.execute("ROLLBACK", []).map_err(|e| DatabaseError::CommonError(format!("Failed to rollback transaction: {:?}", e)))
+        }).await.map_err(|e| DatabaseError::AccessError(format!("Failed to lock database connection: {:?}", e)))??;
+        Ok(())
+    }
+
+    async fn transaction_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut ,  // BF 返回 Future
+        Fut: Future<Output = Result<T, DatabaseError>>,
+    {
+        let conn = self.get_conn().await?;
+        let res = SQLITE_CONN_REGISTER.scope(Arc::new(Mutex::new(conn)), async {
+            self.transaction_exec_basic(func).await
+        }).await;
+        res
     }
 }
 

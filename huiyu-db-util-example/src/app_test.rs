@@ -1,14 +1,11 @@
 use crate::mapper::{AppMapper, BedMapper, UserMapper};
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
+use huiyu_db_util::huiyu_db_mapper::query::db_type::DbTypeWrapper;
 use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
-use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::{ DbRegister};
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
-use huiyu_db_util::huiyu_db_mapper_mysql::mysql::mysql_register::MysqlDbRegister;
-use huiyu_db_util::huiyu_db_mapper_postgres::postgres::postgres_register::PostgresDbRegister;
-use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_register::SqliteDbRegister;
 use rustlog::error;
 use std::cell::RefCell;
 
@@ -30,12 +27,7 @@ pub async fn test(){
                                            Some("test".to_string()),
                                            Some("test".to_string()),
                                            "mysql".to_string());
-    SqliteDbRegister::register_db(&db_config_sqlite).expect("Failed to register db");
-
-    PostgresDbRegister::register_db(&db_config_postgres).expect("Failed to register db");
-
-    MysqlDbRegister::register_db(&db_config_mysql).expect("TODO: panic message");
-
+    DbTypeWrapper::register_dbs(vec![db_config_sqlite, db_config_postgres, db_config_mysql]).expect("Failed to register db");
     DB_NAME_REGISTRY.scope(RefCell::new(Some("mysql".to_string())), async {
         let query_wrapper= QueryWrapper::new().eq("id", ParamValue::String("123".to_string()));
         let users = UserMapper::select(&query_wrapper).await;

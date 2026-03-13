@@ -350,9 +350,9 @@ impl<M: Send + Sync + 'static> DatabaseManagerExt<M> for DbManager<M> {
 }
 
 pub trait DbRegister{
-    fn register_db(config: &DbConfig) -> Result<(), DatabaseError>;
+    fn register_db(&self,config: &DbConfig) -> Result<(), DatabaseError>;
 
-    fn check_config(config: &DbConfig) -> Result<(), DatabaseError>{
+    fn check_config(&self, config: &DbConfig) -> Result<(), DatabaseError>{
         if config.database.is_none() {
             return Err(DatabaseError::ConfigNotFoundError("Database is missing".to_string()));
         }
@@ -370,4 +370,5 @@ pub trait DbRegister{
         }
         Ok(())
     }
+
 }

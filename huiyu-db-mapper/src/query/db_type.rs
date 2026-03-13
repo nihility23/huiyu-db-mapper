@@ -1,21 +1,25 @@
 use std::sync::Arc;
-
+use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_mapper_core::base::entity::Entity;
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
+use huiyu_db_mapper_core::pool::db_manager::DbRegister;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 #[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
+use huiyu_db_mapper_mysql::mysql::mysql_register::MYSQL_DB_REGISTER;
 #[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
+use huiyu_db_mapper_postgres::postgres::postgres_register::POSTGRES_DB_REGISTER;
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
 #[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
+use huiyu_db_mapper_sqlite::sqlite::sqlite_register::SQLITE_DB_REGISTER;
 #[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
 
@@ -91,29 +95,28 @@ macro_rules! impl_db_method_generic {
     };
 }
 
-pub struct QueryDbType(DbType);
+pub struct DbTypeWrapper(DbType);
 
-impl From<DbType> for QueryDbType {
+impl From<DbType> for DbTypeWrapper {
     fn from(db_type: DbType) -> Self {
-        QueryDbType(db_type)
+        DbTypeWrapper(db_type)
     }
 }
 
-impl WhereSqlGenerator for QueryDbType {
+impl WhereSqlGenerator for DbTypeWrapper {
 
 }
 
-
-impl QueryWrapperSqlGenerator for QueryDbType{
+impl QueryWrapperSqlGenerator for DbTypeWrapper{
 
 }
 
-impl PageSqlGenerator for QueryDbType {
+impl PageSqlGenerator for DbTypeWrapper {
     impl_db_method_generic!(gen_page_query_sql(query_sql: &str, current_page: u64, page_size: u64) -> (String, u64, u64));
     impl_db_method_generic!(gen_page_total_sql(query_sql: &str) -> String);
 }
 
-impl BaseSqlGenerator for QueryDbType {
+impl BaseSqlGenerator for DbTypeWrapper {
     impl_db_method_generic!(gen_insert_and_get_id_sql<E>(e: &E) -> (String, Vec<ParamValue>)where E: Entity);
     impl_db_method_generic!(gen_insert_batch_sql<E>(e_vec: &Vec<E>) -> (String, Vec<ParamValue>)where E: Entity);
 }
@@ -174,7 +177,7 @@ impl RowType for DbTypeOccupy {
 
 
 // 然后可以更简洁地实现
-impl Executor for QueryDbType {
+impl Executor for DbTypeWrapper { 
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
 
@@ -199,8 +202,7 @@ impl Executor for QueryDbType {
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         Err(DatabaseError::CommonError("DbType::get_conn not implemented".to_string()))?
     }
-
-
+    
     async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity
@@ -239,5 +241,33 @@ impl Executor for QueryDbType {
 
     async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         impl_executor_methods!(self, update(sql, params))
+    }
+}
+
+
+impl DbRegister for DbTypeWrapper {
+    fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {
+        match self.0 {
+            #[cfg(feature = "mysql")]
+            DbType::Mysql => MYSQL_DB_REGISTER.register_db(config),
+            #[cfg(feature = "sqlite")]
+            DbType::Sqlite => SQLITE_DB_REGISTER.register_db(config),
+            // #[cfg(feature = "oracle")]
+            // DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "postgres")]
+            DbType::Postgres => POSTGRES_DB_REGISTER.register_db(config),
+            // #[cfg(feature = "sqlserver")]
+            // DbType::SqlServer => SQLSERVER_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            _ => {panic!()},
+        }
+    }
+}
+
+impl DbTypeWrapper{
+    pub fn register_dbs(configs: Vec<DbConfig>) -> Result<(), DatabaseError>{
+        for config in configs {
+            DbTypeWrapper(config.db_type).register_db(&config)?;
+        }
+        Ok(())
     }
 }

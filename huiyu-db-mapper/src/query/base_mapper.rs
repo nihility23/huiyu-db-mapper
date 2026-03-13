@@ -8,7 +8,7 @@ use rustlog::info;
 use huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
-use crate::query::db_type::QueryDbType;
+use crate::query::db_type::DbTypeWrapper;
 
 async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
 where
@@ -33,10 +33,10 @@ where
     async fn select_by_key(key: &E::K) -> Result<Option<E>, DatabaseError> {
         let k = key.clone();
         exec::<E, _,_,_,_, Option<E>>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_select_by_key_sql::<E>(k);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_select_by_key_sql::<E>(k);
             (db_type,sql,param_vec)
         },async move|(db_type,sql,param_vec)| {
-            <DbType as Into<QueryDbType>>::into(db_type).query_one(sql.as_str(),&vec![param_vec.clone()]).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).query_one(sql.as_str(),&vec![param_vec.clone()]).await
         }).await
     }
 
@@ -44,10 +44,10 @@ where
     async fn select_by_keys(keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
         let ks = keys.clone();
         exec::<E, _,_,_,_, Vec<E>>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_select_by_keys_sql::<E>(ks);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_select_by_keys_sql::<E>(ks);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).query_some(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).query_some(sql.as_str(),&param_vec).await
         }).await
     }
 
@@ -55,10 +55,10 @@ where
     async fn delete_by_key(key: &E::K) -> Result<u64, DatabaseError> {
         let k = key.clone();
         exec::<E, _,_,_,_, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_delete_by_key_sql::<E>(&k);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_by_key_sql::<E>(&k);
             (db_type,sql,param_vec)
         }, async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).delete(sql.as_str(),&vec![param_vec.clone()]).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).delete(sql.as_str(),&vec![param_vec.clone()]).await
         }).await
     }
 
@@ -66,20 +66,20 @@ where
     async fn delete_by_keys(keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
         let ks = keys.clone();
         exec::<E, _,_,_,_, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_delete_by_keys_sql::<E>(&ks);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_by_keys_sql::<E>(&ks);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).delete(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).delete(sql.as_str(),&param_vec).await
         }).await
     }
 
     // update $table_name set $column_name = ? where id = ?
     async fn update_by_key(e: &E) -> Result<u64, DatabaseError> {
         exec::<E, _,_,_,_, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_update_by_key_sql::<E>(&e,false);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_by_key_sql::<E>(&e,false);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).update(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).update(sql.as_str(),&param_vec).await
         }).await
     }
 
@@ -88,10 +88,10 @@ where
         let key_info = E::key_info();
         if key_info.is_none() {
             exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_one_sql::<E>(&e);
+                let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                 (db_type,sql,param_vec)
             },async |(db_type,sql,param_vec)|{
-                <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                <DbType as Into<DbTypeWrapper>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
             }).await?;
             return Ok(None);
         }
@@ -100,19 +100,19 @@ where
         match key_generate_type {
             KeyGenerateType::None => {
                 exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_one_sql::<E>(&e);
+                    let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
-                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                    <DbType as Into<DbTypeWrapper>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
                 }).await?;
                 Ok(None)
             }
             KeyGenerateType::AutoIncrement => {
                 exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
+                    let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
-                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                    <DbType as Into<DbTypeWrapper>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
                 }).await
             }
             KeyGenerateType::UUID => {
@@ -120,10 +120,10 @@ where
                 e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
 
                 exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
-                    let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_one_sql::<E>(&e);
+                    let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
-                    <DbType as Into<QueryDbType>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
+                    <DbType as Into<DbTypeWrapper>>::into(db_type).insert::<E>(sql.as_str(),&param_vec).await
                 }).await?;
                 let key = Some(ParamValue::String(uuid).into());
                 Ok(key)
@@ -140,10 +140,10 @@ where
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
     async fn insert_batch(entities: Vec<E>) -> Result<u64, DatabaseError> {
         exec::<E, _,_,_, _, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_insert_batch_sql::<E>(&entities);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_batch_sql::<E>(&entities);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).insert_batch::<E>(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).insert_batch::<E>(sql.as_str(),&param_vec).await
         }).await
 
     }
@@ -155,11 +155,11 @@ where
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<PageRes<E>, DatabaseError> {
         exec::<E, _,_,_, _, PageRes<E>>(|db_type: DbType|{
-            let (query_sql, total_sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_page_sql::<E>(&page, query_wrapper);
+            let (query_sql, total_sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_sql::<E>(&page, query_wrapper);
             (db_type,query_sql,total_sql,param_vec,page.page_size)
         },async |(db_type,query_sql,total_sql,param_vec,page_size)|{
-            let total = <DbType as Into<QueryDbType>>::into(db_type).query_count(total_sql.as_str(), &param_vec).await?;
-            let list = <DbType as Into<QueryDbType>>::into(db_type).query_some(query_sql.as_str(), &param_vec).await?;
+            let total = <DbType as Into<DbTypeWrapper>>::into(db_type).query_count(total_sql.as_str(), &param_vec).await?;
+            let list = <DbType as Into<DbTypeWrapper>>::into(db_type).query_some(query_sql.as_str(), &param_vec).await?;
             Ok(PageRes::new_from_records(total, page_size, list))
         }).await
     }
@@ -169,11 +169,11 @@ where
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Vec<E>, DatabaseError> {
         exec::<E, _,_,_, _, Vec<E>>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_query_sql::<E>(query_wrapper);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
             info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).query_some(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).query_some(sql.as_str(),&param_vec).await
         }).await
     }
 
@@ -182,11 +182,11 @@ where
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Option<E>, DatabaseError> {
         exec::<E, _,_,_, _, Option<E>>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_query_sql::<E>(query_wrapper);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
             info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).query_one(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).query_one(sql.as_str(),&param_vec).await
         }).await
 
     }
@@ -198,10 +198,10 @@ where
     ) -> Result<u64, DatabaseError> {
 
         exec::<E, _,_,_, _, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_update_sql::<E>(&e, query_wrapper, false);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_sql::<E>(&e, query_wrapper, false);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).update(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).update(sql.as_str(),&param_vec).await
         }).await
     }
 
@@ -211,20 +211,20 @@ where
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<u64, DatabaseError> {
         exec::<E, _,_,_, _, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_update_sql::<E>(e, query_wrapper, true);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_sql::<E>(e, query_wrapper, true);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).update(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).update(sql.as_str(),&param_vec).await
         }).await
     }
 
     // delete from $table_name where $column = ? ...
     async fn delete<'a>(query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
         exec::<E, _,_,_, _, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<QueryDbType>>::into(db_type).gen_delete_sql::<E>(query_wrapper);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_sql::<E>(query_wrapper);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
-            <DbType as Into<QueryDbType>>::into(db_type).delete(sql.as_str(),&param_vec).await
+            <DbType as Into<DbTypeWrapper>>::into(db_type).delete(sql.as_str(),&param_vec).await
         }).await
     }
 }

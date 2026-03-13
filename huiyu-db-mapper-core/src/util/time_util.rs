@@ -11,3 +11,7 @@ pub fn create_datetime_local(
         .and_local_timezone(Local)
         .unwrap()
 }
+
+pub fn format_date_time_local(time_local: &DateTime<Local>, time_format: &str) -> String {
+    time_local.format(time_format).to_string()
+}

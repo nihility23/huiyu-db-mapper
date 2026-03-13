@@ -14,6 +14,7 @@ use std::sync::Arc;
 use std::time;
 use tokio::task::spawn_blocking;
 use tokio::task_local;
+use huiyu_db_mapper_core::base::entity::ColumnInfo;
 
 task_local! {
     pub static MYSQL_CONN_REGISTER : Arc<Mutex<PooledConn>>;

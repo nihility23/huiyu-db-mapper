@@ -4,6 +4,7 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
+use huiyu_db_mapper_core::util::time_util;
 use rusqlite::types::ValueRef;
 use rusqlite::ToSql;
 use std::sync::Arc;
@@ -42,8 +43,7 @@ impl<'a> RowType for SqliteRow<'a> {
 impl Executor for SqliteSqlExecutor {
     type Row<'a> = SqliteRow<'a>;
     type Conn = Object;
-    // type ConnWrapper = deadpool_sync::SyncWrapper<rusqlite::Connection>;
-    
+
 
     async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
@@ -56,9 +56,10 @@ impl Executor for SqliteSqlExecutor {
         let params = params.clone();
         conn.lock().unwrap().interact(move |conn| {
             let mut stmt = conn.prepare(sql.as_str()).map_err(|e| DatabaseError::CommonError(format!("Failed to prepare statement: {:?}", e)))?;
-            let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
+            let param_refs = ParamValueWrapper::convert_param_values(&params)?;
+            let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
 
-            let mut rows = stmt.query(&*param_refs).map_err(|e| DatabaseError::CommonError(format!("Failed to execute query: {:?}", e)))?;
+            let mut rows = stmt.query(&*to_sql_values).map_err(|e| DatabaseError::CommonError(format!("Failed to execute query: {:?}", e)))?;
             let mut results = Vec::new();
 
             while let Some(row) = rows.next().map_err(|e| DatabaseError::CommonError(format!("Failed to fetch row: {:?}", e)))? {
@@ -73,8 +74,9 @@ impl Executor for SqliteSqlExecutor {
         let sql = sql.to_string();
         let params = params.clone();
         conn.lock().unwrap().interact(move |conn| {
-            let param_refs: Vec<&dyn ToSql> = params.iter().map(|x| to_sql(x)).collect();
-            let res = conn.execute(sql.as_str(), &*param_refs).map_err(|e| DatabaseError::CommonError(format!("Failed to execute statement: {:?}", e)))?;
+            let param_refs = ParamValueWrapper::convert_param_values(&params)?;
+            let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
+            let res = conn.execute(sql.as_str(), &*to_sql_values).map_err(|e| DatabaseError::CommonError(format!("Failed to execute statement: {:?}", e)))?;
             Ok(res as u64)
         }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
     }
@@ -93,6 +95,55 @@ impl Executor for SqliteSqlExecutor {
         Ok(conn)
     }
 }
+
+struct ParamValueWrapper(ParamValue);
+
+impl ParamValueWrapper {
+
+    fn convert_param_values(param_values: &Vec<ParamValue>) -> Result<Vec<ParamValueWrapper>,DatabaseError> {
+        param_values.iter().map(|param_value: &ParamValue|{
+            match param_value {
+                ParamValue::U64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x as i64))),
+                ParamValue::U32(x) => Ok(ParamValueWrapper(ParamValue::U32(*x ))),
+                ParamValue::U16(x) => Ok(ParamValueWrapper(ParamValue::U16(*x))),
+                ParamValue::U8(x) => Ok(ParamValueWrapper(ParamValue::U8(*x)))        ,
+                ParamValue::I64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x))),
+                ParamValue::I32(x) => Ok(ParamValueWrapper(ParamValue::I32(*x))),
+                ParamValue::I16(x) => Ok(ParamValueWrapper(ParamValue::I16(*x))),
+                ParamValue::I8(x) => Ok(ParamValueWrapper(ParamValue::I8(*x))),
+                ParamValue::String(x) => Ok(ParamValueWrapper(ParamValue::String(x.to_string()))),
+                ParamValue::F32(x) => Ok(ParamValueWrapper(ParamValue::F32(*x))),
+                ParamValue::F64(x) => Ok(ParamValueWrapper(ParamValue::F64(*x))),
+                ParamValue::Bool(x) => Ok(ParamValueWrapper(ParamValue::Bool(*x))),
+                ParamValue::Blob(x) => Ok(ParamValueWrapper(ParamValue::Blob(x.to_vec()))),
+                ParamValue::Clob(x) => Ok(ParamValueWrapper(ParamValue::String(String::from_utf8(x.to_vec()).unwrap()))),
+                ParamValue::DateTime(x) => Ok(ParamValueWrapper(ParamValue::String(time_util::format_date_time_local(x, "%Y-%m-%d %H:%M:%S")))),
+                _ => Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", param_value)))
+            }
+        }).collect()
+    }
+    fn as_sql_param(&self) -> Result<&dyn ToSql, DatabaseError> {
+        match &self.0 {
+            ParamValue::Null => Ok(&rusqlite::types::Null),
+            ParamValue::I64(v) => Ok(v),
+            ParamValue::I32(v) => Ok(v),
+            ParamValue::I16(v) => Ok(v),
+            ParamValue::I8(v) => Ok(v),
+            ParamValue::String(v) => Ok(v ),
+            ParamValue::F64(v) => Ok(v )      ,
+            ParamValue::F32(v) => Ok(v),
+            ParamValue::Bool(v) => Ok(v),
+            ParamValue::Blob(v) => Ok(v),
+            ParamValue::Clob(v) => Ok(v),
+            ParamValue::U32(v) => Ok(v),
+            ParamValue::U16(v) => Ok(v),
+            ParamValue::U8(v) => Ok(v),
+            _ => Err(DatabaseError::ConvertError(format!("Can't Convert Sqlite Error: {:?}", self.0)))
+        }
+    }
+
+}
+
 
 fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, DatabaseError> {
     let param_value;
@@ -113,35 +164,3 @@ fn value_to_param_value(value: ValueRef<'_>) -> Result<ParamValue, DatabaseError
     }
     Ok(param_value)
 }
-
-pub fn to_sql(param_value: & ParamValue) -> & dyn ToSql {
-    match param_value {
-        // ParamValue::U64(x) => {let v = (*x as i64) ; let vx =  &v; vx as &dyn ToSql},
-        ParamValue::U32(x) => x as &dyn ToSql,
-        ParamValue::U16(x) => x as &dyn ToSql,
-        ParamValue::U8(x) => x as &dyn ToSql,
-        ParamValue::I64(x) => x as &dyn ToSql,
-        ParamValue::I32(x) => x as &dyn ToSql,
-        ParamValue::I16(x) => x as &dyn ToSql,
-        ParamValue::I8(x) => x as &dyn ToSql,
-        ParamValue::String(x) => x as &dyn ToSql,
-        ParamValue::F32(x) => x as &dyn ToSql,
-        ParamValue::F64(x) => x as &dyn ToSql,
-        ParamValue::Bool(x) => x as &dyn ToSql,
-        ParamValue::Blob(x) => x as &dyn ToSql,
-        ParamValue::Clob(x) => x as &dyn ToSql,
-        ParamValue::Null => &rusqlite::types::Null as &dyn ToSql,
-        ParamValue::DateTime(_) => {
-            // 暂时将 DateTime 转换为字符串，使用静态引用
-            // 实际生产环境中可能需要更复杂的处理
-            &rusqlite::types::Null as &dyn ToSql
-        },
-        _ => panic!("Unsupported parameter type"),
-    }
-}
-
-// async fn get_conn()->Object{
-//     let p:Arc<DbManager<Pool>> = DbManager::get_instance().unwrap();
-//     let conn = p.get_pool().get().await.unwrap();
-//     conn
-// }

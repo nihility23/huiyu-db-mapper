@@ -86,6 +86,7 @@ impl From<&str> for KeyGenerateType {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColumnInfo {
     pub field_name: &'static str,
 
@@ -132,7 +133,7 @@ impl ColumnInfo {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ColumnType {
     I8,
     I16,
@@ -142,6 +143,8 @@ pub enum ColumnType {
     U16,
     U32,
     U64,
+    F32,
+    F64,
     USize,
     Bool,
     String,

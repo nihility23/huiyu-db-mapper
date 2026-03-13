@@ -1,14 +1,14 @@
-use crate::base::entity::Entity;
+use crate::base::entity::{Entity};
 
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 
+use rustlog::error;
 use std::option::Option;
 use std::sync::Arc;
-use rustlog::error;
 
 pub trait RowType{
-    fn col_to_v_by_index(&self, col_index: usize) -> Result<ParamValue, DatabaseError> where Self: Sized ;
+    fn col_to_v_by_index(&self, col_index: usize, ) -> Result<ParamValue, DatabaseError> where Self: Sized ;
 
     fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError> where Self: Sized ;
 }

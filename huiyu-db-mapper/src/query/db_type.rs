@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::db_type::DbType;
-use huiyu_db_mapper_core::base::entity::Entity;
+use huiyu_db_mapper_core::base::entity::{ColumnInfo, Entity};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::db_manager::DbRegister;
@@ -177,7 +177,7 @@ impl RowType for DbTypeOccupy {
 
 
 // 然后可以更简洁地实现
-impl Executor for DbTypeWrapper { 
+impl Executor for DbTypeWrapper {
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
 
@@ -202,7 +202,7 @@ impl Executor for DbTypeWrapper {
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         Err(DatabaseError::CommonError("DbType::get_conn not implemented".to_string()))?
     }
-    
+
     async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
         E: Entity

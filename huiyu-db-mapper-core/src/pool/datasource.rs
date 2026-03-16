@@ -1,12 +1,11 @@
 use crate::base::db_type::DbType;
 use lazy_static::lazy_static;
-use std::cell::RefCell;
 use dashmap::DashMap;
 use tracing::warn;
 use tokio::task_local;
 
 task_local! {
-    pub static DB_NAME_REGISTRY: RefCell<String>;
+    pub static DB_NAME_REGISTRY: String;
 }
 
 lazy_static! {
@@ -15,7 +14,7 @@ lazy_static! {
 
 pub fn get_datasource_name() -> String {
     if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
-        name.borrow().clone();
+        return name.clone()
     }
     "default".to_string()
 }

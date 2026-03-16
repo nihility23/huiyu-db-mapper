@@ -3,7 +3,7 @@ use crate::base::db_type::DbType;
 use crate::base::error::DatabaseError;
 use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
-use rustlog::{info, warn};
+use tracing::{info, warn};
 use std::any::{Any, TypeId};
 use std::error::Error;
 use std::sync::{Arc, OnceLock};

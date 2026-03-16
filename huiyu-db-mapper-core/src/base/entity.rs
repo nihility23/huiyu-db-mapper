@@ -1,5 +1,5 @@
 use crate::base::param::ParamValue;
-use rustlog::error;
+use tracing::error;
 
 pub trait Entity: Send + Sync + 'static {
     type K: Into<ParamValue> + From<ParamValue> + Default + Clone + Send + Sync + 'static;

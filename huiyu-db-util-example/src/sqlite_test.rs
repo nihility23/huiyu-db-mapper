@@ -1,5 +1,4 @@
 use chrono::{ Local, NaiveDateTime, TimeZone};
-use rustlog::{set_level, set_target, Level, Target};
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
 use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
@@ -58,8 +57,6 @@ async fn insert_one(){
 
 
 fn init(){
-    set_target(Target::Stderr);
-    set_level(Level::Info);
     let db_config_sqlite = DbConfig::new(
         DbType::Sqlite,
         None, None,None, None,

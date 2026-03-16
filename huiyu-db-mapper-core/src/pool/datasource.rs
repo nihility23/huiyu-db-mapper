@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::RwLock;
-use rustlog::warn;
+use tracing::warn;
 use tokio::task_local;
 
 task_local! {

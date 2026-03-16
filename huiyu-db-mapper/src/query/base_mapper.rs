@@ -4,7 +4,7 @@ use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::page::{Page, PageRes};
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_type;
-use rustlog::info;
+use tracing::info;
 use huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};

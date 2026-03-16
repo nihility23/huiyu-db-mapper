@@ -11,3 +11,4 @@ rusqlite = { workspace = true}
 tokio = {workspace = true}
 deadpool = { workspace = true }
 deadpool-sync = {workspace = true}
+parking_lot = {workspace = true}

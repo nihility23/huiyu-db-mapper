@@ -151,14 +151,14 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
             fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
-                    _ => rustlog::error!("Field name not found: {}", field_name),
+                    _ => tracing::error!("Field name not found: {}", field_name),
                 }
             }
 
             fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
-                    _ => rustlog::error!("Column name not found: {}", column_name),
+                    _ => tracing::error!("Column name not found: {}", column_name),
                 }
             }
 

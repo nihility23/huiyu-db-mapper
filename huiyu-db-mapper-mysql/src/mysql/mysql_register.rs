@@ -1,5 +1,5 @@
 use mysql::Pool;
-use rustlog::info;
+use tracing::info;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::pool::db_manager::{DbManager, DbRegister};

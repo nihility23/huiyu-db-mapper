@@ -4,14 +4,14 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
 use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
-    pub static POSTGRES_CONN_REGISTER : Arc<std::sync::Mutex<Object>>;
+    pub static POSTGRES_CONN_REGISTER : Arc<parking_lot::Mutex<Object>>;
 }
 #[derive(Clone)]
 pub struct PostgresSqlExecutor;
@@ -46,7 +46,7 @@ impl Executor for PostgresSqlExecutor {
     type Conn = Object;
 
 
-    async fn query<T, R, F, Q>(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, conn: Arc<parking_lot::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -59,19 +59,19 @@ impl Executor for PostgresSqlExecutor {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
-        let stmt = conn.lock().unwrap().prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let stmt = conn.lock().prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         let sql_values = ParamValueWrapper::convert_param_values(params)?;
         // 获取引用
         let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
             .iter()
             .map(|v| v.as_sql_param())
             .collect();
-        let results = conn.lock().unwrap().query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
+        let results = conn.lock().query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
 
         processor(results)
     }
 
-    async fn execute(&self, conn: Arc<std::sync::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, conn: Arc<parking_lot::Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
@@ -85,11 +85,11 @@ impl Executor for PostgresSqlExecutor {
             .map(|v| v.as_sql_param())
             .collect();
 
-        let res = conn.lock().unwrap().execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let res = conn.lock().execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         Ok(res as u64)
     }
 
-    fn get_conn_ref(&self)-> Result<Arc<std::sync::Mutex<Object>>,DatabaseError> {
+    fn get_conn_ref(&self)-> Result<Arc<parking_lot::Mutex<Object>>,DatabaseError> {
         let c = POSTGRES_CONN_REGISTER.try_get();
         if c.is_err() {
             return Err(DatabaseError::AccessError("POSTGRES_CONN_REGISTER is not set".to_string()));
@@ -103,19 +103,19 @@ impl Executor for PostgresSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 

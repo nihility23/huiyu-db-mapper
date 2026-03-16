@@ -8,8 +8,8 @@ use huiyu_db_mapper_core::util::time_util;
 use mysql::prelude::{Queryable};
 use mysql::Error::FromRowError;
 use mysql::{Params, Pool, PooledConn, Row, Value};
-use rustlog::info;
-use std::sync::Mutex;
+use tracing::info;
+use parking_lot::Mutex;
 use std::sync::Arc;
 use std::time;
 use tokio::task::spawn_blocking;
@@ -67,12 +67,12 @@ impl Executor for MysqlSqlExecutor {
         let sql = sql.to_string();
         let params = params.clone();
         spawn_blocking(move || {
-            let stat = conn.lock().unwrap().prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+            let stat = conn.lock().prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
             let mut vec = Vec::new();
             for param in params.iter() {
                 vec.push(param_value_to_value(param)?);
             }
-            let res = conn.lock().unwrap().exec_map(stat, Params::Positional(vec),|row: Row|{
+            let res = conn.lock().exec_map(stat, Params::Positional(vec),|row: Row|{
                 let res = mapper(&MysqlRow{row: row.clone()}).map_err(|_| FromRowError(row));
                 res
             }).map_err(|e| DatabaseError::RowConvertError(e.to_string()))?;
@@ -90,7 +90,7 @@ impl Executor for MysqlSqlExecutor {
         for param in params.iter() {
             vec.push(param_value_to_value(param)?);
         }
-        let res:Option<Value> = conn.lock().unwrap().exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let res:Option<Value> = conn.lock().exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         if res.is_none() {
             return Ok(0);
         }
@@ -118,19 +118,19 @@ impl Executor for MysqlSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().exec_first::<Value, &str, mysql::Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().exec_first::<Value, &str, mysql::Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().map_err(|e| DatabaseError::ExecuteError(e.to_string()))?.exec_first::<Value, &str, mysql::Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.lock().exec_first::<Value, &str, mysql::Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 

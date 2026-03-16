@@ -7,7 +7,8 @@ edition = "2024"
 huiyu-db-mapper-core = { path = "../huiyu-db-mapper-core" }
 tokio = { version = "1.49.0" ,features = ["full"]}
 chrono = {workspace = true}
-rustlog = {workspace = true}
+tracing = {workspace = true}
+parking_lot = {workspace = true}
 
 deadpool = "=0.13.0"
 deadpool-sync = "=0.2.0"

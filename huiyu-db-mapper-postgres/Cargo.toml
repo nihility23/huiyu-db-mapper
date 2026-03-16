@@ -9,6 +9,7 @@ tokio = { version = "1.49.0" ,features = ["full"]}
 deadpool = "=0.13.0"
 deadpool-sync = "=0.2.0"
 chrono = {workspace = true}
+parking_lot = {workspace = true}
 
 ### postgres
 tokio-postgres = {workspace = true}

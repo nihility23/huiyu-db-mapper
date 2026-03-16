@@ -6,7 +6,7 @@ use tracing::warn;
 use tokio::task_local;
 
 task_local! {
-    pub static DB_NAME_REGISTRY: RefCell<Option<String>>;
+    pub static DB_NAME_REGISTRY: RefCell<String>;
 }
 
 lazy_static! {
@@ -15,10 +15,7 @@ lazy_static! {
 
 pub fn get_datasource_name() -> String {
     if let Some(name) = DB_NAME_REGISTRY.try_get().ok() {
-        let name = name.borrow().clone();
-        if name.is_some() {
-            return name.unwrap();
-        }
+        name.borrow().clone();
     }
     "default".to_string()
 }

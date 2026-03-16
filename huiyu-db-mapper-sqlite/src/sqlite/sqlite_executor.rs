@@ -6,7 +6,7 @@ use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::util::time_util;
 use rusqlite::types::ValueRef;
-use rusqlite::ToSql;
+use rusqlite::{Row, ToSql};
 use std::sync::{Arc};
 use parking_lot::Mutex;
 use tokio::task_local;
@@ -39,9 +39,7 @@ impl<'a> RowType for SqliteRow<'a> {
         Ok(value_to_param_value(val)?)
     }
 }
-
 // 查询基本实现
-
 impl Executor for SqliteSqlExecutor {
     type Row<'a> = SqliteRow<'a>;
     type Conn = Object;

@@ -9,6 +9,4 @@ huiyu-db-mapper-core = { path = "../huiyu-db-mapper-core" }
 deadpool-sqlite = { workspace = true}
 rusqlite = { workspace = true}
 tokio = {workspace = true}
-deadpool = { workspace = true }
-deadpool-sync = {workspace = true}
 parking_lot = {workspace = true}

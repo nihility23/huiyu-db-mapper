@@ -10,6 +10,4 @@ chrono = {workspace = true}
 tracing = {workspace = true}
 parking_lot = {workspace = true}
 
-deadpool = "=0.13.0"
-deadpool-sync = "=0.2.0"
 mysql = "27.0.0"

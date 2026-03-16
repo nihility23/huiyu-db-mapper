@@ -1,17 +1,13 @@
-use chrono::{ Local, NaiveDateTime, TimeZone};
+use chrono::{Local, NaiveDateTime, TimeZone};
 use huiyu_db_util::huiyu_db_macros::transactional;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
 use huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec;
 use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
-use huiyu_db_util::huiyu_db_mapper_core::base::db_type;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::{get_datasource_name, get_datasource_type};
-use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::DbManager;
-use huiyu_db_util::huiyu_db_mapper_core::sql::executor::Executor;
-use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
+
 use crate::entities::{UserEntity, UserRoleEntity};
 use crate::mappers::{UserMapper, UserRoleMapper};
 

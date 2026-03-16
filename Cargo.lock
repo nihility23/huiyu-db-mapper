@@ -572,18 +572,11 @@ dependencies = [
 name = "huiyu-db-mapper"
 version = "0.1.0"
 dependencies = [
- "chrono",
- "dashmap",
- "deadpool 0.13.0",
- "deadpool-sync",
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-mysql",
  "huiyu-db-mapper-postgres",
  "huiyu-db-mapper-sqlite",
- "lazy_static",
  "parking_lot",
- "thiserror",
- "tokio",
  "tracing",
  "uuid",
 ]
@@ -594,14 +587,11 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dashmap",
- "deadpool 0.13.0",
- "deadpool-sync",
  "lazy_static",
  "parking_lot",
  "thiserror",
  "tokio",
  "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -609,8 +599,6 @@ name = "huiyu-db-mapper-mysql"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "deadpool 0.13.0",
- "deadpool-sync",
  "huiyu-db-mapper-core",
  "mysql",
  "parking_lot",
@@ -641,9 +629,7 @@ dependencies = [
 name = "huiyu-db-mapper-sqlite"
 version = "0.1.0"
 dependencies = [
- "deadpool 0.13.0",
  "deadpool-sqlite",
- "deadpool-sync",
  "huiyu-db-mapper-core",
  "parking_lot",
  "rusqlite",

@@ -119,7 +119,7 @@ impl Executor for PostgresSqlExecutor {
         Ok(())
     }
 
-    async fn transaction_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
     where
         F: FnOnce() -> Fut,
         Fut: Future<Output=Result<T, DatabaseError>>

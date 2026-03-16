@@ -163,7 +163,7 @@ pub trait Executor{
         Err(DatabaseError::NotSupportedError("rollback".to_string()))
     }
 
-    async fn transaction_exec_basic<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    async fn transactional_exec_basic<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
     where
         F: FnOnce() -> Fut ,
         Fut: Future<Output = Result<T, DatabaseError>>{
@@ -177,7 +177,7 @@ pub trait Executor{
             res
     }
 
-    async fn transaction_exec<F, T, Fut>(&self, _func: F) -> Result<T, DatabaseError>
+    async fn transactional_exec<F, T, Fut>(&self, _func: F) -> Result<T, DatabaseError>
     where
         F: FnOnce() -> Fut ,  // BF 返回 Future
         Fut: Future<Output = Result<T, DatabaseError>>,{
@@ -195,7 +195,7 @@ macro_rules! with_conn_scope {
         
         let conn = $self.get_conn().await?;
         $register.scope(Arc::new(Mutex::new(conn)), async {
-            $self.transaction_exec_basic($func).await
+            $self.transactional_exec_basic($func).await
         }).await
     }};
 }

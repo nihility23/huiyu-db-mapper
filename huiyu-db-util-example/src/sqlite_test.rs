@@ -1,22 +1,29 @@
 use chrono::{ Local, NaiveDateTime, TimeZone};
+use huiyu_db_util::huiyu_db_macros::transactional;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
+use huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec;
 use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
+use huiyu_db_util::huiyu_db_mapper_core::base::db_type;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity;
+use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::{get_datasource_name, get_datasource_type};
+use huiyu_db_util::huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_util::huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_util::huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
 use crate::entities::{UserEntity, UserRoleEntity};
 use crate::mappers::{UserMapper, UserRoleMapper};
 
 #[tokio::test]
-pub async fn test(){
+pub async fn test()-> Result<(), DatabaseError>{
     init();
     // insert_one().await;
-    test_transaction().await;
+    test_transaction().await?;
+    Ok(())
 }
 
-async fn test_transaction(){
+async fn test_transaction()-> Result<(), DatabaseError>{
     let mut user_role1 = UserRoleEntity::new();
     user_role1.create_time = Some(chrono::Local::now());
     user_role1.user_id = Some(12);
@@ -27,12 +34,18 @@ async fn test_transaction(){
     user_role2.user_id = Some(131111111);
     user_role2.role_id = Some(String::from("role_002"));
 
-    let res = SQLITE_SQL_EXECUTOR.transaction_exec(async ||{
+    let res = transactional_exec(async ||{
         let res = UserRoleMapper::insert(&mut user_role1).await?;
         let res2 = UserRoleMapper::insert(&mut user_role2).await?;
         Ok(())
-    }).await.expect("Failed to insert user");
+    }).await?;
 
+    let res = transactional!({
+        UserRoleMapper::insert(&mut user_role1).await?;
+        UserRoleMapper::insert(&mut user_role2).await?;
+        Ok(())
+    })?;
+    Ok(())
 }
 async fn insert_one(){
     let mut user = UserEntity::new();

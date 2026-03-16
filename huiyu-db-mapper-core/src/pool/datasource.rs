@@ -4,6 +4,8 @@ use lazy_static::lazy_static;
 use dashmap::DashMap;
 use tracing::warn;
 use tokio::task_local;
+use crate::base::db_type;
+use crate::base::error::DatabaseError;
 
 task_local! {
     pub static DB_NAME_REGISTRY: Arc<String>;
@@ -35,6 +37,10 @@ pub fn get_datasource_type_by_name(name: &str) -> Option<DbType> {
     None
 }
 
-pub fn get_datasource_type() -> Option<DbType> {
-    get_datasource_type_by_name(&get_datasource_name())
+pub fn get_datasource_type() -> Result<DbType,DatabaseError> {
+    let db_type_opt = get_datasource_type_by_name(&get_datasource_name());
+    if db_type_opt.is_none() {
+        return Err(DatabaseError::NotFoundError("can't find db type!!!".to_string()));
+    }
+    Ok(db_type_opt.unwrap())
 }

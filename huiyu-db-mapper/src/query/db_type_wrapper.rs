@@ -242,6 +242,14 @@ impl Executor for DbTypeWrapper {
     async fn update(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         impl_executor_methods!(self, update(sql, params))
     }
+
+    async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output=Result<T, DatabaseError>>
+    {
+        impl_executor_methods!(self, transactional_exec(func))
+    }
 }
 
 
@@ -271,3 +279,4 @@ impl DbTypeWrapper{
         Ok(())
     }
 }
+

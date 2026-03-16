@@ -17,9 +17,7 @@ where
     Fut: Future<Output = Result<T, DatabaseError>>,
 
 {
-    let db_type = get_datasource_type().ok_or(DatabaseError::NotFoundError(
-        "datasource type is null".to_string(),
-    ))?;
+    let db_type = get_datasource_type()?;
     let p = f(db_type);
     bf(p).await  // 直接 await 异步函数
 }

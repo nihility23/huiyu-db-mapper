@@ -1,7 +1,23 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::meta::ParseNestedMeta;
-use syn::{parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Error, Fields, ItemFn, Lit, LitStr, Type};
+use syn::{parse_macro_input, spanned::Spanned, Attribute, Block, Data, DeriveInput, Error, Fields, ItemFn, Lit, LitStr, Type};
+
+
+#[proc_macro]
+pub fn transactional(input: TokenStream) -> TokenStream {
+    // 解析输入为一个代码块
+    let block = parse_macro_input!(input as Block);
+
+    // 生成 transactional_exec 调用并直接作为表达式返回
+    let expanded = quote! {
+        huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec(async || {
+            #block
+        }).await
+    };
+
+    TokenStream::from(expanded)
+}
 
 /// 数据源属性宏
 ///

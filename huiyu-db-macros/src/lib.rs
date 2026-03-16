@@ -1,10 +1,56 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::meta::ParseNestedMeta;
-use syn::{
-    parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Error, Fields, Lit,
-    LitStr, Type,
-};
+use syn::{parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Error, Fields, ItemFn, Lit, LitStr, Type};
+
+/// 数据源属性宏
+///
+/// # 用法
+/// ```rust
+/// #[datasource("mysql")]
+/// async fn query_user(id: i32) -> Result<User, Error> {
+///     // 函数体，可以直接使用数据源
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn datasource(args: TokenStream, input: TokenStream) -> TokenStream {
+    let db_name = parse_macro_input!(args as LitStr);
+    let db_name_str = db_name.value();
+    let mut func = parse_macro_input!(input as ItemFn);
+
+    if func.sig.asyncness.is_none() {
+        return syn::Error::new_spanned(
+            &func.sig,
+            "datasource 宏只能用于 async 函数"
+        ).to_compile_error().into();
+    }
+
+    let vis = &func.vis;
+    let sig = &func.sig;
+    let block = &func.block;
+    let attrs = &func.attrs;
+    let fn_name = &sig.ident;
+    println!("fn_name: {}", fn_name.to_string());
+    println!("sig: {:?}", sig);
+
+    let expanded = quote! {
+        #(#attrs)*
+        #vis #sig {
+            use std::sync::Arc;
+            use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
+
+            let ds_name: Arc<String> = Arc::new(#db_name_str.to_string());
+            // 执行 scope 并返回结果
+            let result = DB_NAME_REGISTRY.scope(ds_name, async {
+                #block
+            }).await;
+
+            result
+        }
+    };
+
+    TokenStream::from(expanded)
+}
 
 #[proc_macro_derive(Entity, attributes(id, field, table))]
 pub fn derive_entity(input: TokenStream) -> TokenStream {

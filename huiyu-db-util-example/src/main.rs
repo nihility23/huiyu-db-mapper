@@ -3,6 +3,7 @@ mod postgres_test;
 mod mysql_test;
 mod mappers;
 mod entities;
+mod datasource_test;
 
 use std::time;
 use tokio::time::sleep;

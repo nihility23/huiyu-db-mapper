@@ -67,7 +67,7 @@ impl Executor for MysqlSqlExecutor {
         let sql = sql.to_string();
         let params = params.clone();
         spawn_blocking(move || {
-            let stat = conn.lock().prep(sql).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+            let stat = conn.lock().prep(sql).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
             let mut vec = Vec::new();
             for param in params.iter() {
                 vec.push(param_value_to_value(param)?);
@@ -82,7 +82,7 @@ impl Executor for MysqlSqlExecutor {
                 vec.push(row?);
             }
             processor(vec)
-        }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
+        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
     }
 
     async fn execute(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {

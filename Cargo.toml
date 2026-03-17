@@ -1,10 +1,10 @@
 [workspace]
 name = "huiyu-db-util"
-version = "0.1.0"
-edition = "2024"
 members = ["huiyu-db-macros", "huiyu-db-mapper-core", "huiyu-db-mapper-postgres", "huiyu-db-mapper-sqlite", "huiyu-db-mapper", "huiyu-db-util", "huiyu-db-util-example", "huiyu-db-mapper-mysql", "huiyu-db-mapper-oracle"]
 
 [workspace.package]
+version = "0.1.0"
+edition = "2024"
 authors = ["Nihility123"]
 build = false
 autolib = false

@@ -1,7 +1,7 @@
 [package]
 name = "huiyu-db-mapper-postgres"
-version = "0.1.0"
-edition = "2024"
+version = {workspace = true}
+edition = {workspace = true}
 authors = {workspace = true}
 build = false
 autobins = false

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-huiyu-db-mapper-core = { path = "../huiyu-db-mapper-core" }
+huiyu-db-mapper-core = { workspace = true}
 ### sqlite
 deadpool-sqlite = { workspace = true}
 rusqlite = { workspace = true}

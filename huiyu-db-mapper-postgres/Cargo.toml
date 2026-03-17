@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-huiyu-db-mapper-core = { path = "../huiyu-db-mapper-core" }
-tokio = { version = "1.49.0" ,features = ["full"]}
-deadpool = "=0.13.0"
-deadpool-sync = "=0.2.0"
+huiyu-db-mapper-core = {workspace = true}
+tokio = { workspace = true}
+deadpool = { workspace = true }
+deadpool-sync = { workspace = true }
 chrono = {workspace = true}
 parking_lot = {workspace = true}
 
 ### postgres
 tokio-postgres = {workspace = true}
 deadpool-postgres = { workspace = true}
-postgres-types = { version = "0.2.12", features = ["with-chrono-0_4"] }
+postgres-types = { workspace = true }

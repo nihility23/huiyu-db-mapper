@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[table(name = "t_user")]
 pub struct UserEntity {
     #[id(column = "id", auto_increment = true, key_generate_type = "auto_increment")]
-    pub id: Option<i64>,  // 自增主键，使用i64类型,数据库返回i64，确保兼容性，不能丢失精度
+    pub id: Option<String>,  // 自增主键，使用i64类型,数据库返回i64，确保兼容性，不能丢失精度
 
     #[field(column = "username")]
     pub username: Option<String>,  // 用户名

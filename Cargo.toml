@@ -3,9 +3,39 @@ name = "huiyu-db-util"
 version = "0.1.0"
 edition = "2024"
 members = ["huiyu-db-macros", "huiyu-db-mapper-core", "huiyu-db-mapper-postgres", "huiyu-db-mapper-sqlite", "huiyu-db-mapper", "huiyu-db-util", "huiyu-db-util-example", "huiyu-db-mapper-mysql", "huiyu-db-mapper-oracle"]
+authors = ["Nihility123"]
+build = false
+autolib = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+description = "Database Query Tool with Deadpool. Query Wrapper Tool"
+readme = "README.md"
+keywords = [
+    "async",
+    "database",
+    "query_wrapper",
+]
+license = "MIT OR Apache-2.0"
+repository = ""
+
+
 
 [workspace.dependencies]
 
+#### members
+huiyu-db-macros = { path = "huiyu-db-macros" , version = "0.1.0"}
+huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.0"}
+huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.0"}
+huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.0"}
+huiyu-db-mapper = { path = "huiyu-db-mapper" , version = "0.1.0"}
+huiyu-db-util = { path = "huiyu-db-util" , version = "0.1.0"}
+huiyu-db-util-example = { path = "huiyu-db-util-example" , version = "0.1.0"}
+huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.0"}
+huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.0"}
+
+##### common
 chrono = { version = "0.4.42",features = ["serde"] }
 lazy_static = "1.5.0"
 tracing = "0.1.44"
@@ -25,7 +55,10 @@ syn = { version = "2.0.106",features = ["full", "extra-traits", "parsing", "deri
 #### postgresql
 deadpool-postgres = "0.14.1"
 tokio-postgres = "0.7.16"
-
+postgres-types = { version = "0.2.12", features = ["with-chrono-0_4"] }
 ### sqlite
 deadpool-sqlite = "0.13.0"
 rusqlite = { version = "0.38" ,features = ["bundled"] }
+
+### mysql
+mysql = "27.0.0"

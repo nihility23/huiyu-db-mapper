@@ -4,13 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-huiyu-db-macros={path = "../huiyu-db-macros"}
-huiyu-db-mapper-core={path = "../huiyu-db-mapper-core"}
-huiyu-db-mapper = {path = "../huiyu-db-mapper"}
-huiyu-db-mapper-postgres={path = "../huiyu-db-mapper-postgres", optional = true}
-huiyu-db-mapper-sqlite={path = "../huiyu-db-mapper-sqlite", optional = true}
-huiyu-db-mapper-mysql={path = "../huiyu-db-mapper-mysql", optional = true}
-
+huiyu-db-macros={workspace = true}
+huiyu-db-mapper-core={workspace = true}
+huiyu-db-mapper = {workspace = true}
+huiyu-db-mapper-postgres={workspace = true, optional = true}
+huiyu-db-mapper-sqlite={workspace = true, optional = true}
+huiyu-db-mapper-mysql={workspace = true, optional = true}
 
 
 [features]

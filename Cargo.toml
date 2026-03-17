@@ -3,6 +3,8 @@ name = "huiyu-db-util"
 version = "0.1.0"
 edition = "2024"
 members = ["huiyu-db-macros", "huiyu-db-mapper-core", "huiyu-db-mapper-postgres", "huiyu-db-mapper-sqlite", "huiyu-db-mapper", "huiyu-db-util", "huiyu-db-util-example", "huiyu-db-mapper-mysql", "huiyu-db-mapper-oracle"]
+
+[workspace.package]
 authors = ["Nihility123"]
 build = false
 autolib = false
@@ -11,7 +13,7 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "Database Query Tool with Deadpool. Query Wrapper Tool"
-readme = "README.md"
+readme = "ReadMe.md"
 keywords = [
     "async",
     "database",
@@ -19,8 +21,6 @@ keywords = [
 ]
 license = "MIT OR Apache-2.0"
 repository = ""
-
-
 
 [workspace.dependencies]
 

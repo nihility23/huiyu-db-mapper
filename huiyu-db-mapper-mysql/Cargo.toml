@@ -2,6 +2,17 @@
 name = "huiyu-db-mapper-mysql"
 version = "0.1.0"
 edition = "2024"
+authors = {workspace = true}
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+description = {workspace = true}
+readme = {workspace = true}
+keywords = {workspace = true}
+license = { workspace = true }
+repository = {workspace = true}
 
 [dependencies]
 huiyu-db-mapper-core = { workspace = true }

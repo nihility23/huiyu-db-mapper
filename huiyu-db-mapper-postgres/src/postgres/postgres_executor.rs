@@ -5,7 +5,7 @@ use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use std::sync::{Arc};
-use parking_lot::Mutex;
+use tokio::sync::Mutex;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
@@ -60,14 +60,15 @@ impl Executor for PostgresSqlExecutor {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
-        let stmt = conn.lock().prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let mut conn = conn.lock().await;
+        let stmt = conn.prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         let sql_values = ParamValueWrapper::convert_param_values(params)?;
         // 获取引用
         let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
             .iter()
             .map(|v| v.as_sql_param())
             .collect();
-        let results = conn.lock().query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
+        let results = conn.query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
 
         processor(results)
     }
@@ -86,7 +87,8 @@ impl Executor for PostgresSqlExecutor {
             .map(|v| v.as_sql_param())
             .collect();
 
-        let res = conn.lock().execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let mut conn = conn.lock().await;
+        let res = conn.execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         Ok(res as u64)
     }
 
@@ -104,19 +106,22 @@ impl Executor for PostgresSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        let mut conn = conn.lock().await;
+        conn.execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        let mut conn = conn.lock().await;
+        conn.execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        conn.lock().execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        let mut conn = conn.lock().await;
+        conn.execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 

@@ -23,6 +23,7 @@ huiyu-db-mapper-mysql={workspace = true, optional = true}
 tracing = {workspace = true}
 uuid = {workspace = true}
 parking_lot = {workspace = true}
+tokio = { version = "1.50.0", features = ["sync"] }
 
 
 [features]

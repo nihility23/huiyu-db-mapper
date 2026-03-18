@@ -6,7 +6,7 @@ use crate::base::param::ParamValue;
 use tracing::error;
 use std::option::Option;
 use std::sync::{Arc};
-use parking_lot::Mutex;
+use tokio::sync::Mutex;
 
 
 pub trait RowType{
@@ -193,11 +193,11 @@ macro_rules! with_conn_scope {
     // 指定注册器、self、func
     ($register:expr, $self:expr, $func:expr) => {{
         use std::sync::Arc;
-        use parking_lot::Mutex;
+        use tokio::sync::Mutex;
         
         let conn = $self.get_conn().await?;
-        $register.scope(Arc::new(Mutex::new(conn)), async {
+        $register.scope(Arc::new(Mutex::new(conn)), async {{
             $self.transactional_exec_basic($func).await
-        }).await
+        }}).await
     }};
 }

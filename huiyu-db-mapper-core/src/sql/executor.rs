@@ -5,7 +5,9 @@ use crate::base::param::ParamValue;
 
 use tracing::error;
 use std::option::Option;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
+use parking_lot::Mutex;
+
 
 pub trait RowType{
     fn col_to_v_by_index(&self, col_index: usize, ) -> Result<ParamValue, DatabaseError> where Self: Sized ;
@@ -191,7 +193,7 @@ macro_rules! with_conn_scope {
     // 指定注册器、self、func
     ($register:expr, $self:expr, $func:expr) => {{
         use std::sync::Arc;
-        use std::sync::Mutex;
+        use parking_lot::Mutex;
         
         let conn = $self.get_conn().await?;
         $register.scope(Arc::new(Mutex::new(conn)), async {

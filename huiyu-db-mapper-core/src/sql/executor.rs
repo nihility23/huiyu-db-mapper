@@ -5,7 +5,7 @@ use crate::base::param::ParamValue;
 
 use tracing::error;
 use std::option::Option;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub trait RowType{
     fn col_to_v_by_index(&self, col_index: usize, ) -> Result<ParamValue, DatabaseError> where Self: Sized ;
@@ -20,7 +20,7 @@ pub trait Executor{
 
     async fn query<T, R, F, Q>(
         &self,
-        conn: Arc<parking_lot::Mutex<Self::Conn>>,
+        conn: Arc<Mutex<Self::Conn>>,
         sql: &str,
         params: &Vec<ParamValue>,
         mapper: F,
@@ -33,7 +33,7 @@ pub trait Executor{
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
     async fn execute(
         &self,
-        conn: Arc<parking_lot::Mutex<Self::Conn>>,
+        conn: Arc<Mutex<Self::Conn>>,
         sql: &str,
         params: &Vec<ParamValue>,
     ) -> Result<u64, DatabaseError>;
@@ -46,7 +46,7 @@ pub trait Executor{
             self.execute(conn_ref, sql, params).await
         } else {
             let conn: Self::Conn = self.get_conn().await?;
-            self.execute(Arc::new(parking_lot::Mutex::new(conn)), sql, params).await
+            self.execute(Arc::new(Mutex::new(conn)), sql, params).await
         }
     }
 
@@ -70,7 +70,7 @@ pub trait Executor{
             self.query(conn_ref, sql, params, mapper, processor).await // 现在可以借用
         } else {
             let conn = self.get_conn().await?;
-            self.query(Arc::new(parking_lot::Mutex::new(conn)), sql, params, mapper, processor).await
+            self.query(Arc::new(Mutex::new(conn)), sql, params, mapper, processor).await
         }
     }
 
@@ -83,7 +83,7 @@ pub trait Executor{
         Ok(e)
     }
 
-    fn get_conn_ref(&self)-> Result<Arc<parking_lot::Mutex<Self::Conn>>,DatabaseError> ;
+    fn get_conn_ref(&self)-> Result<Arc<Mutex<Self::Conn>>,DatabaseError> ;
 
     async fn get_conn(&self)-> Result<Self::Conn,DatabaseError>;
 
@@ -191,7 +191,7 @@ macro_rules! with_conn_scope {
     // 指定注册器、self、func
     ($register:expr, $self:expr, $func:expr) => {{
         use std::sync::Arc;
-        use parking_lot::Mutex;
+        use std::sync::Mutex;
         
         let conn = $self.get_conn().await?;
         $register.scope(Arc::new(Mutex::new(conn)), async {

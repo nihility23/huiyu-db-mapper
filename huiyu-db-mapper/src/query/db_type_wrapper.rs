@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_mapper_core::base::entity::{Entity};
@@ -181,7 +181,7 @@ impl Executor for DbTypeWrapper {
     type Row<'a> = DbTypeOccupy;
     type Conn = DbTypeOccupy;
 
-    async fn query<T, R, F, Q>(&self, _: Arc<parking_lot::Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>, _: F, _: Q) -> Result<R, DatabaseError>
+    async fn query<T, R, F, Q>(&self, _: Arc<Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>, _: F, _: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
@@ -191,11 +191,11 @@ impl Executor for DbTypeWrapper {
         Err(DatabaseError::CommonError("DbType::query not implemented".to_string()))?
     }
 
-    async fn execute(&self, _: Arc<parking_lot::Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+    async fn execute(&self, _: Arc<Mutex<Self::Conn>>, _: &str, _: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         Err(DatabaseError::CommonError("DbType::execute not implemented".to_string()))?
     }
 
-    fn get_conn_ref(&self) -> Result<Arc<parking_lot::Mutex<Self::Conn>>, DatabaseError> {
+    fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {
         Err(DatabaseError::CommonError("DbType::get_conn_ref not implemented".to_string()))?
     }
 

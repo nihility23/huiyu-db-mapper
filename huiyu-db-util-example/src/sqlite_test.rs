@@ -7,13 +7,13 @@ use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-
+use crate::common::init_dbs;
 use crate::entities::{UserEntity, UserRoleEntity};
 use crate::mappers::{UserMapper, UserRoleMapper};
 
 #[tokio::test]
 pub async fn test()-> Result<(), DatabaseError>{
-    init();
+    init_dbs();
     // insert_one().await;
     test_transaction().await?;
     Ok(())
@@ -65,12 +65,3 @@ async fn insert_one(){
 }
 
 
-fn init(){
-    let db_config_sqlite = DbConfig::new(
-        DbType::Sqlite,
-        None, None,None, None,
-        Some("E:\\test\\huiyu.db".to_string()),  None,
-        "default".to_string());
-    DbTypeWrapper::register_dbs(vec![db_config_sqlite]).expect("Failed to register db");
-
-}

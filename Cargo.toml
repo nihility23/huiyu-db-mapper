@@ -12,12 +12,13 @@ autobins = false
 autoexamples = false
 autotests = false
 autobenches = false
-description = "Database Query Tool with Deadpool. Query Wrapper Tool"
+description = "Database Query Tool with Deadpool. Query Wrapper Tool. Orm Tool"
 readme = "ReadMe.md"
 keywords = [
     "async",
     "database",
     "query_wrapper",
+    "orm",
 ]
 license = "MIT OR Apache-2.0"
 repository = ""

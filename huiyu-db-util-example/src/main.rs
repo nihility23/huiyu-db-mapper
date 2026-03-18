@@ -4,6 +4,8 @@ mod mysql_test;
 mod mappers;
 mod entities;
 mod datasource_test;
+mod muti_test;
+mod common;
 
 use std::time;
 use tokio::time::sleep;

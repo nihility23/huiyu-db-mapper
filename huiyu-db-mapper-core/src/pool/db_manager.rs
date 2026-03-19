@@ -3,7 +3,7 @@ use crate::base::db_type::DbType;
 use crate::base::error::DatabaseError;
 use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
-use tracing::{info, warn};
+use tracing::{info, trace, warn};
 use std::any::{Any, TypeId};
 use std::error::Error;
 use std::sync::{Arc, OnceLock};
@@ -78,7 +78,7 @@ impl DatabaseRegistry {
         name: &str
     ) -> Option<Arc<DbManager<M>>> {
         let key = (name.to_string(), TypeId::of::<M>());
-        warn!("Getting instance with key: {:?}", key);
+        trace!("Getting instance with key: {:?}", key);
         self.instances
             .get(&key)
             .and_then(|entry| entry.value().clone().downcast::<DbManager<M>>().ok())

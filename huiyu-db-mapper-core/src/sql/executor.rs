@@ -3,7 +3,7 @@ use crate::base::entity::{Entity};
 use crate::base::error::DatabaseError;
 use crate::base::param::ParamValue;
 
-use tracing::error;
+use tracing::{error, warn};
 use std::option::Option;
 use std::sync::{Arc};
 use tokio::sync::Mutex;
@@ -42,9 +42,10 @@ pub trait Executor{
 
 
     async fn exec_basic(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        warn!("execute sql: {} with params: {:?}", sql, params);
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
-            let conn_ref = conn_ref.unwrap().clone();
+            let conn_ref = conn_ref?.clone();
             self.execute(conn_ref, sql, params).await
         } else {
             let conn: Self::Conn = self.get_conn().await?;
@@ -66,9 +67,10 @@ pub trait Executor{
         F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static{
 
+        warn!("query sql: {} with params: {:?}", sql, params);
         let conn_ref = self.get_conn_ref();
         if conn_ref.is_ok() {
-            let conn_ref = conn_ref.unwrap().clone();
+            let conn_ref = conn_ref?.clone();
             self.query(conn_ref, sql, params, mapper, processor).await // 现在可以借用
         } else {
             let conn = self.get_conn().await?;

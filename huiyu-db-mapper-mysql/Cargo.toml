@@ -19,6 +19,4 @@ huiyu-db-mapper-core = { workspace = true }
 tokio = { workspace = true}
 chrono = {workspace = true}
 tracing = {workspace = true}
-parking_lot = {workspace = true}
-
 mysql = { workspace = true }

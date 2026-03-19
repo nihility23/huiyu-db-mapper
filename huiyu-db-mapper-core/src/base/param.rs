@@ -344,12 +344,6 @@ impl ParamValue {
 pub trait IntoParamValue {
     fn into_param_value(self) -> ParamValue;
 }
-
-impl IntoParamValue for ParamValue {
-    fn into_param_value(self) -> ParamValue {
-        self
-    }
-}
 impl<T> IntoParamValue for T
 where
     T: Into<ParamValue>,

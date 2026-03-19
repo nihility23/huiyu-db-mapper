@@ -144,6 +144,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
     // 生成 huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo 列表
     let column_infos = generate_column_infos(&fields_info);
+    let column_const_names = generate_column_names(&fields_info);
 
     // 生成 get_value 的 match 分支
     let get_value_by_field_arms = generate_get_value_arms(&fields_info, true);
@@ -162,7 +163,9 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
         // use db_mapper::base::entity::Entity;
         // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo;
         // use db_mapper::base::param::huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
-
+        impl #name{
+            #(#column_const_names)*
+        }
         impl huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity for #name {
             type K = #key_type;
 
@@ -434,6 +437,21 @@ fn generate_column_infos(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStr
         .iter()
         .map(|f| generate_column_info(f))
         .collect()
+}
+
+fn generate_column_names(fields_info: &[FieldInfo]) -> Vec<proc_macro2::TokenStream> {
+    fields_info
+        .iter()
+        .map(|f| generate_column_name(f))
+        .collect()
+}
+
+fn generate_column_name(field: &FieldInfo) -> proc_macro2::TokenStream {
+    let column_name_lit = LitStr::new(&field.column_name, proc_macro2::Span::call_site());
+    let column_name = format_ident!("{}", field.column_name.to_uppercase());
+    quote! {
+        pub const #column_name: &'static str = #column_name_lit;
+    }
 }
 
 fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {

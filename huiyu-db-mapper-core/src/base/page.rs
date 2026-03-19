@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug,Copy, Clone, Serialize, Deserialize)]
 pub struct Page {
     pub current_page: u64,
     pub page_size: u64,
@@ -12,7 +12,7 @@ impl Page {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageRes<T> {
     pub total_size: u64,
     pub page_size: u64,

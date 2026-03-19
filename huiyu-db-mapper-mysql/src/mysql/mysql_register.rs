@@ -10,6 +10,7 @@ impl DbRegister for MysqlDbRegister{
     fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {
         Self::check_config(self, config)?;
         DbManager::register(config, |config| {
+            // mysql://root:password@localhost:3307/db_name
             let url = format!("mysql://{}:{}@{}:{}/{}", config.username.clone().unwrap(), config.password.clone().unwrap(), config.host.clone().unwrap(), config.port.clone().unwrap(), config.database.clone().unwrap());
             info!("mysql url: {}", url);
             Pool::new(url.as_str()).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))

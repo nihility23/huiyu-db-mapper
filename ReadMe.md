@@ -26,3 +26,6 @@
 - [ ] 类似于xml的方式，整合到注解内<if test=""></if>标签
 - [ ] Select/Update/Delete/Insert宏(类似于select注解)
 - [ ] Select注解时候支持分页参数
+- [ ] 直接读取配置文件并注册数据源
+- [ ] 连接池参数
+- [ ] 连接池配置使用url

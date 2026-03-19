@@ -2,7 +2,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DatabaseError {
-    #[error("Business Error")]
+    #[error("Common Error: {0}")]
     CommonError(String),
     #[error("Not Found Error : {0}")]
     NotFoundError(String),

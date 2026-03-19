@@ -56,19 +56,19 @@ impl Executor for SqliteSqlExecutor {
         let params = params.clone();
         let conn = conn.lock().await;
         conn.interact(move |conn| {
-            let mut stmt = conn.prepare(sql.as_str()).map_err(|e| DatabaseError::CommonError(format!("Failed to prepare statement: {:?}", e)))?;
+            let mut stmt = conn.prepare(sql.as_str()).map_err(|e| DatabaseError::ExecuteError(format!("Failed to prepare statement: {:?}", e)))?;
             let param_refs = ParamValueWrapper::convert_param_values(&params)?;
             let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
 
-            let mut rows = stmt.query(&*to_sql_values).map_err(|e| DatabaseError::CommonError(format!("Failed to execute query: {:?}", e)))?;
+            let mut rows = stmt.query(&*to_sql_values).map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute query: {:?}", e)))?;
             let mut results = Vec::new();
 
-            while let Some(row) = rows.next().map_err(|e| DatabaseError::CommonError(format!("Failed to fetch row: {:?}", e)))? {
-                results.push(mapper(&SqliteRow(row)).map_err(|e| DatabaseError::CommonError(format!("Failed to map row: {:?}", e)))?);
+            while let Some(row) = rows.next().map_err(|e| DatabaseError::RowConvertError(format!("Failed to fetch row: {:?}", e)))? {
+                results.push(mapper(&SqliteRow(row)).map_err(|e| DatabaseError::RowConvertError(format!("Failed to map row: {:?}", e)))?);
             }
 
             processor(results)
-        }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
+        }).await.map_err(|e| DatabaseError::ExecuteError(format!("Database interaction failed: {:?}", e)))?
     }
 
     async fn execute(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
@@ -78,9 +78,9 @@ impl Executor for SqliteSqlExecutor {
         conn.interact(move |conn| {
             let param_refs = ParamValueWrapper::convert_param_values(&params)?;
             let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
-            let res = conn.execute(sql.as_str(), &*to_sql_values).map_err(|e| DatabaseError::CommonError(format!("Failed to execute statement: {:?}", e)))?;
+            let res = conn.execute(sql.as_str(), &*to_sql_values).map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute statement: {:?}", e)))?;
             Ok(res as u64)
-        }).await.map_err(|e| DatabaseError::CommonError(format!("Database interaction failed: {:?}", e)))?
+        }).await.map_err(|e| DatabaseError::ExecuteError(format!("Database interaction failed: {:?}", e)))?
     }
 
     fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {

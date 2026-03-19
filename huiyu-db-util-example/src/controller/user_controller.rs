@@ -24,6 +24,7 @@ pub(crate) async fn query_user_page(json: web::Json<UserQueryParam>) ->Result<Ht
     if app_query_param.user_name.is_some(){
         query_wrapper = query_wrapper.eq(UserEntity::USERNAME,app_query_param.user_name.unwrap());
     }
+    query_wrapper = query_wrapper.order_by_desc(UserEntity::CREATE_TIME);
     let page_res = UserMapper::select_page(Page::new(app_query_param.current_page.unwrap() as u64, app_query_param.page_size.unwrap() as u64), &query_wrapper).await;
     if page_res.is_err() {
         return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,page_res.err().unwrap().to_string().as_str())));
@@ -48,6 +49,7 @@ pub(crate) async fn delete_user(id: web::Path<i64>) ->Result<HttpResponse, Error
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))
 }
 
+#[datasource("sqlite")]
 pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<HttpResponse, Error>{
     let mut user_entity = user_entity_json.0;
     if user_entity.id.is_none(){
@@ -60,8 +62,12 @@ pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<
     let user_entity_in_db = user_entity_res.unwrap();
     if user_entity_in_db.is_none(){
         // 插入
+        let res = UserMapper::insert(&mut user_entity).await;
+        if res.is_err() {
+            return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,res.unwrap_err().to_string().as_str())));
+        }
     }else {
-        UserMapper::update_by_key(&mut user_entity).await;
+        UserMapper::update_by_key(&user_entity).await;
     }
 
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))

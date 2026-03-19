@@ -124,44 +124,7 @@ where
 /////
 // 基础数值转换宏（只支持值类型，支持 Option 和非 Option）
 macro_rules! impl_numeric_conversions {
-    // 支持多个源类型的转换
-    ($target:ty: $($src:ident),+ $(,)?) => {
-
-        impl From<ParamValue> for $target where $target: Default{
-            fn from(val: ParamValue) -> Self {
-                // 不能在重复模式中直接使用 $target
-                let result: Option<$target> = val.into();
-                result.unwrap_or_default()
-            }
-        }
-        // 2. 从 ParamValue 到 Option<$target> 的转换（总是成功）
-        impl From<ParamValue> for Option<$target> {
-            fn from(val: ParamValue) -> Self {
-                match val {
-                    $(
-                        ParamValue::$src(v) => Some(v as $target),
-                    )+
-                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
-                    _ => None,
-                }
-            }
-        }
-
-        // 3. 从引用 ParamValue 到 Option<$target> 的转换（方便使用）
-        impl From<&ParamValue> for Option<$target> {
-            fn from(val: &ParamValue) -> Self {
-                match val {
-                    $(
-                        ParamValue::$src(v) => Some(*v as $target),
-                    )+
-                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
-                    _ => None,
-                }
-            }
-        }
-    };
-
-    // 单个源类型（不需要转换）
+        // 单个源类型（不需要转换）
     ($target:ty: $src:ident) => {
         impl From<ParamValue> for Option<$target> {
             fn from(val: ParamValue) -> Self {
@@ -182,6 +145,51 @@ macro_rules! impl_numeric_conversions {
         }
 
     };
+    // 支持多个源类型的转换
+    ($target:ty: $($src:ident),+ $(,)?) => {
+
+        impl From<ParamValue> for $target where $target: Default{
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<$target> = val.into();
+                result.unwrap_or_default()
+            }
+        }
+        // 2. 从 ParamValue 到 Option<$target> 的转换（总是成功）
+        impl From<ParamValue> for Option<$target> {
+            fn from(val: ParamValue) -> Self {
+                match val {
+                    $(
+                        ParamValue::$src(v) => Some(v as $target),
+                    )+
+                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
+                    ParamValue::Bool(v)=>{
+                        if v {
+                            Some(1 as $target)
+                        } else {
+                            Some(0 as $target)
+                        }
+                    }
+                    _ => None,
+                }
+            }
+        }
+
+        // 3. 从引用 ParamValue 到 Option<$target> 的转换（方便使用）
+        impl From<&ParamValue> for Option<$target> {
+            fn from(val: &ParamValue) -> Self {
+                match val {
+                    $(
+                        ParamValue::$src(v) => Some(*v as $target),
+                    )+
+                    ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
+                    _ => None,
+                }
+            }
+        }
+    };
+
+
 }
 
 // 浮点数转换宏
@@ -207,23 +215,76 @@ macro_rules! impl_float_conversions {
     };
 }
 
+macro_rules! impl_bool_conversions {
+    (bool: $($src:ident),+ $(,)?) => {
+        impl From<ParamValue> for Option<bool> {
+            fn from(val: ParamValue) -> Self {
+                match val {
+                    $(
+                        ParamValue::$src(v) => {
+                            if v > 0{
+                                Some(true)
+                            }else {
+                                Some(false)
+                            }
+                        },
+
+                    )+
+                    ParamValue::Bool(v)=>{
+                        Some(v)
+                    },
+                    ParamValue::String(v)=>{
+                        Some(v.parse::<bool>().unwrap_or_default())
+                    },
+                    _ => None,
+                }
+            }
+        }
+        impl From<ParamValue> for bool where bool: Default {
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<bool> = val.into();
+                result.unwrap_or_default()
+            }
+        }
+    };
+}
+
+// // 使用宏
+// impl_numeric_conversions!(i8: I8, U8);
+// impl_numeric_conversions!(i16: I8, I16, U8, U16);
+// impl_numeric_conversions!(i32: I8, I16, I32, U8, U16, U32);
+// impl_numeric_conversions!(i64: I8, I16, I32, I64, U8, U16, U32, U64);
+// impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32);
+// impl_numeric_conversions!(u8: U8);
+// impl_numeric_conversions!(u16: U8, U16);
+// impl_numeric_conversions!(u32: U8, U16, U32);
+// impl_numeric_conversions!(u64: U8, U16, U32, U64);
+//
+// // 浮点数
+// impl_float_conversions!(f32: F32, I8, I16, I32, I64, U8, U16, U32, U64);
+// impl_float_conversions!(f64: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
+//
+// // 布尔值
+// impl_numeric_conversions!(bool: Bool);
+
 // 使用宏
-impl_numeric_conversions!(i8: I8, U8);
-impl_numeric_conversions!(i16: I8, I16, U8, U16);
-impl_numeric_conversions!(i32: I8, I16, I32, U8, U16, U32);
+impl_numeric_conversions!(i8: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(i16: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(i32: I8, I16, I32, I64, U8, U16, U32, U64);
 impl_numeric_conversions!(i64: I8, I16, I32, I64, U8, U16, U32, U64);
-impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32);
-impl_numeric_conversions!(u8: U8);
-impl_numeric_conversions!(u16: U8, U16);
-impl_numeric_conversions!(u32: U8, U16, U32);
-impl_numeric_conversions!(u64: U8, U16, U32, U64);
+impl_numeric_conversions!(usize: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(u8: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(u16: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(u32: I8, I16, I32, I64, U8, U16, U32, U64);
+impl_numeric_conversions!(u64: I8, I16, I32, I64, U8, U16, U32, U64);
 
 // 浮点数
-impl_float_conversions!(f32: F32, I8, I16, I32, I64, U8, U16, U32, U64);
+impl_float_conversions!(f32: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
 impl_float_conversions!(f64: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
 
 // 布尔值
-impl_numeric_conversions!(bool: Bool);
+impl_bool_conversions!(bool: I8, I16, I32, I64, U8, U16, U32, U64);
 
 // 字符串（特殊处理）
 // 1. 值类型 -> Option<String>
@@ -344,6 +405,7 @@ impl ParamValue {
 pub trait IntoParamValue {
     fn into_param_value(self) -> ParamValue;
 }
+
 impl<T> IntoParamValue for T
 where
     T: Into<ParamValue>,

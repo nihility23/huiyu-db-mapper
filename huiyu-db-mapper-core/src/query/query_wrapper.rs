@@ -1,5 +1,5 @@
 use crate::base::entity::Entity;
-use crate::base::param::ParamValue;
+use crate::base::param::{IntoParamValue, ParamValue};
 use std::marker::PhantomData;
 use crate::query::query::{Query, QueryItem, QueryItemNode};
 use crate::query::query::QueryRelation::{And, Or};
@@ -27,37 +27,37 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.and_wrapper(f)
     }
 
-    pub fn eq_when(self, condition: bool,column: &'a str, value: ParamValue)->Self{
+    pub fn eq_when(self, condition: bool,column: &'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.eq(column,value)
     }
 
-    pub fn lt_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn lt_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.lt(column,value)
     }
 
-    pub fn le_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn le_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.le(column,value)
     }
 
-    pub fn gt_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn gt_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.gt(column,value)
     }
 
-    pub fn ge_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn ge_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.ge(column,value)
     }
 
-    pub fn ne_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn ne_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.ne(column,value)
     }
 
-    pub fn between_when(self,condition: bool,column:&'a str, start_value: ParamValue, end_value: ParamValue)->Self{
+    pub fn between_when(self,condition: bool,column:&'a str, start_value: impl IntoParamValue, end_value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.between(column,start_value,end_value)
     }
@@ -77,37 +77,37 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.order_by(column,is_asc)
     }
 
-    pub fn like_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn like_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.like(column,value)
     }
 
-    pub fn like_left_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn like_left_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.like_left(column,value)
     }
 
-    pub fn like_right_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn like_right_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.like_right(column,value)
     }
 
-    pub fn not_like_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn not_like_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.not_like(column,value)
     }
 
-    pub fn not_like_left_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn not_like_left_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.not_like_left(column,value)
     }
 
-    pub fn not_like_right_when(self,condition: bool,column:&'a str, value: ParamValue)->Self{
+    pub fn not_like_right_when(self,condition: bool,column:&'a str, value: impl IntoParamValue)->Self{
         if !condition {return self;}
         self.not_like_right(column,value)
     }
 
-    pub fn in_values_when(self,condition: bool,column:&'a str, values: Vec<ParamValue>)->Self{
+    pub fn in_values_when(self,condition: bool,column:&'a str, values: Vec<impl IntoParamValue>)->Self{
         if !condition {return self;}
         self.in_values(column,values)
     }
@@ -122,7 +122,7 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.not_in_values(column,sql)
     }
 
-    pub fn not_in_sql_when(self,condition: bool,column:&'a str, values: Vec<ParamValue>)->Self{
+    pub fn not_in_sql_when(self,condition: bool,column:&'a str, values: Vec<impl IntoParamValue>)->Self{
         if !condition {return self;}
         self.not_in_sql(column,values)
     }
@@ -137,7 +137,7 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.not_null(column)
     }
 
-    pub fn apply_sql_when(self, condition: bool,sql:&'a str, params: Vec<ParamValue>)->Self{
+    pub fn apply_sql_when(self, condition: bool,sql:&'a str, params: Vec<impl IntoParamValue>)->Self{
 
         if !condition {return self;}
         self.apply_sql(sql,params)
@@ -165,32 +165,32 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self
     }
 
-    pub fn eq(self,column: &'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Eq(column,value))
+    pub fn eq(self,column: &'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Eq(column,value.into_param_value()))
     }
 
-    pub fn lt(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Lt(column,value))
+    pub fn lt(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Lt(column,value.into_param_value()))
     }
 
-    pub fn le(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Le(column,value))
+    pub fn le(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Le(column,value.into_param_value()))
     }
 
-    pub fn gt(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Gt(column,value))
+    pub fn gt(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Gt(column,value.into_param_value()))
     }
 
-    pub fn ge(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Ge(column,value))
+    pub fn ge(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Ge(column,value.into_param_value()))
     }
 
-    pub fn ne(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Ne(column,value))
+    pub fn ne(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Ne(column,value.into_param_value()))
     }
 
-    pub fn between(self,column:&'a str, start_value: ParamValue, end_value: ParamValue)->Self{
-        self.add_condition(QueryItem::Between(column,start_value,end_value))
+    pub fn between(self,column:&'a str, start_value: impl IntoParamValue, end_value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Between(column,start_value.into_param_value(),end_value.into_param_value()))
     }
 
     pub fn order_by_desc(mut self,column: &'a str)->Self{
@@ -208,32 +208,32 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self
     }
 
-    pub fn like(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::Like(column,value))
+    pub fn like(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::Like(column,value.into_param_value()))
     }
 
-    pub fn like_left(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::LikeLeft(column,value))
+    pub fn like_left(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::LikeLeft(column,value.into_param_value()))
     }
 
-    pub fn like_right(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::LikeRight(column,value))
+    pub fn like_right(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::LikeRight(column,value.into_param_value()))
     }
 
-    pub fn not_like(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::NotLike(column,value))
+    pub fn not_like(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::NotLike(column,value.into_param_value()))
     }
 
-    pub fn not_like_left(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::NotLikeLeft(column,value))
+    pub fn not_like_left(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::NotLikeLeft(column,value.into_param_value()))
     }
 
-    pub fn not_like_right(self,column:&'a str, value: ParamValue)->Self{
-        self.add_condition(QueryItem::NotLikeRight(column,value))
+    pub fn not_like_right(self,column:&'a str, value: impl IntoParamValue)->Self{
+        self.add_condition(QueryItem::NotLikeRight(column,value.into_param_value()))
     }
 
-    pub fn in_values(self,column:&'a str, values: Vec<ParamValue>)->Self{
-        self.add_condition(QueryItem::In(column,values))
+    pub fn in_values(self,column:&'a str, values: Vec<impl IntoParamValue>)->Self{
+        self.add_condition(QueryItem::In(column,values.into_iter().map(|value| value.into_param_value()).collect()))
     }
 
     pub fn in_sql(self,column:&'a str, sql:&str)->Self{
@@ -244,8 +244,8 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self.add_condition(QueryItem::NotInSql(column,sql.to_string()))
     }
 
-    pub fn not_in_sql(self,column:&'a str, values: Vec<ParamValue>)->Self{
-        self.add_condition(QueryItem::NotIn(column,values))
+    pub fn not_in_sql(self,column:&'a str, values: Vec<impl IntoParamValue>)->Self{
+        self.add_condition(QueryItem::NotIn(column,values.into_iter().map(|v|v.into_param_value()).collect()))
     }
 
     pub fn null(self,column:&'a str)->Self{
@@ -275,16 +275,16 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self
     }
 
-    pub fn apply_sql(self, sql:&'a str, params: Vec<ParamValue>)->Self{
-        self.add_condition(QueryItem::ApplySql(sql,params))
+    pub fn apply_sql(self, sql:&'a str, params: Vec<impl IntoParamValue>)->Self{
+        self.add_condition(QueryItem::ApplySql(sql,params.into_iter().map(|v|v.into_param_value()).collect()))
     }
 
-    pub fn exists(self, sql:&'a str, params: Vec<ParamValue>)->Self{
-        self.add_condition(QueryItem::ExistsSql(sql,params))
+    pub fn exists(self, sql:&'a str, params: Vec<impl IntoParamValue>)->Self{
+        self.add_condition(QueryItem::ExistsSql(sql,params.into_iter().map(|v|v.into_param_value()).collect()))
     }
 
-    pub fn not_exists(self, sql:&'a str, params: Vec<ParamValue>)->Self{
-        self.add_condition(QueryItem::NotExistsSql(sql,params))
+    pub fn not_exists(self, sql:&'a str, params: Vec<impl IntoParamValue>)->Self{
+        self.add_condition(QueryItem::NotExistsSql(sql,params.into_iter().map(|v|v.into_param_value()).collect()))
     }
 
     pub fn clear(mut self)->Self{

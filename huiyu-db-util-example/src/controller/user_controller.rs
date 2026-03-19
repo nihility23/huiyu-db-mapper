@@ -19,10 +19,10 @@ pub(crate) async fn query_user_page(json: web::Json<UserQueryParam>) ->Result<Ht
     }
     let mut query_wrapper = QueryWrapper::new();
     if app_query_param.id.is_some(){
-        query_wrapper = query_wrapper.eq(UserEntity::ID,app_query_param.id.unwrap().into());
+        query_wrapper = query_wrapper.eq(UserEntity::ID,app_query_param.id.unwrap());
     }
     if app_query_param.user_name.is_some(){
-        query_wrapper = query_wrapper.eq(UserEntity::USERNAME,app_query_param.user_name.unwrap().into());
+        query_wrapper = query_wrapper.eq(UserEntity::USERNAME,app_query_param.user_name.unwrap());
     }
     let page_res = UserMapper::select_page(Page::new(app_query_param.current_page.unwrap() as u64, app_query_param.page_size.unwrap() as u64), &query_wrapper).await;
     if page_res.is_err() {

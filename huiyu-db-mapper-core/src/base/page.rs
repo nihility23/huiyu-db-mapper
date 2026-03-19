@@ -1,10 +1,18 @@
+use serde::Serialize;
+
 #[derive(Debug)]
 pub struct Page {
     pub current_page: u64,
     pub page_size: u64,
 }
 
-#[derive(Debug)]
+impl Page {
+    pub fn new(current_page: u64, page_size: u64) -> Page {
+        Page{current_page,page_size,}
+    }
+}
+
+#[derive(Debug, Serialize)]
 pub struct PageRes<T> {
     pub total_size: u64,
     pub page_size: u64,
@@ -21,6 +29,7 @@ impl<T> PageRes<T> {
             records: None,
         }
     }
+
     pub fn new_from_records(total_size: u64, page_size: u64, records: Vec<T>) -> PageRes<T> {
         let mut total_page = 0;
         if total_size > 0 && page_size > 0 {

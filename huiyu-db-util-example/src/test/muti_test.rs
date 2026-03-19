@@ -1,6 +1,6 @@
 use huiyu_db_util::huiyu_db_macros::datasource;
 use crate::entities::UserEntity;
-use crate::mappers::UserMapper;
+use crate::mapper::mappers::UserMapper;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use crate::common;

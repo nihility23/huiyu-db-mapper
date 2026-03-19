@@ -1,19 +1,29 @@
-mod sqlite_test;
-mod postgres_test;
-mod mysql_test;
-mod mappers;
-mod entities;
-mod datasource_test;
-mod muti_test;
+
 mod common;
+mod controller;
+mod param;
+mod mapper;
+mod test;
+mod entity;
 
-use std::time;
-use tokio::time::sleep;
+use actix_web::{web, App, HttpServer};
+use crate::common::db::init_dbs;
 
-#[tokio::main]
-async fn main() {
-    muti_test::test().await;
-    sleep(time::Duration::from_millis(500)).await;
+#[actix_web::main]
+async fn main() -> std::io::Result<()>{
+    // 初始化 tracing
+    tracing_subscriber::fmt::init();
+    init_dbs();
+    HttpServer::new(move || {
+        App::new()
+            .route("/user/delete_user", web::post().to(controller::user_controller::delete_user))
+            .route("/user/save_user", web::post().to(controller::user_controller::save_user))
+            .route("/user/query_user_page", web::post().to(controller::user_controller::query_user_page))
+            .route("/user/query_user_by_id/{id}", web::post().to(controller::user_controller::query_user_by_id))
+    })
+        .bind(("127.0.0.1", 9999))?
+        .run()
+        .await
 }
 
 

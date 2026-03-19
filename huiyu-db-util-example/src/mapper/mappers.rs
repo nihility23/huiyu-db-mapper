@@ -1,5 +1,5 @@
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use crate::entities::{UserEntity, UserRoleEntity, RoleEntity, RolePermissionEntity, PermissionEntity};
+use crate::entity::entities::{UserEntity, UserRoleEntity, RoleEntity, RolePermissionEntity, PermissionEntity};
 
 pub struct UserMapper;
 

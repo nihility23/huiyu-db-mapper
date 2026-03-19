@@ -1,6 +1,7 @@
 use thiserror::Error;
+use serde::Serialize;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize)]
 pub enum DatabaseError {
     #[error("Business Error")]
     CommonError(String),

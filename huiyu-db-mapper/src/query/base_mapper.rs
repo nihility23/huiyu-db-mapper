@@ -156,7 +156,8 @@ where
             let (query_sql, total_sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_sql::<E>(&page, query_wrapper);
             (db_type,query_sql,total_sql,param_vec,page.page_size)
         },async |(db_type,query_sql,total_sql,param_vec,page_size)|{
-            let total = <DbType as Into<DbTypeWrapper>>::into(db_type).query_count(total_sql.as_str(), &param_vec).await?;
+            let total_param_vec = param_vec[0..param_vec.len()-2].to_vec();
+            let total = <DbType as Into<DbTypeWrapper>>::into(db_type).query_count(total_sql.as_str(), &total_param_vec).await?;
             let list = <DbType as Into<DbTypeWrapper>>::into(db_type).query_some(query_sql.as_str(), &param_vec).await?;
             Ok(PageRes::new_from_records(total, page_size, list))
         }).await

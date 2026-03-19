@@ -12,8 +12,8 @@ use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() {
-
-    sleep(time::Duration::from_millis(5)).await;
+    muti_test::test().await;
+    sleep(time::Duration::from_millis(500)).await;
 }
 
 

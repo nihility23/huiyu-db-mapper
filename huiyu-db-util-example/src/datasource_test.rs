@@ -30,7 +30,7 @@ async fn test_datasource() {
 #[datasource("test")]
 async fn query_user()->UserEntity{
     let res = {
-        let res = UserMapper::select_by_key(&"1".to_string()).await.unwrap();
+        let res = UserMapper::select_by_key(&1).await.unwrap();
         res.unwrap()
     };
     res

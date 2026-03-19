@@ -60,7 +60,7 @@ impl Executor for PostgresSqlExecutor {
             str = str.replacen("?", &format!("${}", i+1), 1);
             println!("{}", str);
         }
-        let mut conn = conn.lock().await;
+        let conn = conn.lock().await;
         let stmt = conn.prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         let sql_values = ParamValueWrapper::convert_param_values(params)?;
         // 获取引用
@@ -87,7 +87,7 @@ impl Executor for PostgresSqlExecutor {
             .map(|v| v.as_sql_param())
             .collect();
 
-        let mut conn = conn.lock().await;
+        let conn = conn.lock().await;
         let res = conn.execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
         Ok(res as u64)
     }
@@ -106,21 +106,21 @@ impl Executor for PostgresSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        let mut conn = conn.lock().await;
+        let conn = conn.lock().await;
         conn.execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        let mut conn = conn.lock().await;
+        let conn = conn.lock().await;
         conn.execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        let mut conn = conn.lock().await;
+        let conn = conn.lock().await;
         conn.execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
         Ok(())
     }

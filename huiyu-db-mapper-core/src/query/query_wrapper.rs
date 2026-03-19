@@ -1,5 +1,5 @@
 use crate::base::entity::Entity;
-use crate::base::param::{IntoParamValue, ParamValue};
+use crate::base::param::IntoParamValue;
 use std::marker::PhantomData;
 use crate::query::query::{Query, QueryItem, QueryItemNode};
 use crate::query::query::QueryRelation::{And, Or};

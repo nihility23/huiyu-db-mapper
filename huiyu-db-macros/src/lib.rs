@@ -32,7 +32,7 @@ pub fn transactional(input: TokenStream) -> TokenStream {
 pub fn datasource(args: TokenStream, input: TokenStream) -> TokenStream {
     let db_name = parse_macro_input!(args as LitStr);
     let db_name_str = db_name.value();
-    let mut func = parse_macro_input!(input as ItemFn);
+    let func = parse_macro_input!(input as ItemFn);
 
     if func.sig.asyncness.is_none() {
         return syn::Error::new_spanned(

@@ -4,7 +4,6 @@ use lazy_static::lazy_static;
 use dashmap::DashMap;
 use tracing::warn;
 use tokio::task_local;
-use crate::base::db_type;
 use crate::base::error::DatabaseError;
 
 task_local! {

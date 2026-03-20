@@ -7,7 +7,7 @@ use tracing::{error, warn};
 use std::option::Option;
 use std::sync::{Arc};
 use tokio::sync::Mutex;
-
+use crate::base::mapping::Mapping;
 
 pub trait RowType{
     fn col_to_v_by_index(&self, col_index: usize, ) -> Result<ParamValue, DatabaseError> where Self: Sized ;
@@ -78,7 +78,7 @@ pub trait Executor{
         }
     }
 
-    fn row_to_e<E>(row: &Self::Row<'_>) -> Result<E, DatabaseError> where E:Entity{
+    fn row_to_e<E>(row: &Self::Row<'_>) -> Result<E, DatabaseError> where E:Mapping{
         let mut e = E::new();
         for col in E::column_names() {
             let val = row.col_to_v_by_name(col)?;
@@ -91,14 +91,14 @@ pub trait Executor{
 
     async fn get_conn(&self)-> Result<Self::Conn,DatabaseError>;
 
-    async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Entity{
+    async fn query_some<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Vec<E>,DatabaseError> where E:Mapping{
         self.query_basic::<E, Vec<E>, _, _>(sql, params, |row|Self::row_to_e(row), |results: Vec<E>| {
             Ok(results)
         }).await
     }
 
     // 查询单个结果
-    async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Entity{
+    async fn query_one<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E>,DatabaseError> where E:Mapping{
         {
             self.query_basic::<E, Option<E>, _, _>(sql, params, |row|Self::row_to_e(row), |results: Vec<E>| {
                 Ok(results.into_iter().next())
@@ -115,6 +115,23 @@ pub trait Executor{
                 Ok(v.into())
             },
             |results: Vec<i64>| Ok(results[0] as u64),
+        ).await
+    }
+
+    async fn query_one_value<T>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<T>,DatabaseError> where Option<T>:From<ParamValue>+Send+Sync+'static{
+        self.query_basic::<_, _, _, _>(
+            sql,
+            params,
+            |row| {
+                    let v = (row).col_to_v_by_index(0).unwrap();
+                    Ok(v)
+                },
+            |results: Vec<ParamValue>| {
+                if results.is_empty() {
+                    return Ok(None)
+                }
+                Ok(results[0].clone().into())
+            },
         ).await
     }
     // 执行插入操作，返回主键
@@ -171,6 +188,7 @@ pub trait Executor{
     where
         F: FnOnce() -> Fut ,
         Fut: Future<Output = Result<T, DatabaseError>>{
+
             self.start_transaction().await?;
             let res = func().await;
             if res.is_err() {
@@ -179,6 +197,7 @@ pub trait Executor{
                 self.commit().await?;
             }
             res
+
     }
 
     async fn transactional_exec<F, T, Fut>(&self, _func: F) -> Result<T, DatabaseError>

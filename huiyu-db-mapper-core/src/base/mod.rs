@@ -4,3 +4,4 @@ pub mod page;
 pub mod db_type;
 pub mod error;
 pub mod config;
+pub mod mapping;

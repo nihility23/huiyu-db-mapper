@@ -68,6 +68,129 @@ pub fn datasource(args: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+#[proc_macro_derive(Mapping, attributes(field))]
+pub fn derive_mapping(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    // 解析字段信息
+    let fields_info = match &input.data {
+        Data::Struct(data) => parse_fields(&data.fields),
+        _ => panic!("Entity only supports structs"),
+    };
+
+    // 校验：所有字段必须是 Option 类型
+    let mut errors = Vec::new();
+    for field in &fields_info {
+        if !field.is_option {
+            let error = Error::new(
+                field.field_span,
+                format!(
+                    "Field `{}` must be of type `Option<T>`, found `{}`",
+                    field.field_name,
+                    field.original_type_name
+                ),
+            );
+            errors.push(error.to_compile_error());
+        }
+    }
+
+    // 如果有错误，返回所有编译错误
+    if !errors.is_empty() {
+        return TokenStream::from(quote! {
+            #(#errors)*
+        });
+    }
+
+
+    // 字段名列表 - 字符串字面量
+    let field_names: Vec<_> = fields_info
+        .iter()
+        .map(|f| {
+            LitStr::new(&f.field_name, proc_macro2::Span::call_site())
+        })
+        .collect();
+
+    // 列名列表 - 字符串字面量
+    let column_names: Vec<_> = fields_info
+        .iter()
+        .map(|f| {
+            LitStr::new(&f.column_name, proc_macro2::Span::call_site())
+        })
+        .collect();
+
+    // 字段初始化 - 标识符
+    let field_inits = fields_info.iter().map(|f| {
+        let name = format_ident!("{}", &f.field_name);
+        quote! { #name: None }
+    });
+
+
+    // 生成 get_value 的 match 分支
+    let get_value_by_field_arms = generate_get_value_arms(&fields_info, true);
+    let get_value_by_column_arms = generate_get_value_arms(&fields_info, false);
+
+    // 生成 set_value 的 match 分支
+    let set_value_by_field_arms = generate_set_value_arms(&fields_info, true);
+    let set_value_by_column_arms = generate_set_value_arms(&fields_info, false);
+
+
+    let expanded = quote! {
+
+        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType;
+        // use db_mapper::base::entity::Entity;
+        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo;
+        // use db_mapper::base::param::huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
+
+        impl huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping for #name {
+
+
+            fn column_names() -> Vec<&'static str> {
+                vec![#(#column_names),*]
+            }
+
+            fn field_names() -> Vec<&'static str> {
+                vec![#(#field_names),*]
+            }
+
+            fn new() -> Self {
+                Self {
+                    #(#field_inits),*
+                }
+            }
+
+            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+                match field_name {
+                    #(#get_value_by_field_arms)*
+                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                }
+            }
+
+            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+                match column_name {
+                    #(#get_value_by_column_arms)*
+                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                }
+            }
+
+            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+                match field_name {
+                    #(#set_value_by_field_arms)*
+                    _ => tracing::error!("Field name not found: {}", field_name),
+                }
+            }
+
+            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+                match column_name {
+                    #(#set_value_by_column_arms)*
+                    _ => tracing::error!("Column name not found: {}", column_name),
+                }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
 #[proc_macro_derive(Entity, attributes(id, field, table))]
 pub fn derive_entity(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -181,16 +304,66 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 Some(#id_column_info)
             }
 
+            // fn column_names() -> Vec<&'static str> {
+            //     vec![#(#column_names),*]
+            // }
+            //
+            // fn field_names() -> Vec<&'static str> {
+            //     vec![#(#field_names),*]
+            // }
+
+            fn table_name() -> &'static str {
+                #table_name_lit
+            }
+
+            // fn new() -> Self {
+            //     Self {
+            //         #(#field_inits),*
+            //     }
+            // }
+
+            // fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            //     match field_name {
+            //         #(#get_value_by_field_arms)*
+            //         _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+            //     }
+            // }
+            //
+            // fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            //     match column_name {
+            //         #(#get_value_by_column_arms)*
+            //         _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+            //     }
+            // }
+            //
+            // fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            //     match field_name {
+            //         #(#set_value_by_field_arms)*
+            //         _ => tracing::error!("Field name not found: {}", field_name),
+            //     }
+            // }
+            //
+            // fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            //     match column_name {
+            //         #(#set_value_by_column_arms)*
+            //         _ => tracing::error!("Column name not found: {}", column_name),
+            //     }
+            // }
+
+            fn get_column_infos() -> Vec<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
+                vec![#(#column_infos),*]
+            }
+        }
+
+        impl huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping for #name {
+
+
             fn column_names() -> Vec<&'static str> {
                 vec![#(#column_names),*]
             }
 
             fn field_names() -> Vec<&'static str> {
                 vec![#(#field_names),*]
-            }
-
-            fn table_name() -> &'static str {
-                #table_name_lit
             }
 
             fn new() -> Self {
@@ -225,10 +398,6 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                     #(#set_value_by_column_arms)*
                     _ => tracing::error!("Column name not found: {}", column_name),
                 }
-            }
-
-            fn get_column_infos() -> Vec<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
-                vec![#(#column_infos),*]
             }
         }
     };

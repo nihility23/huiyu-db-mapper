@@ -1,7 +1,8 @@
 use crate::base::param::ParamValue;
 use tracing::error;
+use crate::base::mapping::Mapping;
 
-pub trait Entity: Send + Sync + 'static {
+pub trait Entity: Mapping + Send + Sync + 'static {
     type K: Into<ParamValue> + From<ParamValue> + Default + Clone + Send + Sync + 'static;
 
     fn key(&self) -> Self::K;
@@ -10,21 +11,21 @@ pub trait Entity: Send + Sync + 'static {
 
     fn key_info() -> Option<ColumnInfo>;
 
-    fn column_names() -> Vec<&'static str>;
+    // fn column_names() -> Vec<&'static str>;
 
-    fn field_names() -> Vec<&'static str>;
+    // fn field_names() -> Vec<&'static str>;
 
     fn table_name() -> &'static str;
 
-    fn new() -> Self;
-
-    fn get_value_by_field_name(&self, field_name: &str) -> ParamValue;
-
-    fn get_value_by_column_name(&self, column_name: &str) -> ParamValue;
-
-    fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue);
-
-    fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue);
+    // fn new() -> Self;
+    //
+    // fn get_value_by_field_name(&self, field_name: &str) -> ParamValue;
+    //
+    // fn get_value_by_column_name(&self, column_name: &str) -> ParamValue;
+    //
+    // fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue);
+    //
+    // fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue);
 
     fn get_column_infos() -> Vec<ColumnInfo>;
 }

@@ -4,6 +4,7 @@ use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_mapper_core::base::entity::{Entity};
 use huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_mapper_core::base::mapping::Mapping;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::db_manager::DbRegister;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
@@ -206,14 +207,14 @@ impl Executor for DbTypeWrapper {
 
     async fn query_some<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Vec<E>, DatabaseError>
     where
-        E: Entity
+        E: Mapping
     {
         impl_executor_methods!(self, query_some(sql, params))
     }
 
     async fn query_one<E>(&self, sql: &str, params: &Vec<ParamValue>) -> Result<Option<E>, DatabaseError>
     where
-        E: Entity
+        E: Mapping
     {
         impl_executor_methods!(self, query_one(sql, params))
     }

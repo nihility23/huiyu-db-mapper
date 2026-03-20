@@ -10,18 +10,6 @@ use huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
 use crate::query::db_type_wrapper::DbTypeWrapper;
 
-async fn exec<E,F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
-where
-    F: FnOnce(DbType) -> P,
-    BF: FnOnce(P) -> Fut ,  // BF 返回 Future
-    Fut: Future<Output = Result<T, DatabaseError>>,
-
-{
-    let db_type = get_datasource_type()?;
-    let p = f(db_type);
-    bf(p).await  // 直接 await 异步函数
-}
-
 #[allow(async_fn_in_trait)]
 pub trait BaseMapper<E>
 where
@@ -30,7 +18,7 @@ where
     // select * from $table_name where $id = ?
     async fn select_by_key(key: &E::K) -> Result<Option<E>, DatabaseError> {
         let k = key.clone();
-        exec::<E, _,_,_,_, Option<E>>(|db_type: DbType|{
+        Self::exec::<  _,_,_,_, Option<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_select_by_key_sql::<E>(k);
             (db_type,sql,param_vec)
         },async move|(db_type,sql,param_vec)| {
@@ -41,7 +29,7 @@ where
     // select * from $table_name where $id in (?,...)
     async fn select_by_keys(keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError> {
         let ks = keys.clone();
-        exec::<E, _,_,_,_, Vec<E>>(|db_type: DbType|{
+        Self::exec::< _,_,_,_, Vec<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_select_by_keys_sql::<E>(ks);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -52,7 +40,7 @@ where
     // delete from $table_name where $id = ?
     async fn delete_by_key(key: &E::K) -> Result<u64, DatabaseError> {
         let k = key.clone();
-        exec::<E, _,_,_,_, u64>(|db_type: DbType|{
+        Self::exec::<  _,_,_,_, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_by_key_sql::<E>(&k);
             (db_type,sql,param_vec)
         }, async |(db_type,sql,param_vec)|{
@@ -63,7 +51,7 @@ where
     // delete from $table_name where $id in (?,...)
     async fn delete_by_keys(keys: &Vec<E::K>) -> Result<u64, DatabaseError> {
         let ks = keys.clone();
-        exec::<E, _,_,_,_, u64>(|db_type: DbType|{
+        Self::exec::< _,_,_,_, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_by_keys_sql::<E>(&ks);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -73,7 +61,7 @@ where
 
     // update $table_name set $column_name = ? where id = ?
     async fn update_by_key(e: &E) -> Result<u64, DatabaseError> {
-        exec::<E, _,_,_,_, u64>(|db_type: DbType|{
+        Self::exec::< _,_,_,_, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_by_key_sql::<E>(&e,false);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -85,7 +73,7 @@ where
     async fn insert(e: &mut E) -> Result<Option<E::K>, DatabaseError> {
         let key_info = E::key_info();
         if key_info.is_none() {
-            exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+            Self::exec::< _,_,_, _, Option<E::K>>(|db_type: DbType|{
                 let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                 (db_type,sql,param_vec)
             },async |(db_type,sql,param_vec)|{
@@ -97,7 +85,7 @@ where
         let key_generate_type = key_info.key_generate_type;
         match key_generate_type {
             KeyGenerateType::None => {
-                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                Self::exec::<  _,_,_, _, Option<E::K>>(|db_type: DbType|{
                     let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
@@ -106,7 +94,7 @@ where
                 Ok(None)
             }
             KeyGenerateType::AutoIncrement => {
-                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                Self::exec::<  _,_,_, _, Option<E::K>>(|db_type: DbType|{
                     let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_and_get_id_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
@@ -117,7 +105,7 @@ where
                 let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
                 e.set_value_by_column_name(key_info.column_name, uuid.clone().into());
 
-                exec::<E, _,_,_, _, Option<E::K>>(|db_type: DbType|{
+                Self::exec::<  _,_,_, _, Option<E::K>>(|db_type: DbType|{
                     let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_one_sql::<E>(&e);
                     (db_type,sql,param_vec)
                 },async |(db_type,sql,param_vec)|{
@@ -137,7 +125,7 @@ where
 
     // insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
     async fn insert_batch(entities: Vec<E>) -> Result<u64, DatabaseError> {
-        exec::<E, _,_,_, _, u64>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_insert_batch_sql::<E>(&entities);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -152,7 +140,7 @@ where
         page: Page,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<PageRes<E>, DatabaseError> {
-        exec::<E, _,_,_, _, PageRes<E>>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, PageRes<E>>(|db_type: DbType|{
             let (query_sql, total_sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_sql::<E>(&page, query_wrapper);
             (db_type,query_sql,total_sql,param_vec,page.page_size)
         },async |(db_type,query_sql,total_sql,param_vec,page_size)|{
@@ -167,7 +155,7 @@ where
     async fn select<'a>(
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Vec<E>, DatabaseError> {
-        exec::<E, _,_,_, _, Vec<E>>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, Vec<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
             info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
@@ -180,7 +168,7 @@ where
     async fn select_one<'a>(
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<Option<E>, DatabaseError> {
-        exec::<E, _,_,_, _, Option<E>>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, Option<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
             info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
@@ -196,7 +184,7 @@ where
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<u64, DatabaseError> {
 
-        exec::<E, _,_,_, _, u64>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_sql::<E>(&e, query_wrapper, false);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -209,7 +197,7 @@ where
         e: &E,
         query_wrapper: &QueryWrapper<'a, E>,
     ) -> Result<u64, DatabaseError> {
-        exec::<E, _,_,_, _, u64>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_sql::<E>(e, query_wrapper, true);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
@@ -219,11 +207,24 @@ where
 
     // delete from $table_name where $column = ? ...
     async fn delete<'a>(query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError> {
-        exec::<E, _,_,_, _, u64>(|db_type: DbType|{
+        Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_delete_sql::<E>(query_wrapper);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
             <DbType as Into<DbTypeWrapper>>::into(db_type).delete(sql.as_str(),&param_vec).await
         }).await
     }
+
+    async fn exec<F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
+    where
+        F: FnOnce(DbType) -> P,
+        BF: FnOnce(P) -> Fut ,  // BF 返回 Future
+        Fut: Future<Output = Result<T, DatabaseError>>,
+
+    {
+        let db_type = get_datasource_type()?;
+        let p = f(db_type);
+        bf(p).await  // 直接 await 异步函数
+    }
 }
+

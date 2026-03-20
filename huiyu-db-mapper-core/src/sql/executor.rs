@@ -106,18 +106,6 @@ pub trait Executor{
         }
     }
 
-    async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>{
-        self.query_basic::<i64, u64, _, _>(
-            sql,
-            params,
-            |row| {
-                let v = (row).col_to_v_by_index(0).unwrap();
-                Ok(v.into())
-            },
-            |results: Vec<i64>| Ok(results[0] as u64),
-        ).await
-    }
-
     async fn query_one_value<T>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<T>,DatabaseError> where Option<T>:From<ParamValue>+Send+Sync+'static{
         self.query_basic::<_, _, _, _>(
             sql,
@@ -132,6 +120,18 @@ pub trait Executor{
                 }
                 Ok(results[0].clone().into())
             },
+        ).await
+    }
+
+    async fn query_count(&self, sql:&str, params: &Vec<ParamValue>) -> Result<u64,DatabaseError>{
+        self.query_basic::<i64, u64, _, _>(
+            sql,
+            params,
+            |row| {
+                let v = (row).col_to_v_by_index(0).unwrap();
+                Ok(v.into())
+            },
+            |results: Vec<i64>| Ok(results[0] as u64),
         ).await
     }
     // 执行插入操作，返回主键

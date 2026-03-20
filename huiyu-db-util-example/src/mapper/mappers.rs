@@ -1,8 +1,8 @@
 use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
 use crate::entity::mappings::RoleDTO;
-use crate::select_impl;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
+use huiyu_db_util::huiyu_db_mapper::select_impl;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_util::huiyu_db_mapper_core::base::page::{Page, PageRes};
@@ -15,7 +15,7 @@ pub struct UserMapper;
 impl UserMapper {
 
     select_impl!{
-        #[select("select user_name from t_user where id = ?")]
+        #[select("select username from t_user where id = ?")]
         #[value]
         async fn select_name_by_id(id:i64)->Result<Option<String>,DatabaseError>;
     }

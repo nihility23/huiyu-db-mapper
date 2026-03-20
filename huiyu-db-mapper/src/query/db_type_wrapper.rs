@@ -219,6 +219,10 @@ impl Executor for DbTypeWrapper {
         impl_executor_methods!(self, query_one(sql, params))
     }
 
+    async fn query_one_value<T>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<T>,DatabaseError> where Option<T>:From<ParamValue>+Send+Sync+'static{
+        impl_executor_methods!(self, query_one_value(sql, params))
+    }
+    
     async fn query_count(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
         impl_executor_methods!(self, query_count(sql, params))
     }

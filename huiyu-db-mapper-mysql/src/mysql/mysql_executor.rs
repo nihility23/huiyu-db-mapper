@@ -148,13 +148,13 @@ impl Executor for MysqlSqlExecutor {
         }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
     }
 
-    async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
-    where
-        F: FnOnce() -> Fut,
-        Fut: Future<Output=Result<T, DatabaseError>>
-    {
-        with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
-    }
+    // async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    // where
+    //     F: FnOnce() -> Fut,
+    //     Fut: Future<Output=Result<T, DatabaseError>>
+    // {
+    //     with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
+    // }
 }
 
 fn param_value_to_value(val: &ParamValue) -> Result<Value, DatabaseError> {

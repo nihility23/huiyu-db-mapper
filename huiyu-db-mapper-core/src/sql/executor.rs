@@ -183,30 +183,6 @@ pub trait Executor{
     async fn rollback(&self)->Result<(),DatabaseError>{
         Err(DatabaseError::NotSupportedError("rollback".to_string()))
     }
-
-    async fn transactional_exec_basic<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
-    where
-        F: FnOnce() -> Fut ,
-        Fut: Future<Output = Result<T, DatabaseError>>{
-
-            self.start_transaction().await?;
-            let res = func().await;
-            if res.is_err() {
-                self.rollback().await?;
-            }else {
-                self.commit().await?;
-            }
-            res
-
-    }
-
-    async fn transactional_exec<F, T, Fut>(&self, _func: F) -> Result<T, DatabaseError>
-    where
-        F: FnOnce() -> Fut ,  // BF 返回 Future
-        Fut: Future<Output = Result<T, DatabaseError>>,{
-        Err(DatabaseError::NotSupportedError("transaction_exec".to_string()))
-    }
-
 }
 
 #[macro_export]

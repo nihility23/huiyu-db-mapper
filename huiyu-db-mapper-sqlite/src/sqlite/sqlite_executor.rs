@@ -124,18 +124,18 @@ impl Executor for SqliteSqlExecutor {
         Ok(())
     }
 
-    async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
-    where
-        F: FnOnce() -> Fut ,  // BF 返回 Future
-        Fut: Future<Output = Result<T, DatabaseError>>,
-    {
-        // let conn = self.get_conn().await?;
-        // let res = SQLITE_CONN_REGISTER.scope(Arc::new(Mutex::new(conn)), async {
-        //     self.transaction_exec_basic(func).await
-        // }).await;
-        // res
-        with_conn_scope!(SQLITE_CONN_REGISTER, self, func)
-    }
+    // async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    // where
+    //     F: FnOnce() -> Fut ,  // BF 返回 Future
+    //     Fut: Future<Output = Result<T, DatabaseError>>,
+    // {
+    //     // let conn = self.get_conn().await?;
+    //     // let res = SQLITE_CONN_REGISTER.scope(Arc::new(Mutex::new(conn)), async {
+    //     //     self.transaction_exec_basic(func).await
+    //     // }).await;
+    //     // res
+    //     with_conn_scope!(SQLITE_CONN_REGISTER, self, func)
+    // }
 }
 
 struct ParamValueWrapper(ParamValue);

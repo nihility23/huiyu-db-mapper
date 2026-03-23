@@ -97,6 +97,7 @@ macro_rules! impl_db_method_generic {
     };
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct DbTypeWrapper(DbType);
 
 impl From<DbType> for DbTypeWrapper {
@@ -249,12 +250,16 @@ impl Executor for DbTypeWrapper {
         impl_executor_methods!(self, update(sql, params))
     }
 
-    async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
-    where
-        F: FnOnce() -> Fut,
-        Fut: Future<Output=Result<T, DatabaseError>>
-    {
-        impl_executor_methods!(self, transactional_exec(func))
+    async fn start_transaction(&self) -> Result<(), DatabaseError> {
+        impl_executor_methods!(self, start_transaction())
+    }
+
+    async fn commit(&self) -> Result<(), DatabaseError> {
+        impl_executor_methods!(self, commit())
+    }
+
+    async fn rollback(&self) -> Result<(), DatabaseError> {
+        impl_executor_methods!(self, rollback())
     }
 }
 

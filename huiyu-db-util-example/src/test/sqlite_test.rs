@@ -7,8 +7,9 @@ use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use crate::common::init_dbs;
-use crate::entities::{UserEntity, UserRoleEntity};
+use huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping;
+use crate::common::db::init_dbs;
+use crate::entity::entities::{UserEntity, UserRoleEntity};
 use crate::mapper::mappers::{UserMapper, UserRoleMapper};
 
 #[tokio::test]

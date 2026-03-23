@@ -10,9 +10,20 @@ where
     Fut: Future<Output = Result<T, DatabaseError>>,
 {
     let db_type = get_datasource_type()?;
-
-    // 开始事务
     let db_wrapper: DbTypeWrapper = db_type.into();
+    
+    db_wrapper.transaction_basic_exec(
+        async|| {
+            do_transaction(db_wrapper,func).await
+        }
+    ).await
+}
+
+async fn do_transaction<F, Fut, T>(db_wrapper: DbTypeWrapper, func: F) -> Result<T, DatabaseError>where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<T, DatabaseError>>
+{
+
     let mut guard = TransactionGuard {
         db_wrapper,
         rollback_needed: true,

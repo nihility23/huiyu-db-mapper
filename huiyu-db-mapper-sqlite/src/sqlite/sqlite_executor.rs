@@ -124,6 +124,14 @@ impl Executor for SqliteSqlExecutor {
         Ok(())
     }
 
+    async fn transaction_basic_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output=Result<T, DatabaseError>>
+    {
+        with_conn_scope!(SQLITE_CONN_REGISTER, self, func)        
+    }
+
     // async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
     // where
     //     F: FnOnce() -> Fut ,  // BF 返回 Future

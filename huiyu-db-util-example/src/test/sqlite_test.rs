@@ -1,25 +1,24 @@
-use chrono::{Local, NaiveDateTime, TimeZone};
-use huiyu_db_util::huiyu_db_macros::transactional;
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
-use huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec;
-use huiyu_db_util::huiyu_db_mapper_core::base::config::DbConfig;
-use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
-use huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity;
-use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping;
 use crate::common::db::init_dbs;
 use crate::entity::entities::{UserEntity, UserRoleEntity};
 use crate::mapper::mappers::{UserMapper, UserRoleMapper};
+use chrono::{Local, NaiveDateTime, TimeZone};
+use huiyu_db_util::huiyu_db_macros::{datasource, transactional};
+use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
+use huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec;
+use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping;
 
 #[tokio::test]
 pub async fn test()-> Result<(), DatabaseError>{
+    // 初始化 tracing
+    tracing_subscriber::fmt::init();
     init_dbs();
     // insert_one().await;
     test_transaction().await?;
     Ok(())
 }
 
+#[datasource("sqlite")]
 async fn test_transaction()-> Result<(), DatabaseError>{
     let mut user_role1 = UserRoleEntity::new();
     user_role1.create_time = Some(chrono::Local::now());

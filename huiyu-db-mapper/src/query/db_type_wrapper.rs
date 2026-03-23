@@ -261,8 +261,15 @@ impl Executor for DbTypeWrapper {
     async fn rollback(&self) -> Result<(), DatabaseError> {
         impl_executor_methods!(self, rollback())
     }
-}
 
+    async fn transaction_basic_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output=Result<T, DatabaseError>>
+    {
+        impl_executor_methods!(self, transaction_basic_exec(func))
+    }
+}
 
 impl DbRegister for DbTypeWrapper {
     fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {

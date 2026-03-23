@@ -48,14 +48,14 @@ fn init_sqlite(){
 
 fn init_oracle(){
     println!("init oracle");
-    let db_config_mysql = DbConfig::new(DbType::O,
-                                        "mysql".to_string(),
+    let db_config_oracle = DbConfig::new(DbType::Oracle,
+                                        "oracle".to_string(),
                                         Some("10.150.6.6".to_string()),
-                                        Some(3306),
+                                        Some(1521),
                                         Some("root".to_string()),
                                         Some("1qaz!QAZ".to_string()),
                                         Some("test".to_string()),
                                         Some("test".to_string()),
     );
-    DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
+    DbTypeWrapper::register_dbs(vec![db_config_oracle]).expect("Failed to register db");
 }

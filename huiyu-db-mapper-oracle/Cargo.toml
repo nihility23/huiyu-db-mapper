@@ -19,4 +19,7 @@ huiyu-db-mapper-core = { workspace = true }
 tokio = { workspace = true}
 chrono = {workspace = true}
 tracing = {workspace = true}
-deadpool-oracle = {workspace = true}
+deadpool-oracle.workspace = true
+oracle-rs = "0.1.5"
+#deadpool-oracle = "0.1.1"
+#oracle-rs = "0.1"

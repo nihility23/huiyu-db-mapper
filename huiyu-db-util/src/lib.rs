@@ -8,3 +8,5 @@ pub use huiyu_db_mapper_postgres;
 pub use huiyu_db_mapper_sqlite;
 #[cfg(feature = "mysql")]
 pub use huiyu_db_mapper_mysql;
+#[cfg(feature = "oracle")]
+pub use huiyu_db_mapper_oracle;

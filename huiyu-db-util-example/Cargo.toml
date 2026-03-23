@@ -4,7 +4,7 @@ version = {workspace = true}
 edition = {workspace = true}
 
 [dependencies]
-huiyu-db-util={workspace = true, features = ["postgres", "sqlite", "mysql"]}
+huiyu-db-util={workspace = true, features = ["postgres", "sqlite", "mysql","oracle"]}
 
 chrono = { workspace = true }
 tracing = {workspace = true}

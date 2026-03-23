@@ -5,8 +5,7 @@ pub enum DbType{
     Sqlite,
     Postgres,
     Mysql,
-    // Oracle,
-    // SqlServer,
+    Oracle,
 
     Other,
 }
@@ -17,7 +16,7 @@ impl Display for DbType {
             DbType::Sqlite => write!(f, "sqlite"),
             DbType::Postgres => write!(f, "postgres"),
             DbType::Mysql => write!(f, "mysql"),
-            // DbType::Oracle => write!(f, "oracle"),
+            DbType::Oracle => write!(f, "oracle"),
             // DbType::SqlServer => write!(f, "sqlserver"),
             DbType::Other => write!(f, "other"),
         }

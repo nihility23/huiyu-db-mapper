@@ -28,11 +28,12 @@ repository = ""
 #### members
 huiyu-db-macros = { path = "huiyu-db-macros" , version = "0.1.0"}
 huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.0"}
-huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.0"}
-huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.0"}
 huiyu-db-mapper = { path = "huiyu-db-mapper" , version = "0.1.0"}
 huiyu-db-util = { path = "huiyu-db-util" , version = "0.1.0"}
+huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.0"}
 huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.0"}
+huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.0"}
+huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.0"}
 
 ##### common
 chrono = { version = "0.4.42",features = ["serde"] }
@@ -61,3 +62,6 @@ rusqlite = { version = "0.38" ,features = ["bundled"] }
 
 ### mysql
 mysql = "27.0.0"
+
+### oracle
+deadpool-oracle = "0.1.1"

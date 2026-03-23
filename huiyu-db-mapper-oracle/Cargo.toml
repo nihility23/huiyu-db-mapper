@@ -15,3 +15,8 @@ license = { workspace = true }
 repository = {workspace = true}
 
 [dependencies]
+huiyu-db-mapper-core = { workspace = true }
+tokio = { workspace = true}
+chrono = {workspace = true}
+tracing = {workspace = true}
+deadpool-oracle = {workspace = true}

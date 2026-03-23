@@ -12,7 +12,7 @@ pub fn init_dbs(){
 fn init_postgres(){
     println!("init postgres");
     let db_config_postgres = DbConfig::new(DbType::Postgres,
-                                           "default".to_string(),
+                                           "postgres".to_string(),
                                            Some("10.150.2.200".to_string()),
                                            Some(5432),
                                            Some("postgres".to_string()),
@@ -45,6 +45,17 @@ fn init_sqlite(){
     );
     DbTypeWrapper::register_dbs(vec![db_config_sqlite]).expect("Failed to register db");
 }
+
 fn init_oracle(){
     println!("init oracle");
+    let db_config_mysql = DbConfig::new(DbType::O,
+                                        "mysql".to_string(),
+                                        Some("10.150.6.6".to_string()),
+                                        Some(3306),
+                                        Some("root".to_string()),
+                                        Some("1qaz!QAZ".to_string()),
+                                        Some("test".to_string()),
+                                        Some("test".to_string()),
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
 }

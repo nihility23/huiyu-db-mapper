@@ -23,6 +23,7 @@ impl DbRegister for PostgresDbRegister{
             if config.schema.is_some() {
                 cfg.options = Some(format!("--search_path={}",config.schema.clone().unwrap()));
             }
+            cfg.connect_timeout = Some(std::time::Duration::from_secs(config.timeout.unwrap_or(3).into()));
             cfg.create_pool(Some(Runtime::Tokio1), NoTls ).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
         })?;
         Ok(())

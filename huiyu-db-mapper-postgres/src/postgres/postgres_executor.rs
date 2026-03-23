@@ -101,7 +101,7 @@ impl Executor for PostgresSqlExecutor {
     }
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
-        DbManager::<Pool>::get_instance(get_datasource_name().as_str()).unwrap().get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
+        DbManager::<Pool>::get_instance(get_datasource_name().as_str())?.get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
     }
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {

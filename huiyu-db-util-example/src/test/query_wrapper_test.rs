@@ -32,10 +32,8 @@ async fn queries()->Result<(),DatabaseError>{
     query_wrapper = query_wrapper.ne(RoleEntity::ROLE_NAME, "role_001");
     query_wrapper = query_wrapper.gt(RoleEntity::STATUS, 0);
     query_wrapper = query_wrapper.lt(RoleEntity::STATUS, 1);
-    query_wrapper = query_wrapper.order_by(RoleEntity::ID, true);
     query_wrapper = query_wrapper.order_by(RoleEntity::STATUS, false);
-    query_wrapper = query_wrapper.limit( 10);
-    
+
     query_wrapper = query_wrapper.or_wrapper(|mut query_wrapper1| {
         query_wrapper1 = query_wrapper1.eq(RoleEntity::ID, 1);
         query_wrapper1 = query_wrapper1.eq(RoleEntity::ROLE_NAME, 1);

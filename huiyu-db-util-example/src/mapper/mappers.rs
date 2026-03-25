@@ -18,6 +18,9 @@ impl UserMapper {
         #[select("select username from t_user where id = ?")]
         #[value]
         async fn select_name_by_id(id:i64)->Result<Option<String>,DatabaseError>;
+
+        #[select("select id,username from t_user where username like concat('%',?,'%')")]
+        async fn select_name_by_page(page:Page,name:String)->Result<PageRes<RoleDTO>,DatabaseError>;
     }
 }
 

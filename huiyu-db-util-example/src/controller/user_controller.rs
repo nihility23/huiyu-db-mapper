@@ -5,8 +5,9 @@ use actix_web::{web, Error, HttpResponse};
 use tracing::error;
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper_core::base::page::Page;
+use huiyu_db_util::huiyu_db_mapper_core::base::page::{Page, PageRes};
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
+use crate::entity::mappings::RoleDTO;
 use crate::param::param::UserQueryParam;
 
 #[datasource("sqlite")]
@@ -100,4 +101,15 @@ pub(crate) async fn query_user_name_by_id(id: web::Path<i64>) ->Result<HttpRespo
         return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,"user name is null".to_string().as_str())));
     }
     Ok(HttpResponse::Ok().json(Res::<String>::success(user_name_opt.unwrap())))
+}
+
+#[datasource("sqlite")]
+pub(crate) async fn query_user_name_by_page(json: web::Json<UserQueryParam>) ->Result<HttpResponse, Error>{
+    let user_name_res = UserMapper::select_name_by_page(Page::new(json.0.current_page.unwrap() as u64, json.0.page_size.unwrap() as u64), json.0.user_name.unwrap()).await;
+    if user_name_res.is_err(){
+        error!("{}", user_name_res.err().unwrap().to_string()); 
+        return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,"user name not found".to_string().as_str())));
+    }
+
+    Ok(HttpResponse::Ok().json(Res::success(user_name_res.ok().unwrap())))
 }

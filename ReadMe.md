@@ -24,7 +24,7 @@
 - [x] features排除不需要的数据库依赖
 - [x] 引入async/await实现异步非阻塞
 - [ ] 类似于xml的方式，整合到注解内<if test=""></if>标签
-- [ ] Select/Update/Delete/Insert宏(类似于select注解)
+- [ ] Select宏(类似于select注解)
 - [ ] Select注解时候支持分页参数
 - [ ] 直接读取配置文件并注册数据源
 - [ ] 连接池参数

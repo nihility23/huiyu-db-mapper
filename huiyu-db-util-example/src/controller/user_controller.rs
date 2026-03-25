@@ -1,15 +1,15 @@
 use crate::common::result::Res;
 use crate::entity::entities::UserEntity;
 use crate::mapper::mappers::UserMapper;
-use crate::param::UserQueryParam;
 use actix_web::{web, Error, HttpResponse};
 use tracing::error;
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper_core::base::page::Page;
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
+use crate::param::param::UserQueryParam;
 
-#[datasource("oracle")]
+#[datasource("sqlite")]
 pub(crate) async fn query_user_page(json: web::Json<UserQueryParam>) ->Result<HttpResponse, Error>{
     let app_query_param = json.0;
     if app_query_param.current_page.is_none(){
@@ -68,7 +68,7 @@ pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<
             return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,res.unwrap_err().to_string().as_str())));
         }
     }else {
-        UserMapper::update_by_key(&user_entity).await;
+        UserMapper::update_by_key(&user_entity).await.expect("TODO: panic message");
     }
 
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))
@@ -88,7 +88,7 @@ pub(crate) async fn query_user_by_id(id: web::Path<i64>) ->Result<HttpResponse, 
     Ok(HttpResponse::Ok().json(Res::<UserEntity>::success(user_entity)))
 }
 
-#[datasource("oracle")]
+#[datasource("sqlite")]
 pub(crate) async fn query_user_name_by_id(id: web::Path<i64>) ->Result<HttpResponse, Error>{
     let user_name_res = UserMapper::select_name_by_id(id.into_inner()).await;
     if user_name_res.is_err(){

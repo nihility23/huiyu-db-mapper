@@ -18,11 +18,11 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         }
     }
 
-    pub fn or_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized, F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+    pub fn or_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized, F: Fn(QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         if !condition {return self;}
         self.or_wrapper(f)
     }
-    pub fn and_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized,F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+    pub fn and_wrapper_when<F>(self, condition: bool, f: F)->Self where Self: Sized,F: Fn(QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         if !condition {return self;}
         self.and_wrapper(f)
     }
@@ -150,16 +150,16 @@ impl <'a,E>QueryWrapper<'a, E>where E: Entity{
         self
     }
 
-    pub fn or_wrapper<F>(mut self, f: F)->Self where Self: Sized, F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+    pub fn or_wrapper<F>(mut self, f: F)->Self where Self: Sized, F: Fn(QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         let mut sub_query_wrapper = QueryWrapper::new();
-        f(&mut sub_query_wrapper);
+        sub_query_wrapper = f(sub_query_wrapper);
         sub_query_wrapper.query.query_group.relation_type = Or;
         self.query.query_group.query_item_nodes.push(QueryItemNode::ItemGroup(sub_query_wrapper.query.query_group));
         self
     }
-    pub fn and_wrapper<F>(mut self, f: F)->Self where Self: Sized,F: Fn(&mut QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
+    pub fn and_wrapper<F>(mut self, f: F)->Self where Self: Sized,F: Fn(QueryWrapper<'a,E>)->QueryWrapper<'a,E>{
         let mut sub_query_wrapper = QueryWrapper::new();
-        f(&mut sub_query_wrapper);
+        sub_query_wrapper = f(sub_query_wrapper);
         sub_query_wrapper.query.query_group.relation_type = And;
         self.query.query_group.query_item_nodes.push(QueryItemNode::ItemGroup(sub_query_wrapper.query.query_group));
         self

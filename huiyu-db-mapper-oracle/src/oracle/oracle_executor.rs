@@ -101,7 +101,7 @@ impl Executor for OracleSqlExecutor {
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("BEGIN TRANSACTION", &[] as &[Value]).await.map_err(|e| DatabaseError::ExecuteError(format!("Failed to start transaction: {:?}", e)))?;
+        conn.execute("SET TRANSACTION READ WRITE;", &[] as &[Value]).await.map_err(|e| DatabaseError::ExecuteError(format!("Failed to set transaction: {:?}", e)))?;
         Ok(())
     }
 
@@ -138,24 +138,7 @@ impl ParamValueWrapper {
      */
     fn convert_param_values(param_values: &Vec<ParamValue>) -> Result<Vec<ParamValueWrapper>,DatabaseError> {
         param_values.iter().map(|param_value: &ParamValue|{
-            match param_value {
-                ParamValue::U64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x as i64))),
-                ParamValue::U32(x) => Ok(ParamValueWrapper(ParamValue::U32(*x ))),
-                ParamValue::U16(x) => Ok(ParamValueWrapper(ParamValue::U16(*x))),
-                ParamValue::U8(x) => Ok(ParamValueWrapper(ParamValue::U8(*x)))        ,
-                ParamValue::I64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x))),
-                ParamValue::I32(x) => Ok(ParamValueWrapper(ParamValue::I32(*x))),
-                ParamValue::I16(x) => Ok(ParamValueWrapper(ParamValue::I16(*x))),
-                ParamValue::I8(x) => Ok(ParamValueWrapper(ParamValue::I8(*x))),
-                ParamValue::String(x) => Ok(ParamValueWrapper(ParamValue::String(x.to_string()))),
-                ParamValue::F32(x) => Ok(ParamValueWrapper(ParamValue::F32(*x))),
-                ParamValue::F64(x) => Ok(ParamValueWrapper(ParamValue::F64(*x))),
-                ParamValue::Bool(x) => Ok(ParamValueWrapper(ParamValue::Bool(*x))),
-                ParamValue::Blob(x) => Ok(ParamValueWrapper(ParamValue::Blob(x.to_vec()))),
-                ParamValue::Clob(x) => Ok(ParamValueWrapper(ParamValue::String(String::from_utf8(x.to_vec()).unwrap()))),
-                ParamValue::DateTime(x) => Ok(ParamValueWrapper(ParamValue::String(time_util::format_date_time_local(x, "%Y-%m-%d %H:%M:%S")))),
-                _ => Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", param_value)))
-            }
+            Ok(ParamValueWrapper(param_value.clone()))
         }).collect()
     }
 

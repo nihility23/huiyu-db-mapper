@@ -1,9 +1,8 @@
-use tracing::info;
+use deadpool_oracle::PoolBuilder;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::pool::db_manager::{DbManager, DbRegister};
 use oracle_rs::Config;
-use deadpool_oracle::{Pool, PoolBuilder};
 
 pub const ORACLE_DB_REGISTER: OracleDbRegister = OracleDbRegister;
 pub struct OracleDbRegister;
@@ -12,17 +11,17 @@ impl DbRegister for OracleDbRegister{
         Self::check_config(self, config)?;
         DbManager::register(config, |config| {
             // Create connection config
-            let config = Config::new(config.host.unwrap_or("localhost".to_string()),
+            let config = Config::new(config.host.clone().unwrap_or("localhost".to_string()),
                                      config.port.unwrap_or(1521),
-                                     config.database.unwrap_or("orcl".to_string()),
-                                     config.username.unwrap(),
-                                     config.password.unwrap(),);
+                                     config.database.clone().unwrap_or("orcl".to_string()),
+                                     config.username.clone().unwrap(),
+                                     config.password.clone().unwrap(),);
 
             // Create pool
-            let pool = PoolBuilder::new(config)
+
+            PoolBuilder::new(config)
                 .max_size(10)
-                .build()?;
-            pool
+                .build().map_err(|e| DatabaseError::CommonError(e.to_string()))
         })?;
         Ok(())
     }

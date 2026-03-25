@@ -9,7 +9,7 @@ use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper_core::base::page::Page;
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 
-#[datasource("sqlite")]
+#[datasource("oracle")]
 pub(crate) async fn query_user_page(json: web::Json<UserQueryParam>) ->Result<HttpResponse, Error>{
     let app_query_param = json.0;
     if app_query_param.current_page.is_none(){
@@ -88,7 +88,7 @@ pub(crate) async fn query_user_by_id(id: web::Path<i64>) ->Result<HttpResponse, 
     Ok(HttpResponse::Ok().json(Res::<UserEntity>::success(user_entity)))
 }
 
-#[datasource("sqlite")]
+#[datasource("oracle")]
 pub(crate) async fn query_user_name_by_id(id: web::Path<i64>) ->Result<HttpResponse, Error>{
     let user_name_res = UserMapper::select_name_by_id(id.into_inner()).await;
     if user_name_res.is_err(){

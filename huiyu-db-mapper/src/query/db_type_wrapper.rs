@@ -11,16 +11,28 @@ use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
 #[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
+#[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_register::MYSQL_DB_REGISTER;
 #[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_sql_generator::MYSQL_SQL_GENERATOR;
+
+#[cfg(feature = "oracle")]
+use huiyu_db_mapper_oracle::oracle::oracle_executor::ORACLE_SQL_EXECUTOR;
+#[cfg(feature = "oracle")]
+use huiyu_db_mapper_oracle::oracle::oracle_register::ORACLE_DB_REGISTER;
+#[cfg(feature = "oracle")]
+use huiyu_db_mapper_oracle::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
+
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
+#[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_register::POSTGRES_DB_REGISTER;
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_sql_generator::POSTGRES_SQL_GENERATOR;
+
 #[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_executor::SQLITE_SQL_EXECUTOR;
+#[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_register::SQLITE_DB_REGISTER;
 #[cfg(feature = "sqlite")]
 use huiyu_db_mapper_sqlite::sqlite::sqlite_sql_generator::SQLITE_SQL_GENERATOR;
@@ -33,7 +45,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
-                // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle")]
+                DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
@@ -51,7 +64,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
-                // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle")]
+                DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
@@ -70,7 +84,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
-                // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle")]
+                DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
@@ -133,8 +148,8 @@ macro_rules! impl_executor_methods {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method($($arg),*).await,
-            // #[cfg(feature = "oracle")]
-            // DbType::Oracle => todo!(),
+            #[cfg(feature = "oracle")]
+            DbType::Oracle => ORACLE_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method($($arg),*).await,
             // #[cfg(feature = "sqlserver")]
@@ -150,8 +165,8 @@ macro_rules! impl_executor_methods {
             DbType::Mysql => MYSQL_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
-            // #[cfg(feature = "oracle")]
-            // DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "oracle")]
+            DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             // #[cfg(feature = "sqlserver")]
@@ -278,8 +293,8 @@ impl DbRegister for DbTypeWrapper {
             DbType::Mysql => MYSQL_DB_REGISTER.register_db(config),
             #[cfg(feature = "sqlite")]
             DbType::Sqlite => SQLITE_DB_REGISTER.register_db(config),
-            // #[cfg(feature = "oracle")]
-            // DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "oracle")]
+            DbType::Oracle => ORACLE_DB_REGISTER.register_db(config),
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_DB_REGISTER.register_db(config),
             // #[cfg(feature = "sqlserver")]

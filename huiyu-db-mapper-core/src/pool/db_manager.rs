@@ -362,12 +362,6 @@ pub trait DbRegister{
         if config.password.is_none() {
             return Err(DatabaseError::ConfigNotFoundError("Password is missing".to_string()));
         }
-        if config.host.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Host is missing".to_string()));
-        }
-        if config.port.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Port is missing".to_string()));
-        }
         Ok(())
     }
 

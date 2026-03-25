@@ -50,12 +50,12 @@ fn init_oracle(){
     println!("init oracle");
     let db_config_oracle = DbConfig::new(DbType::Oracle,
                                         "oracle".to_string(),
-                                        Some("10.150.6.6".to_string()),
+                                        Some("10.150.6.7".to_string()),
                                         Some(1521),
-                                        Some("root".to_string()),
-                                        Some("1qaz!QAZ".to_string()),
-                                        Some("test".to_string()),
-                                        Some("test".to_string()),
+                                        Some("huiyu".to_string()),
+                                        Some("123456".to_string()),
+                                        Some("orcl".to_string()),
+                                        None,
     );
     DbTypeWrapper::register_dbs(vec![db_config_oracle]).expect("Failed to register db");
 }

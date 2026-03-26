@@ -174,6 +174,10 @@ pub trait Executor{
         self.exec_basic(sql, params).await
     }
 
+    async fn execute_sql(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        self.exec_basic(sql, params).await
+    }
+
     async fn start_transaction(&self)->Result<(),DatabaseError>{
         Err(DatabaseError::NotSupportedError("start_transaction".to_string()))
     }

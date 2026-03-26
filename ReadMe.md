@@ -145,6 +145,6 @@ impl RoleMapper {
 
 #### api
 
-- [ ] 类似于xml的方式，整合到注解内<if test=""></if>标签
+- [ ] 类似于xml的方式，整合到注解内<if test=""></if>标签，考虑复用QueryWrapper使用占位符替代if
 - [ ] 直接读取配置文件并注册数据源
 

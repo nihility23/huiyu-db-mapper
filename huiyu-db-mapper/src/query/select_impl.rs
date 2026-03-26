@@ -1,5 +1,18 @@
 #[macro_export]
 macro_rules! select_impl {
+    // ===== 辅助宏：处理 query_wrapper 的 SQL 替换 =====
+    (@process_wrapper $sql:expr, $query_wrapper:expr, $db_type:expr) => {{
+        let wrapper_result = <DbType as Into<DbTypeWrapper>>::into($db_type)
+            .gen_where_sql($query_wrapper);
+
+        match wrapper_result {
+            Some((where_sql, mut params)) => (
+                $sql.replace("#{query_wrapper}", &where_sql),
+                params,
+            ),
+            None => ($sql.to_string(), Vec::new()),
+        }
+    }};
 
     // ===== 带 value 属性 + query_wrapper 的方法 =====
     (
@@ -9,21 +22,14 @@ macro_rules! select_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name<'a>($query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<$inner>, DatabaseError> {
-
             Self::exec(
                 |db_type: DbType| {
-                    let sql_opt = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_where_sql(&$query_wrapper);
-                    if sql_opt.is_none() {
-                        return ($sql.to_string(), Vec::new(), db_type);
-                    }
-                    let (processed_sql, param_vec) = sql_opt.unwrap();
-                    let sql = $sql.replace("#{query_wrapper}", &processed_sql);
-                    (sql, param_vec, db_type)
+                    let (sql, params) = select_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
+                    (sql, params, db_type)
                 },
-                async |(sql, param_vec, db_type)| {
+                async |(sql, params, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one_value(sql.as_str(), &param_vec)
+                        .query_one_value(sql.as_str(), &params)
                         .await
                 }
             ).await
@@ -31,7 +37,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== PageRes<T> + query_wrapper 方法（Page 必须是第一个参数） =====
+    // ===== PageRes<T> + query_wrapper 方法 =====
     (
         #[select($sql:literal)]
         async fn $method_name:ident<'a>($page_param:ident: Page, $query_wrapper:ident: &OccupyQueryMapper<'a>) -> Result<PageRes<$inner:ty>, DatabaseError>;
@@ -40,39 +46,27 @@ macro_rules! select_impl {
         pub async fn $method_name<'a>($page_param: Page, $query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<$inner>, DatabaseError> {
             Self::exec::<_, _, _, _, PageRes<$inner>>(
                 |db_type: DbType| {
+                    let (sql, mut params) = select_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
 
-                    let mut param_vec = Vec::new();
-                    let sql_opt = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_where_sql(&$query_wrapper);
-                    let mut sql = $sql.to_string();
-                    if !sql_opt.is_none() {
-                        let (processed_sql, param_vec_opt) = sql_opt.unwrap();
-                        sql = $sql.replace("#{query_wrapper}",&processed_sql);
-                        param_vec.extend(param_vec_opt);
-                    }
+                    let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
+                        .gen_page_total_sql(&sql);
 
-                    let mut p1: u64 = 0;
-                    let mut p2: u64 = 0;
+                    let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
+                        .gen_page_query_sql(&sql, $page_param.current_page, $page_param.page_size);
 
-                    let total_page_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_total_sql(sql.as_str());
+                    params.push(ParamValue::U64(offset));
+                    params.push(ParamValue::U64(limit));
 
-                    let (page_sql, p1, p2) = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_query_sql(sql.as_str(), $page_param.current_page, $page_param.page_size);
-
-                    param_vec.push(ParamValue::U64(p1));
-                    param_vec.push(ParamValue::U64(p2));
-
-                    (page_sql, total_page_sql, param_vec, $page_param, db_type)
+                    (page_sql, total_sql, params, $page_param, db_type)
                 },
-                async |(page_sql, total_page_sql, param_vec, page, db_type)| {
-                    let total_param_vec = param_vec[0..param_vec.len()-2].to_vec();
+                async |(page_sql, total_sql, mut params, page, db_type)| {
+                    let total_params = params[0..params.len()-2].to_vec();
                     let total = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_count(total_page_sql.as_str(), &total_param_vec)
+                        .query_count(&total_sql, &total_params)
                         .await?;
 
                     let list = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(page_sql.as_str(), &param_vec)
+                        .query_some(&page_sql, &params)
                         .await?;
 
                     Ok(PageRes::new_from_records(total, page.page_size, list))
@@ -91,18 +85,12 @@ macro_rules! select_impl {
         pub async fn $method_name<'a>($query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<$inner>, DatabaseError> {
             Self::exec(
                 |db_type: DbType| {
-                    let sql_opt = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_where_sql(&$query_wrapper);
-                    if sql_opt.is_none() {
-                        return ($sql.to_string(), Vec::new(), db_type);
-                    }
-                    let (processed_sql, param_vec) = sql_opt.unwrap();
-                    let sql = $sql.replace("#{query_wrapper}", &processed_sql);
-                    (sql, param_vec, db_type)
+                    let (sql, params) = select_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
+                    (sql, params, db_type)
                 },
-                async |(sql, param_vec, db_type)| {
+                async |(sql, params, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(sql.as_str(), &param_vec)
+                        .query_some(sql.as_str(), &params)
                         .await
                 }
             ).await
@@ -119,18 +107,12 @@ macro_rules! select_impl {
         pub async fn $method_name<'a>($query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<$entity>, DatabaseError> {
             Self::exec(
                 |db_type: DbType| {
-                    let sql_opt = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_where_sql(&$query_wrapper);
-                    if sql_opt.is_none() {
-                        return ($sql.to_string(), Vec::new(), db_type);
-                    }
-                    let (processed_sql, param_vec) = sql_opt.unwrap();
-                    let sql = $sql.replace("#{query_wrapper}", &processed_sql);
-                    (sql, param_vec, db_type)
+                    let (sql, params) = select_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
+                    (sql, params, db_type)
                 },
-                async |(sql, param_vec, db_type)| {
+                async |(sql, params, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql.as_str(), &param_vec)
+                        .query_one(sql.as_str(), &params)
                         .await
                 }
             ).await
@@ -147,18 +129,12 @@ macro_rules! select_impl {
         pub async fn $method_name<'a>($query_wrapper: &OccupyQueryMapper<'a>) -> Result<$entity, DatabaseError> {
             let result: Option<$entity> = Self::exec(
                 |db_type: DbType| {
-                    let sql_opt = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_where_sql(&$query_wrapper);
-                    if sql_opt.is_none() {
-                        return ($sql.to_string(), Vec::new(), db_type);
-                    }
-                    let (processed_sql, param_vec) = sql_opt.unwrap();
-                    let sql = $sql.replace("#{query_wrapper}", &processed_sql);
-                    (sql, param_vec, db_type)
+                    let (sql, params) = select_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
+                    (sql, params, db_type)
                 },
-                async |(sql, param_vec, db_type)| {
+                async |(sql, params, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql.as_str(), &param_vec)
+                        .query_one(sql.as_str(), &params)
                         .await
                 }
             ).await?;
@@ -168,7 +144,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配带 value 属性的方法 =====
+    // ===== 带 value 属性的方法（无 query_wrapper） =====
     (
         #[select($sql:literal)]
         #[value]
@@ -195,7 +171,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配 PageRes<T> 方法（Page 必须是第一个参数） =====
+    // ===== PageRes<T> 方法（无 query_wrapper） =====
     (
         #[select($sql:literal)]
         async fn $method_name:ident($page_param:ident: Page, $($param_name:ident: $param_type:ty),* $(,)?) -> Result<PageRes<$inner:ty>, DatabaseError>;
@@ -205,10 +181,6 @@ macro_rules! select_impl {
             Self::exec::<_, _, _, _, PageRes<$inner>>(
                 |db_type: DbType| {
                     let sql = $sql;
-                    let mut p1: u64 = 0;
-                    let mut p2: u64 = 0;
-                    let mut page_sql = String::new();
-
                     let mut param_vec = vec![
                         $($param_name.into(),)*
                     ];
@@ -216,11 +188,11 @@ macro_rules! select_impl {
                     let total_page_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
                         .gen_page_total_sql(&sql);
 
-                    (page_sql, p1, p2) = <DbType as Into<DbTypeWrapper>>::into(db_type)
+                    let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
                         .gen_page_query_sql(&sql, $page_param.current_page, $page_param.page_size);
 
-                    param_vec.push(ParamValue::U64(p1));
-                    param_vec.push(ParamValue::U64(p2));
+                    param_vec.push(ParamValue::U64(offset));
+                    param_vec.push(ParamValue::U64(limit));
 
                     (page_sql, total_page_sql, param_vec, $page_param, db_type)
                 },
@@ -241,7 +213,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配 Vec<T> 方法 =====
+    // ===== Vec<T> 方法（无 query_wrapper） =====
     (
         #[select($sql:literal)]
         async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<Vec<$inner:ty>, DatabaseError>;
@@ -267,7 +239,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配 Option<T> 实体类型方法 =====
+    // ===== Option<T> 方法（无 query_wrapper） =====
     (
         #[select($sql:literal)]
         async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<Option<$entity:ty>, DatabaseError>;
@@ -293,7 +265,7 @@ macro_rules! select_impl {
         $crate::select_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配单个 T（非 Option）方法 =====
+    // ===== 单个 T 方法（无 query_wrapper） =====
     (
         #[select($sql:literal)]
         async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<$entity:ty, DatabaseError>;
@@ -324,5 +296,3 @@ macro_rules! select_impl {
     // ===== 终止递归 =====
     () => { };
 }
-
-

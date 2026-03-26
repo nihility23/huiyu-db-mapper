@@ -1,6 +1,8 @@
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
+use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
 use huiyu_db_util::huiyu_db_mapper::query::query_wrapper_occupy::OccupyQueryMapper;
+use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use crate::common::db::init_dbs;
@@ -50,6 +52,14 @@ async fn queries()->Result<(),DatabaseError>{
         .like("r.role_name","管理员")
     ).await?;
     println!("{:?}", res);
+    // 测试多个 OccupyQueryMapper 的 SQL 生成
+    let db_type_wrapper = DbTypeWrapper::from(DbType::Sqlite);
 
+    let wrapper1 = OccupyQueryMapper::new().eq("status", 1);
+    let wrapper2 = OccupyQueryMapper::new().like("name", "test");
+
+    // 模拟宏中的处理逻辑
+    let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
+    println!("{:?}", result.err());
     Ok(())
 }

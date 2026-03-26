@@ -3,7 +3,7 @@ use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRole
 use crate::entity::mappings::RoleDTO;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
-use huiyu_db_util::huiyu_db_mapper::select_impl;
+use huiyu_db_util::huiyu_db_mapper::{execute_impl, select_impl};
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_util::huiyu_db_mapper_core::base::page::{Page, PageRes};
@@ -86,6 +86,13 @@ impl RoleMapper {
         // 支持多个 OccupyQueryMapper 的示例
         #[select("select * from t_role where 1=1 and #{query_wrapper} and #{query_wrapper}")]
         async fn query_role_by_multiple_wrappers<'a>(wrapper1: &OccupyQueryMapper<'a>, wrapper2: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
+    }
+    
+    execute_impl!{
+        #[sql("update t_role set role_code = ? where id = ?")]
+        async fn update_role_code(id: i64, role_code: String) -> Result<u64, DatabaseError>;
+        #[sql("create table t_test(id: int)")]
+        async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;
     }
 }
 

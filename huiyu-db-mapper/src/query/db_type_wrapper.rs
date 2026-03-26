@@ -266,6 +266,10 @@ impl Executor for DbTypeWrapper {
         impl_executor_methods!(self, update(sql, params))
     }
 
+    async fn execute_sql(&self, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
+        impl_executor_methods!(self, execute_sql(sql, params))
+    }
+
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         impl_executor_methods!(self, start_transaction())
     }

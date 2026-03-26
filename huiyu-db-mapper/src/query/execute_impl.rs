@@ -1,154 +1,88 @@
 #[macro_export]
 macro_rules! execute_impl {
-    // ===== 主入口：匹配带 value 属性的方法 =====
+    // ===== 辅助宏：处理多个 query_wrapper 的 SQL 替换 =====
+    (@process_wrappers $sql:expr, [$($query_wrapper:expr),*], $db_type:expr) => {{
+        let mut result_sql = $sql.to_string();
+        let mut all_params = Vec::new();
+        let placeholder = "#{query_wrapper}";
+        
+        $(
+            if let Some((where_sql, mut params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
+                .gen_where_sql($query_wrapper) {
+                if let Some(pos) = result_sql.find(placeholder) {
+                    let before = &result_sql[..pos];
+                    let after = &result_sql[pos + placeholder.len()..];
+                    result_sql = format!("{}{}{}", before, where_sql, after);
+                    all_params.append(&mut params);
+                }
+            }
+        )*
+        
+        (result_sql, all_params)
+    }};
+
+    // ===== 辅助宏：处理单个 query_wrapper 的 SQL 替换（向后兼容）=====
+    (@process_wrapper $sql:expr, $query_wrapper:expr, $db_type:expr) => {{
+        execute_impl!(@process_wrappers $sql, [$query_wrapper], $db_type)
+    }};
+
+    // ===== 带 query_wrapper 参数的方法（单个）=====
     (
-        #[select($sql:literal)]
-        #[value]
-        async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<Option<$inner:ty>, DatabaseError>;
+        #[sql($sql:literal)]
+        async fn $method_name:ident<'a>($query_wrapper:ident: &OccupyQueryMapper<'a>) -> Result<u64, DatabaseError>;
         $($rest:tt)*
     ) => {
-        pub async fn $method_name($($param_name: $param_type),*) -> Result<Option<$inner>, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
-                $($param_name.into(),)*
-            ];
-
-            Self::exec(
+        pub async fn $method_name<'a>($query_wrapper: &OccupyQueryMapper<'a>) -> Result<u64, DatabaseError> {
+            Self::exec::<_, _, _, _, u64>(
                 |db_type: DbType| {
-                    (sql, param_vec, db_type)
+                    let (sql, params) = execute_impl!(@process_wrapper $sql, &$query_wrapper, db_type);
+                    (db_type, sql, params)
                 },
-                async |(sql, param_vec, db_type)| {
-                    <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one_value(sql, &param_vec)
-                        .await
+                async |(db_type, sql, params)| {
+                    <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &params).await
                 }
             ).await
         }
         $crate::execute_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配 PageRes<T> 方法（Page 必须是第一个参数） =====
+    // ===== 带多个 query_wrapper 参数的方法 =====
     (
-        #[select($sql:literal)]
-        async fn $method_name:ident($page_param:ident: Page, $($param_name:ident: $param_type:ty),* $(,)?) -> Result<PageRes<$inner:ty>, DatabaseError>;
+        #[sql($sql:literal)]
+        async fn $method_name:ident<'a>($($query_wrapper:ident: &OccupyQueryMapper<'a>),+) -> Result<u64, DatabaseError>;
         $($rest:tt)*
     ) => {
-        pub async fn $method_name($page_param: Page, $($param_name: $param_type),*) -> Result<PageRes<$inner>, DatabaseError> {
-            Self::exec::<_, _, _, _, PageRes<$inner>>(
+        pub async fn $method_name<'a>($($query_wrapper: &OccupyQueryMapper<'a>),+) -> Result<u64, DatabaseError> {
+            Self::exec::<_, _, _, _, u64>(
                 |db_type: DbType| {
-                    let sql = $sql;
-                    let mut p1: u64 = 0;
-                    let mut p2: u64 = 0;
-                    let mut page_sql = String::new();
-
-                    let mut param_vec = vec![
-                        $($param_name.into(),)*
-                    ];
-
-                    let total_page_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_total_sql(&sql);
-
-                    (page_sql, p1, p2) = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_query_sql(&sql, $page_param.current_page, $page_param.page_size);
-
-                    param_vec.push(ParamValue::U64(p1));
-                    param_vec.push(ParamValue::U64(p2));
-
-                    (page_sql, total_page_sql, param_vec, $page_param, db_type)
+                    let (sql, params) = execute_impl!(@process_wrappers $sql, [$(&$query_wrapper),+], db_type);
+                    (db_type, sql, params)
                 },
-                async |(page_sql, total_page_sql, param_vec, page, db_type)| {
-                    let total_param_vec = param_vec[0..param_vec.len()-2].to_vec();
-                    let total = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_count(total_page_sql.as_str(), &total_param_vec)
-                        .await?;
-
-                    let list = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(page_sql.as_str(), &param_vec)
-                        .await?;
-
-                    Ok(PageRes::new_from_records(total, page.page_size, list))
+                async |(db_type, sql, params)| {
+                    <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &params).await
                 }
             ).await
         }
         $crate::execute_impl! { $($rest)* }
     };
 
-    // ===== 主入口：匹配 Vec<T> 方法 =====
+    // ===== 普通参数方法（无 query_wrapper）=====
     (
-        #[select($sql:literal)]
-        async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<Vec<$inner:ty>, DatabaseError>;
+        #[sql($sql:literal)]
+        async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<u64, DatabaseError>;
         $($rest:tt)*
     ) => {
-        pub async fn $method_name($($param_name: $param_type),*) -> Result<Vec<$inner>, DatabaseError> {
-            let sql = $sql;
+        pub async fn $method_name($($param_name: $param_type),*) -> Result<u64, DatabaseError> {
+            let sql = $sql.to_string();
             let param_vec = vec![
                 $($param_name.into(),)*
             ];
 
-            Self::exec(
-                |db_type: DbType| {
-                    (sql, param_vec, db_type)
-                },
-                async |(sql, param_vec, db_type)| {
-                    <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(sql, &param_vec)
-                        .await
-                }
-            ).await
-        }
-        $crate::execute_impl! { $($rest)* }
-    };
-
-    // ===== 主入口：匹配 Option<T> 实体类型方法 =====
-    (
-        #[select($sql:literal)]
-        async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<Option<$entity:ty>, DatabaseError>;
-        $($rest:tt)*
-    ) => {
-        pub async fn $method_name($($param_name: $param_type),*) -> Result<Option<$entity>, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
-                $($param_name.into(),)*
-            ];
-
-            Self::exec(
-                |db_type: DbType| {
-                    (sql, param_vec, db_type)
-                },
-                async |(sql, param_vec, db_type)| {
-                    <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql, &param_vec)
-                        .await
-                }
-            ).await
-        }
-        $crate::execute_impl! { $($rest)* }
-    };
-
-    // ===== 主入口：匹配单个 T（非 Option）方法 =====
-    (
-        #[select($sql:literal)]
-        async fn $method_name:ident($($param_name:ident: $param_type:ty),* $(,)?) -> Result<$entity:ty, DatabaseError>;
-        $($rest:tt)*
-    ) => {
-        pub async fn $method_name($($param_name: $param_type),*) -> Result<$entity, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
-                $($param_name.into(),)*
-            ];
-
-            let result: Option<$entity> = Self::exec(
-                |db_type: DbType| {
-                    (sql, param_vec, db_type)
-                },
-                async |(sql, param_vec, db_type)| {
-                    <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql, &param_vec)
-                        .await
-                }
-            ).await?;
-
-            result.ok_or(DatabaseError::CommonError("Not found".to_string()))
+            Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
+                (db_type,sql,param_vec)
+            },async |(db_type,sql,param_vec)|{
+                <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(),&param_vec).await
+            }).await
         }
         $crate::execute_impl! { $($rest)* }
     };

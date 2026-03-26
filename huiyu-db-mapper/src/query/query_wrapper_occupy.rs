@@ -2,7 +2,6 @@ use huiyu_db_mapper_core::base::entity::{ColumnInfo, Entity};
 use huiyu_db_mapper_core::base::mapping::Mapping;
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
-use crate::query::base_mapper::BaseMapper;
 
 pub struct EntityOccupy;
 

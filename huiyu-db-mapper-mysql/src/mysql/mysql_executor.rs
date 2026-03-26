@@ -155,6 +155,14 @@ impl Executor for MysqlSqlExecutor {
     {
         with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
     }
+
+    // async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
+    // where
+    //     F: FnOnce() -> Fut,
+    //     Fut: Future<Output=Result<T, DatabaseError>>
+    // {
+    //     with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
+    // }
 }
 
 fn param_value_to_value(val: &ParamValue) -> Result<Value, DatabaseError> {

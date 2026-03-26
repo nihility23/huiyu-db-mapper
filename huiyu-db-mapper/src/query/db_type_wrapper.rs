@@ -102,7 +102,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Mysql => MYSQL_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "postgres")]
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
-                // DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle")]
+                DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),

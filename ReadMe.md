@@ -130,6 +130,21 @@ impl RoleMapper {
         #[select("select role_name from t_user where role_code = ? and status = ?")]
         #[value]   // 标记为简单值类型
         async fn query_role_name(name: String, status: i8) -> Result<Option<String>, DatabaseError>;
+        
+        
+        #[select("select * from t_user  #{query_wrapper}")]
+        async fn query_role_dtos_by_query_wrapper(query_wrapper: OccpyQueryWrapper) -> Result<Vec<RoleDTO>, DatabaseError>;
+
+        #[select("select * from t_user  #{query_wrapper}")]
+        async fn query_role_page_query_wrapper(page: Page, query_wrapper: OccpyQueryWrapper) -> Result<PageRes<RoleDTO>, DatabaseError>;
+
+
+        #[select("select * from t_user #{query_wrapper}")]
+        async fn query_role_first_query_wrapper(query_wrapper: OccpyQueryWrapper) -> Result<Option<RoleDTO>, DatabaseError>;
+
+        #[select("select role_name from t_user #{query_wrapper}")]
+        #[value]   // 标记为简单值类型
+        async fn query_role_name_query_wrapper(query_wrapper: OccpyQueryWrapper) -> Result<Option<String>, DatabaseError>;
     }
 }
 ```

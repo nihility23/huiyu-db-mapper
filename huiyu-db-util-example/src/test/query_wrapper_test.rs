@@ -59,7 +59,10 @@ async fn queries()->Result<(),DatabaseError>{
     let wrapper2 = OccupyQueryMapper::new().like("name", "test");
 
     // 模拟宏中的处理逻辑
-    let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
-    println!("{:?}", result.err());
+    // let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
+    // println!("{:?}", result.err());
+
+    let res = RoleMapper::create_table_employees(1).await?;
+    println!("{:?}", res);
     Ok(())
 }

@@ -1,3 +1,5 @@
+use huiyu_db_mapper_core::base::param::ParamValue;
+
 #[macro_export]
 macro_rules! select_impl {
     // ===== 辅助宏：处理多个 query_wrapper 的 SQL 替换 =====
@@ -92,11 +94,11 @@ macro_rules! select_impl {
                 async |(page_sql, total_sql, mut params, page, db_type)| {
                     let total_params = params[0..params.len()-2].to_vec();
                     let total = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_count(&total_sql, &total_params)
+                        .query_count(&total_sql.as_str(), &total_params)
                         .await?;
 
                     let list = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(&page_sql, &params)
+                        .query_some(&page_sql.as_str(), &params)
                         .await?;
 
                     Ok(PageRes::new_from_records(total, page.page_size, list))
@@ -131,11 +133,11 @@ macro_rules! select_impl {
                 async |(page_sql, total_sql, mut params, page, db_type)| {
                     let total_params = params[0..params.len()-2].to_vec();
                     let total = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_count(&total_sql, &total_params)
+                        .query_count(&total_sql.as_str(), &total_params)
                         .await?;
 
                     let list = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(&page_sql, &params)
+                        .query_some(&page_sql.as_str(), &params)
                         .await?;
 
                     Ok(PageRes::new_from_records(total, page.page_size, list))
@@ -289,18 +291,21 @@ macro_rules! select_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name($($param_name: $param_type),*) -> Result<Option<$inner>, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
+            let mut sql = $sql.to_string();
+            let mut param_vec:Vec<ParamValue> = vec![
                 $($param_name.into(),)*
             ];
-
+            while sql.contains("?#") {
+                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
+                param_vec.remove(0);
+            }
             Self::exec(
                 |db_type: DbType| {
                     (sql, param_vec, db_type)
                 },
                 async |(sql, param_vec, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one_value(sql, &param_vec)
+                        .query_one_value(sql.as_str(), &param_vec)
                         .await
                 }
             ).await
@@ -317,16 +322,19 @@ macro_rules! select_impl {
         pub async fn $method_name($page_param: Page, $($param_name: $param_type),*) -> Result<PageRes<$inner>, DatabaseError> {
             Self::exec::<_, _, _, _, PageRes<$inner>>(
                 |db_type: DbType| {
-                    let sql = $sql;
-                    let mut param_vec = vec![
+                    let mut sql = $sql.to_string();
+                    let mut param_vec:Vec<ParamValue> = vec![
                         $($param_name.into(),)*
                     ];
-
+                    while sql.contains("?#") {
+                        sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
+                        param_vec.remove(0);
+                    }
                     let total_page_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_total_sql(&sql);
+                        .gen_page_total_sql(sql.as_str());
 
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .gen_page_query_sql(&sql, $page_param.current_page, $page_param.page_size);
+                        .gen_page_query_sql(sql.as_str(), $page_param.current_page, $page_param.page_size);
 
                     param_vec.push(ParamValue::U64(offset));
                     param_vec.push(ParamValue::U64(limit));
@@ -357,18 +365,21 @@ macro_rules! select_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name($($param_name: $param_type),*) -> Result<Vec<$inner>, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
+            let mut sql = $sql.to_string();
+            let mut param_vec:Vec<ParamValue> = vec![
                 $($param_name.into(),)*
             ];
-
+            while sql.contains("?#") {
+                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
+                param_vec.remove(0);
+            }
             Self::exec(
                 |db_type: DbType| {
                     (sql, param_vec, db_type)
                 },
                 async |(sql, param_vec, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_some(sql, &param_vec)
+                        .query_some(sql.as_str(), &param_vec)
                         .await
                 }
             ).await
@@ -383,18 +394,21 @@ macro_rules! select_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name($($param_name: $param_type),*) -> Result<Option<$entity>, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
+            let mut sql = $sql.to_string();
+            let mut param_vec:Vec<ParamValue> = vec![
                 $($param_name.into(),)*
             ];
-
+            while sql.contains("?#") {
+                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
+                param_vec.remove(0);
+            }
             Self::exec(
                 |db_type: DbType| {
                     (sql, param_vec, db_type)
                 },
                 async |(sql, param_vec, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql, &param_vec)
+                        .query_one(sql.as_str(), &param_vec)
                         .await
                 }
             ).await
@@ -409,18 +423,21 @@ macro_rules! select_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name($($param_name: $param_type),*) -> Result<$entity, DatabaseError> {
-            let sql = $sql;
-            let param_vec = vec![
+            let mut sql = $sql.to_string();
+            let mut param_vec:Vec<ParamValue> = vec![
                 $($param_name.into(),)*
             ];
-
+            while sql.contains("?#") {
+                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
+                param_vec.remove(0);
+            }
             let result: Option<$entity> = Self::exec(
                 |db_type: DbType| {
                     (sql, param_vec, db_type)
                 },
                 async |(sql, param_vec, db_type)| {
                     <DbType as Into<DbTypeWrapper>>::into(db_type)
-                        .query_one(sql, &param_vec)
+                        .query_one(sql.as_str(), &param_vec)
                         .await
                 }
             ).await?;

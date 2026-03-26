@@ -1,3 +1,5 @@
+use huiyu_db_mapper_core::base::param::ParamValue;
+
 #[macro_export]
 macro_rules! execute_impl {
     // ===== 辅助宏：处理多个 query_wrapper 的 SQL 替换 =====
@@ -73,10 +75,14 @@ macro_rules! execute_impl {
         $($rest:tt)*
     ) => {
         pub async fn $method_name($($param_name: $param_type),*) -> Result<u64, DatabaseError> {
-            let sql = $sql.to_string();
-            let param_vec = vec![
+            let mut sql = $sql.to_string();
+            let mut param_vec:Vec<ParamValue> = vec![
                 $($param_name.into(),)*
             ];
+            while sql.contains("?#") {
+                sql = sql.replace("?#", &param_vec[0].to_string().as_str());
+                param_vec.remove(0);
+            }
 
             Self::exec::<  _,_,_, _, u64>(|db_type: DbType|{
                 (db_type,sql,param_vec)

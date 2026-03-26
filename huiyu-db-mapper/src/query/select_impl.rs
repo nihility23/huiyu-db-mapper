@@ -1,5 +1,3 @@
-use huiyu_db_mapper_core::base::param::ParamValue;
-
 #[macro_export]
 macro_rules! select_impl {
     // ===== 辅助宏：处理多个 query_wrapper 的 SQL 替换 =====

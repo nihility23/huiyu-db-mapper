@@ -294,8 +294,10 @@ macro_rules! select_impl {
                 $($param_name.into(),)*
             ];
             while sql.contains("?#") {
-                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
-                param_vec.remove(0);
+                let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                // 获取参数角标，即第几个?
+                sql = sql.replacen("?#", &param_vec[idx].to_string().as_str(),1);
+                param_vec.remove(idx);
             }
             Self::exec(
                 |db_type: DbType| {
@@ -325,8 +327,10 @@ macro_rules! select_impl {
                         $($param_name.into(),)*
                     ];
                     while sql.contains("?#") {
-                        sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
-                        param_vec.remove(0);
+                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        // 获取参数角标，即第几个?
+                        sql = sql.replacen("?#", &param_vec[idx].to_string().as_str(),1);
+                        param_vec.remove(idx);
                     }
                     let total_page_sql = <DbType as Into<DbTypeWrapper>>::into(db_type)
                         .gen_page_total_sql(sql.as_str());
@@ -368,8 +372,10 @@ macro_rules! select_impl {
                 $($param_name.into(),)*
             ];
             while sql.contains("?#") {
-                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
-                param_vec.remove(0);
+                let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                // 获取参数角标，即第几个?
+                sql = sql.replacen("?#", &param_vec[idx].to_string().as_str(),1);
+                param_vec.remove(idx);
             }
             Self::exec(
                 |db_type: DbType| {
@@ -397,8 +403,10 @@ macro_rules! select_impl {
                 $($param_name.into(),)*
             ];
             while sql.contains("?#") {
-                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
-                param_vec.remove(0);
+                let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                // 获取参数角标，即第几个?
+                sql = sql.replacen("?#", &param_vec[idx].to_string().as_str(),1);
+                param_vec.remove(idx);
             }
             Self::exec(
                 |db_type: DbType| {
@@ -426,8 +434,10 @@ macro_rules! select_impl {
                 $($param_name.into(),)*
             ];
             while sql.contains("?#") {
-                sql = sql.replacen("?#", &param_vec[0].to_string().as_str(),1);
-                param_vec.remove(0);
+                let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                // 获取参数角标，即第几个?
+                sql = sql.replacen("?#", &param_vec[idx].to_string().as_str(),1);
+                param_vec.remove(idx);
             }
             let result: Option<$entity> = Self::exec(
                 |db_type: DbType| {

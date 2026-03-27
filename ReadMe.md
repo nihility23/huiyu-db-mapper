@@ -18,34 +18,38 @@
  - [x] 更新
  - [x] 删除
  - [x] 插入
+ - [x] 自定义查询
+
 
 ### 查询功能
 #### QueryWrapper    查询条件构造器
-    eq
-    ne
-    lt
-    le
-    gt
-    ge
-    between
-    like
-    likeLeft
-    likeRight
-    notLike
-    notLikeLeft
-    notLikeRight
-    in
-    inSql
-    notIn
-    notInSql
-    isNotNull
-    isNull
-    applySql
-    existsSql
-    notExistsSql
-    
-    or_wrapper
-    and_wrapper
+
+| 名称 | 用法 |
+|------|------|
+| eq | 等于 (=) |
+| ne | 不等于 (<>) |
+| lt | 小于 (<) |
+| le | 小于等于 (<=) |
+| gt | 大于 (>) |
+| ge | 大于等于 (>=) |
+| between | 在两者之间 (between ... and ...) |
+| like | 模糊匹配，支持通配符 (like '%...%') |
+| likeLeft | 左模糊匹配 (like '%...') |
+| likeRight | 右模糊匹配 (like '...%') |
+| notLike | 不匹配指定模式 (not like) |
+| notLikeLeft | 不匹配左模糊模式 (not like '%...') |
+| notLikeRight | 不匹配右模糊模式 (not like '...%') |
+| in | 在指定集合中 (in (...)) |
+| inSql | 使用子查询作为 in 的条件 (in (select ...)) |
+| notIn | 不在指定集合中 (not in (...)) |
+| notInSql | 使用子查询作为 not in 的条件 (not in (select ...)) |
+| isNotNull | 不为空 (is not null) |
+| isNull | 为空 (is null) |
+| applySql | 直接拼接自定义 SQL 片段 |
+| existsSql | 使用 exists 子查询 (exists (select ...)) |
+| notExistsSql | 使用 not exists 子查询 (not exists (select ...)) |
+| or_wrapper | 以 OR 逻辑包裹一组条件 |
+| and_wrapper | 以 AND 逻辑包裹一组条件 |
 ```aiignore
     let mut query_wrapper = QueryWrapper::<RoleEntity>::new();
     query_wrapper = query_wrapper.eq("id", 1);
@@ -188,15 +192,20 @@ pub struct RoleEntity {
 
 返回值支持：
 #### 1.查询所有
-    返回值必须Result<PageRes<RoleDTO>, DatabaseError>, RoleDTO必须实现Mapping
+    返回值必须Result<PageRes<T>, DatabaseError>, T必须实现Mapping
 #### 2.查询分页
-    第一个参数必须为Page,返回值必须Result<PageRes<RoleDTO>, DatabaseError>, RoleDTO必须实现Mapping
+    第一个参数必须为Page,返回值必须Result<PageRes<T>, DatabaseError>, T必须实现Mapping
 #### 3.查询单个
-    返回值必须为Result<Option<RoleDTO>, DatabaseError>, RoleDTO必须实现Mapping
+    返回值必须为Result<Option<T>, DatabaseError>, T必须实现Mapping
 #### 4.查询简单值
     返回值必须为Result<Option<String>, DatabaseError>，必须标记为value
 
-## api
+## 未来支持
 
 - [ ] 直接读取配置文件并注册数据源
+- [ ] 优化默认数据源
 
+## 注意事项
+#### 1.实体及映射成员必须Option包裹
+#### 2.事务宏必须返回Result<T,DatasourceError>，以确定是否回滚
+#### 3.必须有个名称为default的数据源，后期考虑优化，找不到对应名称使用第一个注册的数据源

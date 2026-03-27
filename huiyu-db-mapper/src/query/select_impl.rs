@@ -38,6 +38,28 @@ macro_rules! select_impl {
         $params.push($param.into());
     };
 
+    // ===== 辅助宏：处理占位符 =====
+    (@process_placeholders $sql:expr, $params:expr) => {
+        {
+            let mut param_vec = $params.clone();
+            while $sql.contains("?#") {
+                let idx = $sql.find("?#").map(|pos| $sql[..pos].matches('?').count()).unwrap();
+                $sql = $sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                param_vec.remove(idx);
+            }
+            while $sql.contains("?$") {
+                let idx = $sql.find("?$").map(|pos| $sql[..pos].matches('?').count()).unwrap();
+                $sql = $sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                param_vec.remove(idx);
+            }
+            while $sql.contains("?@") {
+                let idx = $sql.find("?@").map(|pos| $sql[..pos].matches('?').count()).unwrap();
+                $sql = $sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                param_vec.remove(idx);
+            }
+        }
+    };
+
     // ===== 带 value 属性的方法（带生命周期）=====
     (
         #[select($sql:literal)]
@@ -54,13 +76,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -90,24 +107,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -136,24 +137,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_total_sql(&sql);
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
@@ -190,23 +175,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_total_sql(&sql);
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
@@ -243,23 +213,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -288,23 +243,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -333,23 +273,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -378,23 +303,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -423,23 +333,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },
@@ -469,23 +364,8 @@ macro_rules! select_impl {
                     // 处理参数
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
-                    // 处理 ?# 占位符
-                    let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                        param_vec.remove(idx);
-                    }
+                    // 处理占位符
+                    select_impl!(@process_placeholders sql, params);
                     
                     (sql, params, db_type)
                 },

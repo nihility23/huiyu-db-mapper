@@ -61,6 +61,8 @@ async fn queries()->Result<(),DatabaseError>{
 
     // let res = RoleMapper::query_role_first_query_wrapper("abc".to_string(), &wrapper1).await?;
     // println!("{:?}",res.unwrap());
+    let res = RoleMapper::update_role_code("a".to_string(),"b".to_string(),&wrapper1,&wrapper2).await?;
+    println!("{:?}", res);
 
     let res = RoleMapper::query_role_by_multiple_wrappers("abc".to_string(), &wrapper1, &wrapper2).await.unwrap();
     println!("{:?}", res);

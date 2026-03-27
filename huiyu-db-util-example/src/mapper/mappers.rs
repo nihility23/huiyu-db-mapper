@@ -75,7 +75,7 @@ impl RoleMapper {
         async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role  where 1=1 and #{query_wrapper}")]
-        async fn query_role_page_query_wrapper<'a>(page: Page,name:String, query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
+        async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,   query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role where name like concat('%',?#,'%') and #{query_wrapper}")]
         async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
@@ -90,8 +90,8 @@ impl RoleMapper {
     }
     
     execute_impl!{
-        #[sql("update t_role set role_code = ? where id = ?")]
-        async fn update_role_code(id: i64, role_code: String) -> Result<u64, DatabaseError>;
+        #[sql("update t_role set role_code = ? where id = ? and #{query_wrapper} and #{query_wrapper}")]
+        async fn update_role_code(role_code: String, role_code1: String,query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
         #[sql("create table t_test(id: int)")]
         async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;
         #[sql("CREATE TABLE Employees_?# (
@@ -100,7 +100,7 @@ impl RoleMapper {
                 Age INTEGER
             );
         ")]
-        async fn create_table_employees(idx: i64) -> Result<u64, DatabaseError>;
+        async fn create_table_employees() -> Result<u64, DatabaseError>;
     }
     // pub async fn create_table_employees(idx: i64) -> Result<u64, DatabaseError> {
     //     let mut sql = "CREATE TABLE Employees_? (

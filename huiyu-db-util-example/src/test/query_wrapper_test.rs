@@ -1,3 +1,4 @@
+use std::fs::read;
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
@@ -58,6 +59,8 @@ async fn queries()->Result<(),DatabaseError>{
     let wrapper1 = OccupyQueryMapper::new().eq("status", 1);
     let wrapper2 = OccupyQueryMapper::new().like("name", "test");
 
+    let res = RoleMapper::query_role_first_query_wrapper("abc".to_string(), &wrapper1).await?;
+    println!("{:?}",res.unwrap());
     // 模拟宏中的处理逻辑
     // let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
     // println!("{:?}", result.err());

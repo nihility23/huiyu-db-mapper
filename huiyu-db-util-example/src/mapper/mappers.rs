@@ -77,8 +77,8 @@ impl RoleMapper {
         #[select("select * from t_role  where 1=1 and #{query_wrapper}")]
         async fn query_role_page_query_wrapper<'a>(page: Page, query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
-        #[select("select * from t_role where 1=1 and #{query_wrapper}")]
-        async fn query_role_first_query_wrapper<'a>(query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
+        #[select("select * from t_role where name like concat('%',?#,'%') and #{query_wrapper}")]
+        async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
         #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{query_wrapper}")]
         #[value]   // 标记为简单值类型

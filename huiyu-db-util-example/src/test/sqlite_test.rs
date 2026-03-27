@@ -1,6 +1,6 @@
 use crate::common::db::init_dbs;
 use crate::entity::entities::{UserEntity, UserRoleEntity};
-use crate::mapper::mappers::{UserMapper, UserRoleMapper};
+use crate::mapper::mappers::{RoleMapper, UserMapper, UserRoleMapper};
 use chrono::{Local, NaiveDateTime, TimeZone};
 use huiyu_db_util::huiyu_db_macros::{datasource, transactional};
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
@@ -29,6 +29,9 @@ async fn test_transaction()-> Result<(), DatabaseError>{
     user_role2.create_time = Some(chrono::Local::now());
     user_role2.user_id = Some(131111111);
     user_role2.role_id = Some(String::from("role_002"));
+
+    let res = RoleMapper::delete_by_key(&"1 or 101".to_string()).await;
+    println!("{:?}", res);
 
     let res = transactional_exec(async ||{
         let res = UserRoleMapper::insert(&mut user_role1).await?;

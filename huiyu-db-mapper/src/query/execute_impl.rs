@@ -24,7 +24,18 @@ macro_rules! execute_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
-                    
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+
                     (db_type, sql, params)
                 },
                 async |(db_type, sql, params)| {

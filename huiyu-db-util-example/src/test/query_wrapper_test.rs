@@ -59,18 +59,18 @@ async fn queries()->Result<(),DatabaseError>{
     let wrapper1 = OccupyQueryMapper::new().eq("status", 1);
     let wrapper2 = OccupyQueryMapper::new().like("role_name", "test");
 
-    // let res = RoleMapper::query_role_first_query_wrapper("abc".to_string(), &wrapper1).await?;
-    // println!("{:?}",res.unwrap());
-    let res = RoleMapper::update_role_code("a".to_string(),"b".to_string(),&wrapper1,&wrapper2).await?;
-    println!("{:?}", res);
-
-    let res = RoleMapper::query_role_by_multiple_wrappers("abc".to_string(), &wrapper1, &wrapper2).await.unwrap();
-    println!("{:?}", res);
-    // 模拟宏中的处理逻辑
-    // let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
-    // println!("{:?}", result.err());
-
-    // let res = RoleMapper::create_table_employees(1).await?;
+    // // let res = RoleMapper::query_role_first_query_wrapper("abc".to_string(), &wrapper1).await?;
+    // // println!("{:?}",res.unwrap());
+    // let res = RoleMapper::update_role_code("a".to_string(),"b".to_string(),&wrapper1,&wrapper2).await?;
     // println!("{:?}", res);
+    // 
+    // let res = RoleMapper::query_role_by_multiple_wrappers("abc".to_string(), &wrapper1, &wrapper2).await.unwrap();
+    // println!("{:?}", res);
+    // // 模拟宏中的处理逻辑
+    // // let result = RoleMapper::query_role_by_multiple_wrappers(&wrapper1, &wrapper2).await;
+    // // println!("{:?}", result.err());
+
+    let res = RoleMapper::create_table_employees(1).await?;
+    println!("{:?}", res);
     Ok(())
 }

@@ -97,6 +97,17 @@ macro_rules! select_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
                     
                     (sql, params, db_type)
                 },
@@ -130,6 +141,17 @@ macro_rules! select_impl {
                     while sql.contains("?#") {
                         let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
                     
@@ -175,6 +197,16 @@ macro_rules! select_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
                     
                     let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_total_sql(&sql);
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
@@ -218,6 +250,16 @@ macro_rules! select_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
                     
                     (sql, params, db_type)
                 },
@@ -251,6 +293,16 @@ macro_rules! select_impl {
                     while sql.contains("?#") {
                         let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
                     
@@ -288,6 +340,16 @@ macro_rules! select_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
                     
                     (sql, params, db_type)
                 },
@@ -321,6 +383,16 @@ macro_rules! select_impl {
                     while sql.contains("?#") {
                         let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
                     
@@ -358,6 +430,16 @@ macro_rules! select_impl {
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
                     
                     (sql, params, db_type)
                 },
@@ -392,6 +474,16 @@ macro_rules! select_impl {
                     while sql.contains("?#") {
                         let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
                         sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?$") {
+                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                        param_vec.remove(idx);
+                    }
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
                     

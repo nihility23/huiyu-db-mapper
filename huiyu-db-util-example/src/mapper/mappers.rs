@@ -100,7 +100,7 @@ impl RoleMapper {
                 Age INTEGER
             );
         ")]
-        async fn create_table_employees() -> Result<u64, DatabaseError>;
+        async fn create_table_employees(idx:i64) -> Result<u64, DatabaseError>;
     }
     // pub async fn create_table_employees(idx: i64) -> Result<u64, DatabaseError> {
     //     let mut sql = "CREATE TABLE Employees_? (

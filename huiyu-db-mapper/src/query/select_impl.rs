@@ -42,19 +42,19 @@ macro_rules! select_impl {
     (@process_placeholders $sql:expr, $params:expr) => {
         {
             let mut param_vec = $params.clone();
-            while $sql.contains("?#") {
-                let idx = $sql.find("?#").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?#", &param_vec[idx].to_string(), 1);
-                param_vec.remove(idx);
-            }
-            while $sql.contains("?$") {
-                let idx = $sql.find("?$").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                param_vec.remove(idx);
-            }
             while $sql.contains("?@") {
                 let idx = $sql.find("?@").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                $sql = $sql.replacen("?@", &param_vec[idx].to_string(), 1);
+                param_vec.remove(idx);
+            }
+            while $sql.contains("?#") {
+                let idx = $sql.find("?#").map(|pos| $sql[..pos].matches('?').count()).unwrap();
+                $sql = $sql.replacen("?#", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                param_vec.remove(idx);
+            }
+            while $sql.contains("?&") {
+                let idx = $sql.find("?&").map(|pos| $sql[..pos].matches('?').count()).unwrap();
+                $sql = $sql.replacen("?&", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                 param_vec.remove(idx);
             }
         }

@@ -19,20 +19,20 @@ macro_rules! execute_impl {
                     
                     // 处理 ?# 占位符
                     let mut param_vec = params.clone();
-                    while sql.contains("?#") {
-                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?#", &param_vec[idx].to_string(), 1);
+                    while sql.contains("?@") {
+                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?@", &param_vec[idx].to_string(), 1);
                         param_vec.remove(idx);
                     }
-                    while sql.contains("?$") {
-                        let idx = sql.find("?$").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?$", &format!("'{}'",&param_vec[idx].to_string()), 1);
+                    while sql.contains("?&") {
+                        let idx = sql.find("?&").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?&", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
 
-                    while sql.contains("?@") {
-                        let idx = sql.find("?@").map(|pos| sql[..pos].matches('?').count()).unwrap();
-                        sql = sql.replacen("?@", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
+                    while sql.contains("?#") { 
+                        let idx = sql.find("?#").map(|pos| sql[..pos].matches('?').count()).unwrap();
+                        sql = sql.replacen("?#", &format!("'{}'",&param_vec[idx].to_string()), 1);
                         param_vec.remove(idx);
                     }
 

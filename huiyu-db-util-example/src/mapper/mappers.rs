@@ -94,7 +94,7 @@ impl RoleMapper {
         async fn update_role_code(role_code: String, role_code1: String,query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
         #[sql("create table t_test(id: int)")]
         async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;
-        #[sql("CREATE TABLE Employees_?# (
+        #[sql("CREATE TABLE Employees_?@ (
                 EmployeeID INTEGER PRIMARY KEY,
                 Name TEXT NOT NULL,
                 Age INTEGER

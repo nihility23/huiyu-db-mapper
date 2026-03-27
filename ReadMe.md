@@ -161,31 +161,30 @@ pub struct RoleEntity {
         async fn create_table_employees(idx:i64) -> Result<u64, DatabaseError>;
     }
 ```
-参数值支持：
+### 参数值支持：
 #### 1.普通值.可以多个与？搭配，按顺序替换
 #### 2.OccupyQueryMapper，可以多个，通过#{qw}按顺序替换
 #### 3.普通值？搭配规则
 
-[select(select *from where id = ?)]
-?:参与预编译，后以参数传入
-结果：
-sql:select *from where id = ?  
-sql执行参数：abc
+    [select(select *from where id = ?)]
+    ?:参与预编译，后以参数传入
+    sql:select *from where id = ?  
+    sql执行参数：abc
 
-[select(select *from t_user where id = ?#)]
-?#：不参与预编译，先替换后执行,替换时候加单引号,传入参数("abc")
-sql:select *from where id = 'abc'
-sql执行参数：无
+    [select(select *from t_user where id = ?#)]
+    ?#：不参与预编译，先替换后执行,替换时候加单引号,传入参数("abc")
+    sql:select *from where id = 'abc'
+    sql执行参数：无
 
-[select(select *from ?@ where id = ?@)]
-?@：不参与预编译，先替换后执行,替换时候不加单引号,传入参数("t_user","1")
-sql:select *from t_user where id = ?
-sql执行参数：1
+    [select(select *from ?@ where id = ?@)]
+    ?@：不参与预编译，先替换后执行,替换时候不加单引号,传入参数("t_user","1")
+    sql:select *from t_user where id = ?
+    sql执行参数：1
 
-?&：不参与预编译，先替换后执行,替换是增加双引号
-[select(select name from ?& where id = ?)],传入参数("t_user","1")
-sql:select *from "t_user" where id = ?
-sql执行参数：1
+    [select(select name from ?& where id = ?)]
+    ?&：不参与预编译，先替换后执行,替换是增加双引号,传入参数("t_user","1")
+    sql:select *from "t_user" where id = ?
+    sql执行参数：1
 
 返回值支持：
 #### 1.查询所有

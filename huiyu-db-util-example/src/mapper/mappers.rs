@@ -71,26 +71,26 @@ impl RoleMapper {
         #[value]   // 标记为简单值类型
         async fn query_role_name(name: String, status: i8) -> Result<Option<String>, DatabaseError>;
         
-        #[select("select * from t_role where 1=1 and #{query_wrapper}")]
+        #[select("select * from t_role where 1=1 and #{qw}")]
         async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
         
-        #[select("select * from t_role  where 1=1 and #{query_wrapper}")]
+        #[select("select * from t_role  where 1=1 and #{qw}")]
         async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,   query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
-        #[select("select * from t_role where name like concat('%',?#,'%') and #{query_wrapper}")]
+        #[select("select * from t_role where name like concat('%',?#,'%') and #{qw}")]
         async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
-        #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{query_wrapper}")]
+        #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{qw}")]
         #[value]   // 标记为简单值类型
         async fn query_role_name_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<String>, DatabaseError>;
         
         // 支持多个 OccupyQueryMapper 的示例
-        #[select("select * from t_role where 1=1 and role_code =?# and #{query_wrapper} and #{query_wrapper}")]
+        #[select("select * from t_role where 1=1 and role_code =?# and #{qw} and #{qw}")]
         async fn query_role_by_multiple_wrappers<'a>(code:String,wrapper1: &OccupyQueryMapper<'a>, wrapper2: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
     }
     
     execute_impl!{
-        #[sql("update t_role set role_code = ? where id = ? and #{query_wrapper} and #{query_wrapper}")]
+        #[sql("update t_role set role_code = ? where id = ? and #{qw} and #{qw}")]
         async fn update_role_code(role_code: String, role_code1: String,query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
         #[sql("create table t_test(id: int)")]
         async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;

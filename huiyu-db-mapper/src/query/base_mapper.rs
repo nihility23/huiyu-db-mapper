@@ -157,7 +157,6 @@ where
     ) -> Result<Vec<E>, DatabaseError> {
         Self::exec::<  _,_,_, _, Vec<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
-            info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
             <DbType as Into<DbTypeWrapper>>::into(db_type).query_some(sql.as_str(),&param_vec).await
@@ -170,7 +169,6 @@ where
     ) -> Result<Option<E>, DatabaseError> {
         Self::exec::<  _,_,_, _, Option<E>>(|db_type: DbType|{
             let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_query_sql::<E>(query_wrapper);
-            info!("sql: {}, param_vec: {:?}", sql, param_vec);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
             <DbType as Into<DbTypeWrapper>>::into(db_type).query_one(sql.as_str(),&param_vec).await

@@ -72,21 +72,21 @@ impl RoleMapper {
         async fn query_role_name(name: String, status: i8) -> Result<Option<String>, DatabaseError>;
         
         #[select("select * from t_role where 1=1 and #{query_wrapper}")]
-        async fn query_role_dtos_by_query_wrapper<'a>(query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
+        async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role  where 1=1 and #{query_wrapper}")]
-        async fn query_role_page_query_wrapper<'a>(page: Page, query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
+        async fn query_role_page_query_wrapper<'a>(page: Page,name:String, query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role where name like concat('%',?#,'%') and #{query_wrapper}")]
         async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
         #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{query_wrapper}")]
         #[value]   // 标记为简单值类型
-        async fn query_role_name_query_wrapper<'a>(query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<String>, DatabaseError>;
+        async fn query_role_name_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<String>, DatabaseError>;
         
         // 支持多个 OccupyQueryMapper 的示例
-        #[select("select * from t_role where 1=1 and #{query_wrapper} and #{query_wrapper}")]
-        async fn query_role_by_multiple_wrappers<'a>(wrapper1: &OccupyQueryMapper<'a>, wrapper2: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
+        #[select("select * from t_role where 1=1 and role_code =?# and #{query_wrapper} and #{query_wrapper}")]
+        async fn query_role_by_multiple_wrappers<'a>(code:String,wrapper1: &OccupyQueryMapper<'a>, wrapper2: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
     }
     
     execute_impl!{

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDate};
+use chrono::{DateTime, Local, NaiveDate, NaiveDateTime};
 
 pub fn create_datetime_local(
     year: i32, month: u32, day: u32,
@@ -14,4 +14,12 @@ pub fn create_datetime_local(
 
 pub fn format_date_time_local(time_local: &DateTime<Local>, time_format: &str) -> String {
     time_local.format(time_format).to_string()
+}
+
+pub fn create_datetime_local_from_seconds(seconds: i64)-> DateTime<Local> {
+    // 转换为 NaiveDateTime（无时区）
+    let utc = DateTime::from_timestamp(seconds, 0).unwrap();
+    // 转换为本地时间
+    let local: DateTime<Local> = DateTime::from(utc);
+    local
 }

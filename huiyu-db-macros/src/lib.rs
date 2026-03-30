@@ -1,8 +1,38 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::meta::ParseNestedMeta;
-use syn::{parse_macro_input, spanned::Spanned, Attribute, Block, Data, DeriveInput, Error, Fields, FnArg, ItemFn, ItemImpl, Lit, LitStr, PatType, ReturnType, Type, TypePath};
+use syn::parse::Parse;
+use syn::{parse_macro_input, spanned::Spanned, Attribute, Block, Data, DeriveInput, Error, Fields, ItemFn, ItemStruct, Lit, LitStr, Type};
 
+use syn::punctuated::Punctuated;
+use syn::Token;
+use syn::{Meta};
+
+#[proc_macro_attribute]
+pub fn mapper(args: TokenStream, input: TokenStream) -> TokenStream {
+    // 解析宏参数，例如 #[mapper(PermissionEntity)]
+    let args = parse_macro_input!(args with Punctuated::<Meta, Token![,]>::parse_terminated);
+    let entity_type = match args.first() {
+        Some(Meta::Path(path)) => {
+            path.segments.last().unwrap().ident.clone()
+        }
+        _ => panic!("Expected entity type as argument, e.g., #[mapper(PermissionEntity)]"),
+    };
+
+    // 解析被标注的结构体，例如 pub struct PermissionMapper;
+    let input = parse_macro_input!(input as ItemStruct);
+    let struct_name = &input.ident;
+
+    // 生成实现代码
+    let expanded = quote! {
+        #input
+
+        impl BaseMapper<#entity_type> for #struct_name {
+        }
+    };
+
+    TokenStream::from(expanded)
+}
 
 #[proc_macro]
 pub fn transactional(input: TokenStream) -> TokenStream {

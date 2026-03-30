@@ -11,6 +11,7 @@ use rusqlite::ToSql;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task_local;
+use tracing::warn;
 
 task_local! {
     pub static SQLITE_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -27,16 +28,24 @@ impl<'a> RowType for SqliteRow<'a> {
     where
         Self: Sized
     {
-        let val = self.0.get_ref(col_index).map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
-        Ok(value_to_param_value(val)?)
+        let val = self.0.get_ref(col_index);//.map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
+        if val.is_err(){
+            warn!("Fail to get Column {}",val.as_ref().err().unwrap());
+            return Ok(ParamValue::Null);
+        }
+        Ok(value_to_param_value(val.unwrap())?)
     }
 
     fn col_to_v_by_name(&self, col_name: &str) -> Result<ParamValue, DatabaseError>
     where
         Self: Sized
     {
-        let val = self.0.get_ref(col_name).map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
-        Ok(value_to_param_value(val)?)
+        let val = self.0.get_ref(col_name);//.map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
+        if val.is_err() {
+            warn!("Fail to get Column {}",val.as_ref().err().unwrap());
+            return Ok(ParamValue::Null)
+        }
+        Ok(value_to_param_value(val.unwrap())?)
     }
 }
 // 查询基本实现

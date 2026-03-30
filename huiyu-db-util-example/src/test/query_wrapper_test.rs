@@ -1,5 +1,5 @@
 use crate::common::db::init_dbs;
-use crate::mapper::mappers::RoleMapper;
+use crate::mapper::mappers::{PermissionMapper, RoleMapper};
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
 use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
@@ -7,7 +7,7 @@ use huiyu_db_util::huiyu_db_mapper::query::query_wrapper_occupy::OccupyQueryMapp
 use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
-use crate::entity::entities::RoleEntity;
+use crate::entity::entities::{PermissionEntity, RoleEntity};
 
 #[tokio::test]
 async fn test(){
@@ -22,6 +22,11 @@ async fn test(){
 }
 #[datasource("sqlite")]
 async fn queries()->Result<(),DatabaseError>{
+    // let permission = PermissionMapper::select_by_key(&"perm_001".to_string()).await?;
+    // println!("{:?}", permission);
+
+    let role = RoleMapper::query_role_dtos("role_001".to_string()).await?;
+    println!("{:?}", role);
     // let mut query_wrapper = QueryWrapper::<RoleEntity>::new().eq("id", 1);
     // query_wrapper = query_wrapper.like(RoleEntity::ROLE_NAME, "role_");
     // query_wrapper = query_wrapper.like_left(RoleEntity::ROLE_NAME, "role_");

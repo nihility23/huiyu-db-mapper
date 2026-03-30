@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use huiyu_db_util::huiyu_db_macros::Mapping;
 
@@ -5,4 +6,5 @@ use huiyu_db_util::huiyu_db_macros::Mapping;
 pub struct RoleDTO{
     pub id: Option<String>,
     pub username: Option<String>,
+    pub create_time: Option<DateTime<Local>>,
 }

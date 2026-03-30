@@ -66,7 +66,8 @@
 ```
 生成sql:
 ```
-select id,role_name,role_code,description,sort_order,status,is_system,create_time,update_time from t_role where id = ?  AND  role_name != ?  AND  status > ?  AND  status < ?  AND  (id = ?  OR  role_name = ?) order by status DESC
+select id,role_name,role_code,description,sort_order,status,is_system,create_time,update_time from 
+t_role where id = ?  AND  role_name != ?  AND  status > ?  AND  status < ?  AND  (id = ?  OR  role_name = ?) order by status DESC
 ```
 
 ## 宏
@@ -180,7 +181,7 @@ pub struct RoleEntity {
     sql:select *from where id = 'abc'
     sql执行参数：无
 
-    [select(select *from ?@ where id = ?@)]
+    [select(select *from ?@ where id = ?)]
     ?@：不参与预编译，先替换后执行,替换时候不加单引号,传入参数("t_user","1")
     sql:select *from t_user where id = ?
     sql执行参数：1
@@ -190,7 +191,7 @@ pub struct RoleEntity {
     sql:select *from "t_user" where id = ?
     sql执行参数：1
 
-返回值支持：
+### 返回值支持：
 #### 1.查询所有
     返回值必须Result<PageRes<T>, DatabaseError>, T必须实现Mapping
 #### 2.查询分页

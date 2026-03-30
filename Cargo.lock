@@ -1105,9 +1105,9 @@ version = "0.1.0"
 dependencies = [
  "deadpool-sqlite",
  "huiyu-db-mapper-core",
- "parking_lot",
  "rusqlite",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
 use std::alloc;
+use huiyu_db_util::huiyu_db_macros::mapper;
 use huiyu_db_util::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
 use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
 use crate::entity::mappings::RoleDTO;
@@ -37,28 +38,10 @@ pub struct RoleMapper;
 
 impl BaseMapper<RoleEntity> for RoleMapper {}
 
-// select_impl! {
-//
-//
-//         pub trait RolePermissionMapper:BaseMapper<RolePermissionEntity> {
-//             #[select("select *from t_user where id = ?")]
-//             async fn query_role_dtos(id:String)->Result<Vec<RoleDTO>, DatabaseError>;
-//
-//             #[select("select *from t_user where id = ?")]
-//             async fn query_role_page(page:Page,name:String)->Result<PageRes<RoleDTO>, DatabaseError>;
-//
-//             #[select("select *from t_user where role_code = ? and status = ?")]
-//             async fn query_role_first(name:String, status: i8)->Result<Option<RoleDTO>, DatabaseError>;
-//
-//             #[select("select role_name from t_user where role_code = ? and status = ?")]
-//             async fn query_role_name(name:String, status: i8)->Result<Option<String>, DatabaseError>;
-//         }
-//     }
-
 impl RoleMapper {
     select_impl! {
 
-        #[select("select * from t_role where id = ?")]
+        #[select("select create_time from t_role where id = ?")]
         async fn query_role_dtos(id: String) -> Result<Vec<RoleDTO>, DatabaseError>;
 
         #[select("select * from t_role where id = ?")]
@@ -102,80 +85,11 @@ impl RoleMapper {
         ")]
         async fn create_table_employees(idx:i64) -> Result<u64, DatabaseError>;
     }
-    // pub async fn create_table_employees(idx: i64) -> Result<u64, DatabaseError> {
-    //     let mut sql = "CREATE TABLE Employees_? (
-    //                 EmployeeID INTEGER PRIMARY KEY,
-    //                 Name TEXT NOT NULL,
-    //                 Age INTEGER
-    //             );
-    //         ".to_string();
-    //     let mut param_vec:Vec<ParamValue> = <[_]>::into_vec(
-    //         ::alloc::boxed::box_new([(idx.into())])
-    //     );
-    //     while sql.contains("?#") {
-    //         sql = sql.replace("?#", &param_vec[0].to_string().as_str());
-    //         param_vec.remove(0);
-    //     }
-    //
-    //     Self::exec::<_, _, _, _, u64>(|db_type: DbType| {
-    //         (db_type, sql, param_vec)
-    //     }, async |(db_type, sql, param_vec)| {
-    //         <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &param_vec).await
-    //     }).await
-    // }
-    // pub async fn update_role_code(id: i64, role_code: String) -> Result<u64, DatabaseError> {
-    //     let mut sql = "update t_role set role_code = ? where id = ?".to_string();
-    //     let mut param_vec: Vec<ParamValue> = vec![id.into(), role_code.into()];
-    //     while sql.contains("?#") {
-    //         sql = sql.replace("?#", param_vec[0].to_string().as_str());
-    //         param_vec.remove(0);
-    //     }
-    //
-    //     Self::exec::<_, _, _, _, u64>(|db_type: DbType| {
-    //         (db_type, sql, param_vec)
-    //     }, async |(db_type, sql, param_vec)| {
-    //         <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &param_vec).await
-    //     }).await
-    // }
-    // pub async fn create_table_test(id: i64) -> Result<u64, DatabaseError> {
-    //     let mut sql = "create table t_test(id: int)".to_string();
-    //     let mut param_vec = vec![id.into()];
-    //     while sql.contains("?#") {
-    //             sql = sql.replace("?#", &param_vec[0].to_string());
-    //         param_vec.remove(0);
-    //     }
-    //
-    //     Self::exec::<_, _, _, _, u64>(|db_type: DbType| {
-    //         (db_type, sql, param_vec)
-    //     }, async |(db_type, sql, param_vec)| {
-    //         <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &param_vec).await
-    //     }).await
-    // }
-    // pub async fn create_table_employees(idx: i64) -> Result<u64, DatabaseError> {
-    //     let mut sql = "CREATE TABLE Employees_? (
-    //                 EmployeeID INTEGER PRIMARY KEY,
-    //                 Name TEXT NOT NULL,
-    //                 Age INTEGER
-    //             );
-    //         ".to_string();
-    //     let mut param_vec = <[_]>::into_vec(
-    //         ::alloc::boxed::box_new([(idx.into())])
-    //     );
-    //     while sql.contains("?#") {
-    //         sql = sql.replace("?#", &param_vec[0].to_string());
-    //         param_vec.remove(0);
-    //     }
-    //
-    //     Self::exec::<_, _, _, _, u64>(|db_type: DbType| {
-    //         (db_type, sql, param_vec)
-    //     }, async |(db_type, sql, param_vec)| {
-    //         <DbType as Into<DbTypeWrapper>>::into(db_type).execute_sql(sql.as_str(), &param_vec).await
-    //     }).await
-    // }
 }
 
+#[mapper(PermissionEntity)]
 pub struct PermissionMapper;
 
-impl BaseMapper<PermissionEntity> for PermissionMapper {
-
-}
+// impl BaseMapper<PermissionEntity> for PermissionMapper {
+// 
+// }

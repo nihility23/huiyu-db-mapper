@@ -17,8 +17,8 @@ repository = {workspace = true}
 
 [dependencies]
 huiyu-db-mapper-core = { workspace = true}
+tracing = {workspace = true}
 ### sqlite
 deadpool-sqlite = { workspace = true}
 rusqlite = { workspace = true}
 tokio = {workspace = true}
-parking_lot = {workspace = true}

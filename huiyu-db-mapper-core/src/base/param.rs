@@ -1,5 +1,7 @@
+use chrono::TimeZone;
 use crate::base::error::DatabaseError;
 use chrono::{DateTime, Local};
+use crate::util::time_util;
 
 #[derive(Clone, Debug)]
 pub enum ParamValue {
@@ -249,7 +251,39 @@ macro_rules! impl_bool_conversions {
         }
     };
 }
+macro_rules! impl_date_conversions {
+    (date: $($src:ident),+ $(,)?) => {
+        impl From<ParamValue> for Option<DateTime<Local>> {
+            fn from(val: ParamValue) -> Self {
+                match val {
+                    $(
+                        ParamValue::$src(v) => {
+                            // 数字作为秒值转日期
+                            Some(time_util::create_datetime_local_from_seconds(v as i64))
+                        },
 
+                    )+
+                    ParamValue::String(v)=>{
+                        // 字符串转Date
+                        let res = Local.datetime_from_str(v.as_str(), "%Y-%m-%d %H:%M:%S");
+                        if res.is_ok() {
+                            return Some(res.unwrap());
+                        }
+                        None
+                    },
+                    _ => None,
+                }
+            }
+        }
+        impl From<ParamValue> for DateTime<Local> where DateTime<Local>: Default {
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<DateTime<Local>> = val.into();
+                result.unwrap_or_default()
+            }
+        }
+    };
+}
 // // 使用宏
 // impl_numeric_conversions!(i8: I8, U8);
 // impl_numeric_conversions!(i16: I8, I16, U8, U16);
@@ -311,7 +345,7 @@ impl From<ParamValue> for String {
 
 
 // 日期时间
-impl_numeric_conversions!(DateTime<Local>: DateTime);
+impl_date_conversions!(date: I8, I16, I32, I64, U8, U16, U32, U64);
 
 // Blob (Vec<u8>)
 // 1. 值类型 -> Option<Vec<u8>>

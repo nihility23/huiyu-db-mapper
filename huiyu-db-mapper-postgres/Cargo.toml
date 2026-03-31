@@ -20,6 +20,7 @@ tokio = { workspace = true}
 deadpool = { workspace = true }
 deadpool-sync = { workspace = true }
 chrono = {workspace = true}
+tracing = {workspace = true}
 
 ### postgres
 tokio-postgres = {workspace = true}

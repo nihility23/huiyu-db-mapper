@@ -138,6 +138,7 @@ impl PageSqlGenerator for DbTypeWrapper {
 impl BaseSqlGenerator for DbTypeWrapper {
     impl_db_method_generic!(gen_insert_and_get_id_sql<E>(e: &E) -> (String, Vec<ParamValue>)where E: Entity);
     impl_db_method_generic!(gen_insert_batch_sql<E>(e_vec: &Vec<E>) -> (String, Vec<ParamValue>)where E: Entity);
+    impl_db_method_generic!(gen_case_sensitive(e: &str) -> (String));
 }
 
 

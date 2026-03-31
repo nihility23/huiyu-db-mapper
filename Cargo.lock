@@ -1096,6 +1096,7 @@ dependencies = [
  "postgres-types",
  "tokio",
  "tokio-postgres",
+ "tracing",
 ]
 
 [[package]]

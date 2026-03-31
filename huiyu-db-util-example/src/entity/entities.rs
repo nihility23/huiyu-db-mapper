@@ -4,51 +4,51 @@ use serde::{Deserialize, Serialize};
 
 // 用户实体
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Entity)]
-#[table(name = "t_user")]
+#[table(name = "T_USER")]
 pub struct UserEntity {
-    #[id(column = "id", auto_increment = true, key_generate_type = "auto_increment")]
+    #[id(column = "ID", auto_increment = true, key_generate_type = "auto_increment")]
     pub id: Option<i64>,  // 自增主键，使用i64类型,数据库返回i64，确保兼容性，不能丢失精度
 
-    #[field(column = "username")]
+    #[field(column = "USERNAME")]
     pub username: Option<String>,  // 用户名
 
-    #[field(column = "password")]
+    #[field(column = "PASSWORD")]
     pub password: Option<String>,  // 密码
 
-    #[field(column = "real_name")]
+    #[field(column = "REAL_NAME")]
     pub real_name: Option<String>,  // 真实姓名
 
-    #[field(column = "email")]
+    #[field(column = "EMAIL")]
     pub email: Option<String>,  // 邮箱
 
-    #[field(column = "phone")]
+    #[field(column = "PHONE")]
     pub phone: Option<String>,  // 手机号
 
-    #[field(column = "gender")]
+    #[field(column = "GENDER")]
     pub gender: Option<i8>,  // 性别：0-未知 1-男 2-女
 
-    #[field(column = "birthday")]
+    #[field(column = "BIRTHDAY")]
     pub birthday: Option<DateTime<Local>>,  // 生日，日期类型
 
-    #[field(column = "height")]
+    #[field(column = "HEIGHT")]
     pub height: Option<f32>,  // 身高，小数类型
 
-    #[field(column = "is_active")]
+    #[field(column = "IS_ACTIVE")]
     pub is_active: Option<bool>,  // 是否激活，布尔类型
 
-    #[field(column = "login_count")]
+    #[field(column = "LOGIN_COUNT")]
     pub login_count: Option<i32>,  // 登录次数
 
-    #[field(column = "last_login_time")]
+    #[field(column = "LAST_LOGIN_TIME")]
     pub last_login_time: Option<DateTime<Local>>,  // 最后登录时间
 
-    #[field(column = "profile")]
+    #[field(column = "PROFILE")]
     pub profile: Option<String>,  // 个人简介，文本类型
 
-    #[field(column = "create_time")]
+    #[field(column = "CREATE_TIME")]
     pub create_time: Option<DateTime<Local>>,  // 创建时间
 
-    #[field(column = "update_time")]
+    #[field(column = "UPDATE_TIME")]
     pub update_time: Option<DateTime<Local>>,  // 更新时间
 }
 

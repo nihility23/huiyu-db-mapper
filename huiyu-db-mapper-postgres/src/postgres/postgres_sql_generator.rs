@@ -16,6 +16,9 @@ impl WhereSqlGenerator for PostgresSqlGenerator {
 }
 
 impl BaseSqlGenerator for PostgresSqlGenerator{
+    fn gen_case_sensitive(&self, column:&str)->String{
+        format!("\"{}\"", column)
+    }
     fn gen_insert_and_get_id_sql<E>(&self, e:&E) -> (String, Vec<ParamValue>)
     where
         E: Entity
@@ -23,11 +26,8 @@ impl BaseSqlGenerator for PostgresSqlGenerator{
         let (sql,params) = self.gen_insert_one_sql(e);
         (format!("{} returning {}", sql, E::key_name()), params)
     }
-    
 }
 
 impl QueryWrapperSqlGenerator for PostgresSqlGenerator {
-    fn gen_case_sensitive(&self, column:&str)->String{
-        format!("\"{}\"",column)
-    }
+
 }

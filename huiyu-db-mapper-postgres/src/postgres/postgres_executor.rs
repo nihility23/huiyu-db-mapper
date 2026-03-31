@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
+use tracing::warn;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -58,7 +59,7 @@ impl Executor for PostgresSqlExecutor {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
-            println!("{}", str);
+            warn!("postgre sql : {}", str);
         }
         let conn = conn.lock().await;
         let stmt = conn.prepare(str.as_str()).await.map_err(|e| {
@@ -81,7 +82,7 @@ impl Executor for PostgresSqlExecutor {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!("${}", i+1), 1);
-            println!("{}", str);
+            warn!("postgre sql : {}", str);
         }
         let sql_values = ParamValueWrapper::convert_param_values(params)?;
 

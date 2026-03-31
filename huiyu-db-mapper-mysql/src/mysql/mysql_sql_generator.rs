@@ -16,6 +16,10 @@ impl WhereSqlGenerator for MysqlSqlGenerator {
 }
 
 impl BaseSqlGenerator for MysqlSqlGenerator{
+    fn gen_case_sensitive(&self, column:&str)->String{
+        format!("`{}`",column)
+    }
+
     fn gen_insert_and_get_id_sql<E>(&self, e:&E) -> (String, Vec<ParamValue>)
     where
         E: Entity
@@ -27,7 +31,5 @@ impl BaseSqlGenerator for MysqlSqlGenerator{
 }
 
 impl QueryWrapperSqlGenerator for MysqlSqlGenerator {
-    fn gen_case_sensitive(&self, column:&str)->String{
-        format!("`{}`",column)
-    }
+
 }

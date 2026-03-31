@@ -54,7 +54,7 @@ macro_rules! execute_impl {
     (@process_args ($wrapper:ident: &OccupyQueryMapper<'_>, $($rest:tt)*), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
-            $sql = $sql.replacen("#{query_wrapper}", &where_sql, 1);
+            $sql = $sql.replacen("#{qw}", &where_sql, 1);
             $params.append(&mut wrapper_params);
         }
         execute_impl!(@process_args ($($rest)*), $sql, $db_type, $params);
@@ -70,7 +70,7 @@ macro_rules! execute_impl {
     (@process_args ($wrapper:ident: &OccupyQueryMapper<'_>), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
-            $sql = $sql.replacen("#{query_wrapper}", &where_sql, 1);
+            $sql = $sql.replacen("#{qw}", &where_sql, 1);
             $params.append(&mut wrapper_params);
         }
     };

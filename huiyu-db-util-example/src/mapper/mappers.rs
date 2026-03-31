@@ -1,4 +1,5 @@
 use std::alloc;
+use chrono::{DateTime, Local};
 use huiyu_db_util::huiyu_db_macros::mapper;
 use huiyu_db_util::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
 use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
@@ -63,7 +64,7 @@ impl RoleMapper {
         #[select("select * from t_role where role_name like concat('%',?#,'%') and #{qw}")]
         async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
-        #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{qw}")]
+        #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where role_name like concat('%',?#,'%') and #{qw}")]
         #[value]   // 标记为简单值类型
         async fn query_role_name_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<String>, DatabaseError>;
         
@@ -73,8 +74,8 @@ impl RoleMapper {
     }
     
     execute_impl!{
-        #[sql("update t_role set role_code = ? where id = ? and #{qw} and #{qw}")]
-        async fn update_role_code(role_code: String, role_code1: String,query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
+        #[sql("update t_role set update_time = ? where #{qw} and #{qw}")]
+        async fn update_role(update_time: DateTime<Local>, query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
         #[sql("create table t_test(id: int)")]
         async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;
         #[sql("CREATE TABLE Employees_?@ (

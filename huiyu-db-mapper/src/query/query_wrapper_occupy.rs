@@ -8,6 +8,10 @@ pub struct EntityOccupy;
 impl Entity for EntityOccupy {
     type K = String;
 
+    fn is_case_sensitive() -> bool {
+        false
+    }
+
     fn key(&self) -> Self::K {
         String::from("key")
     }

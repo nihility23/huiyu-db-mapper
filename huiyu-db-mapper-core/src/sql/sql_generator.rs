@@ -179,6 +179,10 @@ pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + Where
         }
         column_names.join(",")
     }
+    
+    fn gen_case_sensitive(&self, column:&str)->String{
+        column.to_string()
+    }
     fn gen_where_sql<E>(&self, query_wrapper: &QueryWrapper<E>)-> Option<(String,Vec<ParamValue>)> where E:Entity {
         if query_wrapper.query.is_empty(){
             return None

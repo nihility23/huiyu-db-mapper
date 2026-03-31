@@ -127,7 +127,7 @@ pub struct PermissionEntity {
 
 // 用户-角色关联实体
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Entity)]
-#[table(name = "t_user_role")]
+#[table(name = "t_user_role",case_sensitive=true)]
 pub struct UserRoleEntity {
     #[id(column = "id")]
     pub id: Option<String>,  // 关联ID，varchar主键

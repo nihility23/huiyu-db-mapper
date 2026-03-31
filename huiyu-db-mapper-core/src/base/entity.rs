@@ -5,6 +5,8 @@ use crate::base::mapping::Mapping;
 pub trait Entity: Mapping + Send + Sync + 'static {
     type K: Into<ParamValue> + From<ParamValue> + Default + Clone + Send + Sync + 'static;
 
+    fn is_case_sensitive() -> bool;
+
     fn key(&self) -> Self::K;
 
     fn key_name() -> &'static str;

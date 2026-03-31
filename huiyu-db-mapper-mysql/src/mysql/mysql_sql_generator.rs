@@ -26,4 +26,8 @@ impl BaseSqlGenerator for MysqlSqlGenerator{
     }
 }
 
-impl QueryWrapperSqlGenerator for MysqlSqlGenerator {}
+impl QueryWrapperSqlGenerator for MysqlSqlGenerator {
+    fn gen_case_sensitive(&self, column:&str)->String{
+        format!("`{}`",column)
+    }
+}

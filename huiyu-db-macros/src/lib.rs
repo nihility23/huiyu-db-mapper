@@ -225,6 +225,8 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
+    // 是否大小写敏感
+    let is_case_sensitive = parse_table_case_sensitive(&input.attrs).unwrap_or(false);
     // 解析表名
     let table_name = parse_table_name(&input.attrs)
         .unwrap_or_else(|| format!("t_{}", name.to_string().to_lowercase()));
@@ -320,6 +322,10 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
         }
         impl huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity for #name {
             type K = #key_type;
+
+            fn is_case_sensitive() -> bool {
+                #is_case_sensitive
+            }
 
             fn key(&self) -> Self::K {
                 self.#id_field_ident.clone().unwrap_or_default()
@@ -471,6 +477,28 @@ fn parse_table_name(attrs: &[Attribute]) -> Option<String> {
                 Ok(())
             });
             return table_name;
+        }
+    }
+    None
+}
+
+// 解析表名
+fn parse_table_case_sensitive(attrs: &[Attribute]) -> Option<bool> {
+    for attr in attrs {
+        if attr.path().is_ident("table") {
+            let mut table_sensitive = None;
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("sensitive") {
+                    let value = meta.value()?;
+                    let lit: Lit = value.parse()?;
+                    if let Lit::Str(lit_str) = lit {
+                        let v = lit_str.value(); // 这里只是演示，实际需要存储
+                        table_sensitive = Some(v.parse::<bool>().unwrap_or(false));
+                    }
+                }
+                Ok(())
+            });
+            return table_sensitive;
         }
     }
     None

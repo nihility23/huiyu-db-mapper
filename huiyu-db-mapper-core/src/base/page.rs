@@ -17,7 +17,7 @@ pub struct PageRes<T> {
     pub total_size: u64,
     pub page_size: u64,
     pub total_page: u64,
-    pub records: Option<Vec<T>>,
+    pub records: Vec<T>,
 }
 
 impl<T> PageRes<T> {
@@ -26,7 +26,7 @@ impl<T> PageRes<T> {
             total_size: 0,
             page_size: 0,
             total_page: 0,
-            records: None,
+            records: Vec::new(),
         }
     }
 
@@ -39,7 +39,7 @@ impl<T> PageRes<T> {
             total_size,
             page_size,
             total_page,
-            records: Some(records),
+            records,
         }
     }
 }

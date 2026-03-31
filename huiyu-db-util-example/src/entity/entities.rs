@@ -210,19 +210,6 @@ pub enum Status {
     Enabled = 1,
 }
 
-impl Status {
-    pub fn from_i8(value: i8) -> Option<Self> {
-        match value {
-            0 => Some(Status::Disabled),
-            1 => Some(Status::Enabled),
-            _ => None,
-        }
-    }
-
-    pub fn to_i8(&self) -> i8 {
-        *self as i8
-    }
-}
 
 // 可以添加一些实用的方法
 impl UserEntity {
@@ -234,18 +221,6 @@ impl UserEntity {
     // 获取完整姓名
     pub fn get_display_name(&self) -> String {
         self.real_name.clone().unwrap_or_else(|| self.username.clone().unwrap_or_default())
-    }
-}
-
-impl RoleEntity {
-    // 检查角色是否启用
-    pub fn is_enabled(&self) -> bool {
-        self.status.unwrap_or(0) == 1
-    }
-
-    // 检查是否为系统角色
-    pub fn is_system_role(&self) -> bool {
-        self.is_system.unwrap_or(false)
     }
 }
 

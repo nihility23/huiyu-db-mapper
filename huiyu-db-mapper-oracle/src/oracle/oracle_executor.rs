@@ -65,7 +65,7 @@ impl Executor for OracleSqlExecutor {
             let param_refs = ParamValueWrapper::convert_param_values(&params)?;
             let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
 
-            let mut rows = conn.query(sql.as_str(),&*to_sql_values).await.map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute query: {:?}", e)))?;
+            let rows = conn.query(sql.as_str(),&*to_sql_values).await.map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute query: {:?}", e)))?;
             let mut results = Vec::new();
             for row in rows{
                 results.push(mapper(&OracleRow(row)).map_err(|e| DatabaseError::RowConvertError(format!("Failed to map row: {:?}", e)))?);

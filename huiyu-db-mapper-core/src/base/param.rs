@@ -1,7 +1,6 @@
-use chrono::TimeZone;
 use crate::base::error::DatabaseError;
-use chrono::{DateTime, Local};
 use crate::util::time_util;
+use chrono::{DateTime, Local};
 
 #[derive(Clone, Debug)]
 pub enum ParamValue {
@@ -265,7 +264,7 @@ macro_rules! impl_date_conversions {
                     )+
                     ParamValue::String(v)=>{
                         // 字符串转Date
-                        let res = Local.datetime_from_str(v.as_str(), "%Y-%m-%d %H:%M:%S");
+                        let res = time_util::format_date_time_local_from_str(v.as_str(), "%Y-%m-%d %H:%M:%S");
                         if res.is_ok() {
                             return Some(res.unwrap());
                         }

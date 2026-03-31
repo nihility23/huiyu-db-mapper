@@ -1,14 +1,13 @@
+use crate::query::db_type_wrapper::DbTypeWrapper;
 use huiyu_db_mapper_core::base::db_type::DbType;
 use huiyu_db_mapper_core::base::entity::{Entity, KeyGenerateType};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::page::{Page, PageRes};
 use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_type;
-use tracing::info;
 use huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, QueryWrapperSqlGenerator};
-use crate::query::db_type_wrapper::DbTypeWrapper;
 
 #[allow(async_fn_in_trait)]
 pub trait BaseMapper<E>

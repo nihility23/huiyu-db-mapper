@@ -1,5 +1,3 @@
-use huiyu_db_mapper_core::base::param::ParamValue;
-
 #[macro_export]
 macro_rules! select_impl {
     // ===== 辅助宏：处理参数 =====
@@ -41,21 +39,21 @@ macro_rules! select_impl {
     // ===== 辅助宏：处理占位符 =====
     (@process_placeholders $sql:expr, $params:expr) => {
         {
-            let mut param_vec = $params.clone();
+            // let mut param_vec = $params.clone();
             while $sql.contains("?@") {
                 let idx = $sql.find("?@").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?@", &param_vec[idx].to_string(), 1);
-                param_vec.remove(idx);
+                $sql = $sql.replacen("?@", $params[idx].to_string().as_str(), 1);
+                $params.remove(idx);
             }
             while $sql.contains("?#") {
                 let idx = $sql.find("?#").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?#", &format!("'{}'",&param_vec[idx].to_string()), 1);
-                param_vec.remove(idx);
+                $sql = $sql.replacen("?#", &format!("'{}'",$params[idx].to_string()), 1);
+                $params.remove(idx);
             }
             while $sql.contains("?&") {
                 let idx = $sql.find("?&").map(|pos| $sql[..pos].matches('?').count()).unwrap();
-                $sql = $sql.replacen("?&", &format!("\"{}\"",&param_vec[idx].to_string()), 1);
-                param_vec.remove(idx);
+                $sql = $sql.replacen("?&", &format!("\"{}\"",$params[idx].to_string()), 1);
+                $params.remove(idx);
             }
         }
     };
@@ -77,7 +75,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -108,7 +106,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -138,7 +136,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_total_sql(&sql);
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
@@ -176,7 +174,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     let total_sql = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_page_total_sql(&sql);
                     let (page_sql, offset, limit) = <DbType as Into<DbTypeWrapper>>::into(db_type)
@@ -214,7 +212,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -244,7 +242,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -274,7 +272,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -304,7 +302,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -334,7 +332,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },
@@ -365,7 +363,7 @@ macro_rules! select_impl {
                     select_impl!(@process_args ($($args)*), sql, db_type, params);
                     
                     // 处理占位符
-                    select_impl!(@process_placeholders sql, params);
+                    select_impl!(@process_placeholders sql, &mut params);
                     
                     (sql, params, db_type)
                 },

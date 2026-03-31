@@ -1,5 +1,3 @@
-use huiyu_db_mapper_core::base::param::ParamValue;
-
 #[macro_export]
 macro_rules! execute_impl {
     // ===== 标准 u64 返回值 + 任意参数的方法 =====

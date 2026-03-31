@@ -41,10 +41,10 @@ impl BaseMapper<RoleEntity> for RoleMapper {}
 impl RoleMapper {
     select_impl! {
 
-        #[select("select create_time from t_role where id = ?")]
+        #[select("select id,role_name,create_time from t_role where id = ?")]
         async fn query_role_dtos(id: String) -> Result<Vec<RoleDTO>, DatabaseError>;
 
-        #[select("select * from t_role where id = ?")]
+        #[select("select * from t_role where id like '%'||?#||'%'")]
         async fn query_role_page(page: Page, name: String) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role where role_code = ? and status = ?")]
@@ -54,13 +54,13 @@ impl RoleMapper {
         #[value]   // 标记为简单值类型
         async fn query_role_name(name: String, status: i8) -> Result<Option<String>, DatabaseError>;
         
-        #[select("select * from t_role where 1=1 and #{qw}")]
+        #[select("select * from t_role where role_code = ? and #{qw}")]
         async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role  where 1=1 and #{qw}")]
-        async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,   query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
+        async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
-        #[select("select * from t_role where name like concat('%',?#,'%') and #{qw}")]
+        #[select("select * from t_role where role_name like concat('%',?#,'%') and #{qw}")]
         async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
         #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where 1=1 and #{qw}")]

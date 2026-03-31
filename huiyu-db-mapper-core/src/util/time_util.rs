@@ -1,4 +1,6 @@
-use chrono::{DateTime, Local, NaiveDate, NaiveDateTime};
+use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, TimeZone};
+use chrono::LocalResult::Single;
+use crate::base::error::DatabaseError;
 
 pub fn create_datetime_local(
     year: i32, month: u32, day: u32,
@@ -22,4 +24,13 @@ pub fn create_datetime_local_from_seconds(seconds: i64)-> DateTime<Local> {
     // 转换为本地时间
     let local: DateTime<Local> = DateTime::from(utc);
     local
+}
+
+pub fn format_date_time_local_from_str(time_str: &str, time_format: &str) -> Result<DateTime<Local>,DatabaseError> {
+    let date = NaiveDateTime::parse_from_str(time_str, time_format).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+    let local_date_time = Local.from_local_datetime(&date);
+    match local_date_time {
+        Single(v) => Ok(v),
+        _ => Err(DatabaseError::ConvertError("Invalid datetime".to_string())),
+    }
 }

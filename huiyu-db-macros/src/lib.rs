@@ -1,12 +1,11 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::meta::ParseNestedMeta;
-use syn::parse::Parse;
 use syn::{parse_macro_input, spanned::Spanned, Attribute, Block, Data, DeriveInput, Error, Fields, ItemFn, ItemStruct, Lit, LitStr, Type};
 
 use syn::punctuated::Punctuated;
 use syn::Token;
-use syn::{Meta};
+use syn::Meta;
 
 #[proc_macro_attribute]
 pub fn mapper(args: TokenStream, input: TokenStream) -> TokenStream {

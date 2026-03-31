@@ -42,21 +42,21 @@ impl Mapping for EntityOccupy {
         EntityOccupy {}
     }
 
-    fn get_value_by_field_name(&self, field_name: &str) -> ParamValue {
+    fn get_value_by_field_name(&self, _field_name: &str) -> ParamValue {
         ParamValue::Null
 
     }
 
-    fn get_value_by_column_name(&self, column_name: &str) -> ParamValue {
+    fn get_value_by_column_name(&self, _column_name: &str) -> ParamValue {
         ParamValue::Null
 
     }
 
-    fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue) {
+    fn set_value_by_field_name(&mut self, _field_name: &str, _value: ParamValue) {
 
     }
 
-    fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue) {
+    fn set_value_by_column_name(&mut self, _column_name: &str, _value: ParamValue) {
 
     }
 }

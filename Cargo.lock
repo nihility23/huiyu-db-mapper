@@ -1093,7 +1093,6 @@ dependencies = [
  "deadpool-postgres",
  "deadpool-sync",
  "huiyu-db-mapper-core",
- "parking_lot",
  "postgres-types",
  "tokio",
  "tokio-postgres",

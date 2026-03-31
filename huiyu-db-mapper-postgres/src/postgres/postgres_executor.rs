@@ -4,12 +4,12 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
-use std::sync::{Arc};
+use huiyu_db_mapper_core::with_conn_scope;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
 use tokio_postgres::Row;
-use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
     pub static POSTGRES_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -61,14 +61,18 @@ impl Executor for PostgresSqlExecutor {
             println!("{}", str);
         }
         let conn = conn.lock().await;
-        let stmt = conn.prepare(str.as_str()).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let stmt = conn.prepare(str.as_str()).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("prepare sql error: {:?}", e))
+        })?;
         let sql_values = ParamValueWrapper::convert_param_values(params)?;
         // 获取引用
         let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
             .iter()
             .map(|v| v.as_sql_param())
-            .collect();
-        let results = conn.query(&stmt, &param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, DatabaseError>>()?;
+        let results = conn.query(&stmt, &param_refs).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("Query Sql Error:{:?}",e))
+        })?.iter().map(|row| mapper(&PostgresRow{row: row.clone()})).collect::<Result<Vec<_>, _>>()?;
 
         processor(results)
     }
@@ -85,10 +89,12 @@ impl Executor for PostgresSqlExecutor {
         let param_refs: Vec<&(dyn ToSql + Sync)> = sql_values
             .iter()
             .map(|v| v.as_sql_param())
-            .collect();
+            .collect::<Result<Vec<_>, DatabaseError>>()?;
 
         let conn = conn.lock().await;
-        let res = conn.execute(str.as_str(), &*param_refs).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
+        let res = conn.execute(str.as_str(), &*param_refs).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("Execute Sql Error:{:?}",e))
+        })?;
         Ok(res as u64)
     }
 
@@ -101,27 +107,33 @@ impl Executor for PostgresSqlExecutor {
     }
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
-        DbManager::<Pool>::get_instance(get_datasource_name().as_str())?.get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
+        DbManager::<Pool>::get_instance(get_datasource_name().as_str())?.get_pool().get().await.map_err(|e| DatabaseError::ConnectCanNotGetError(format!("{:?}", e)))
     }
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("BEGIN", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.execute("BEGIN", &[]).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("Begin Transaction Error:{:?}",e))
+        })?;
         Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("COMMIT", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.execute("COMMIT", &[]).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("Commit Transaction Error:{:?}",e))
+        })?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("ROLLBACK", &[]).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+        conn.execute("ROLLBACK", &[]).await.map_err(|e| {
+            DatabaseError::ExecuteError(format!("Rollback Transaction Error:{:?}",e))
+        })?;
         Ok(())
     }
 
@@ -198,20 +210,20 @@ impl ParamValueWrapper {
         }).collect()
     }
 
-    pub fn as_sql_param(&self) -> &(dyn ToSql + Sync) {
+    pub fn as_sql_param(&self) -> Result<&(dyn ToSql + Sync), DatabaseError> {
         match &self.0 {
-            ParamValue::I64(v) => v,
-            ParamValue::I32(v) => v,
-            ParamValue::I16(v) => v,
-            ParamValue::I8(v) => v,
-            ParamValue::String(v) => v,
-            ParamValue::F32(v) => v,
-            ParamValue::F64(v) => v,
-            ParamValue::Bool(v) => v,
-            ParamValue::Blob(v) => v,
-            ParamValue::Clob(v) => v,
-            ParamValue::DateTime(v) => v,
-            _=> panic!()
+            ParamValue::I64(v) => Ok(v),
+            ParamValue::I32(v) => Ok(v),
+            ParamValue::I16(v) => Ok(v),
+            ParamValue::I8(v) => Ok(v),
+            ParamValue::String(v) => Ok(v),
+            ParamValue::F32(v) => Ok(v),
+            ParamValue::F64(v) => Ok(v),
+            ParamValue::Bool(v) => Ok(v),
+            ParamValue::Blob(v) => Ok(v),
+            ParamValue::Clob(v) => Ok(v),
+            ParamValue::DateTime(v) => Ok(v),
+            _=> Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", self.0)))
         }
     }
 }

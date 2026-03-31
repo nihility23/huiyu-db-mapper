@@ -17,8 +17,8 @@ fn init_postgres(){
                                            Some(5432),
                                            Some("postgres".to_string()),
                                            Some("123456".to_string()),
-                                           Some("postgres".to_string()),
-                                           Some("fhds".to_string()),
+                                           Some("huiyu".to_string()),
+                                           Some("public".to_string()),
     );
     DbTypeWrapper::register_dbs(vec![db_config_postgres]).expect("Failed to register db");
 }

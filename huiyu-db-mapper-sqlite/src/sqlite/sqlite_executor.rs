@@ -11,7 +11,7 @@ use rusqlite::ToSql;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task_local;
-use tracing::warn;
+use tracing::{trace};
 
 task_local! {
     pub static SQLITE_CONN_REGISTER : Arc<Mutex<Object>>;
@@ -30,7 +30,7 @@ impl<'a> RowType for SqliteRow<'a> {
     {
         let val = self.0.get_ref(col_index);//.map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
         if val.is_err(){
-            warn!("Fail to get Column {}",val.as_ref().err().unwrap());
+            trace!("Fail to get Column {}",val.as_ref().err().unwrap());
             return Ok(ParamValue::Null);
         }
         Ok(value_to_param_value(val.unwrap())?)
@@ -42,7 +42,7 @@ impl<'a> RowType for SqliteRow<'a> {
     {
         let val = self.0.get_ref(col_name);//.map_err(|e| DatabaseError::CommonError(format!("Failed to get column value: {:?}", e)))?;
         if val.is_err() {
-            warn!("Fail to get Column {}",val.as_ref().err().unwrap());
+            trace!("Fail to get Column {}",val.as_ref().err().unwrap());
             return Ok(ParamValue::Null)
         }
         Ok(value_to_param_value(val.unwrap())?)

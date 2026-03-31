@@ -15,7 +15,7 @@ pub fn mapper(args: TokenStream, input: TokenStream) -> TokenStream {
         Some(Meta::Path(path)) => {
             path.segments.last().unwrap().ident.clone()
         }
-        _ => panic!("Expected entity type as argument, e.g., #[mapper(PermissionEntity)]"),
+        _ => panic!("Expected entity type as argument, e.g., #[mapper(XxxxxEntity)]"),
     };
 
     // 解析被标注的结构体，例如 pub struct PermissionMapper;

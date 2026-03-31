@@ -1,3 +1,4 @@
+use std::error::Error;
 use deadpool_postgres::{Object, Pool};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
@@ -164,7 +165,11 @@ impl FromSql<'_> for ParamValueWrapper {
             &Type::INT2 => Ok(ParamValueWrapper(ParamValue::I16(i16::from_sql(ty, _bytes)?))),
             &Type::BOOL => Ok(ParamValueWrapper(ParamValue::Bool(bool::from_sql(ty, _bytes)?))),
             &Type::TEXT => Ok(ParamValueWrapper(ParamValue::String(String::from_sql(ty, _bytes)?))),
-            &Type::VARCHAR => Ok(ParamValueWrapper(ParamValue::String(String::from_sql(ty, _bytes)?))),
+            &Type::VARCHAR => {
+                if _bytes.is_empty(){
+                    return Ok(ParamValueWrapper(ParamValue::Null));
+                }
+                Ok(ParamValueWrapper(ParamValue::String(String::from_sql(ty, _bytes)?)))},
             &Type::FLOAT4 => Ok(ParamValueWrapper(ParamValue::F32(f32::from_sql(ty, _bytes)?))),
             &Type::FLOAT8 => Ok(ParamValueWrapper(ParamValue::F64(f64::from_sql(ty, _bytes)?))),
             &Type::BYTEA => Ok(ParamValueWrapper(ParamValue::Blob(Vec::<u8>::from_sql(ty, _bytes)?))),
@@ -174,8 +179,13 @@ impl FromSql<'_> for ParamValueWrapper {
             &Type::TIMESTAMP => {
                 Ok(ParamValueWrapper(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
             },
+            &Type::VOID => Ok(ParamValueWrapper(ParamValue::Null)),
             _ => Err(Box::new(DatabaseError::ConvertError(format!("Unsupported type {}", ty.name())))),
         }
+
+    }
+    fn from_sql_null(ty: &Type) -> Result<Self, Box<dyn Error + Sync + Send>> {
+        Ok(ParamValueWrapper(ParamValue::Null))
     }
 
     fn accepts(_: &Type) -> bool {

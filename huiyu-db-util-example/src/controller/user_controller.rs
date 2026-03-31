@@ -75,10 +75,11 @@ pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))
 }
 
-#[datasource("sqlite")]
+#[datasource("postgres")]
 pub(crate) async fn query_user_by_id(id: web::Path<i64>) ->Result<HttpResponse, Error>{
     let user_res = UserMapper::select_by_key(&id.into_inner()).await;
     if user_res.is_err(){
+        error!("{:?}", user_res.err());
         return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,"user record not found".to_string().as_str())));
     }
     let user_entity_opt = user_res.unwrap();

@@ -2,6 +2,7 @@ use crate::common::result::Res;
 use crate::entity::entities::UserEntity;
 use crate::mapper::mappers::UserMapper;
 use actix_web::{web, Error, HttpResponse};
+use chrono::{DateTime, Local};
 use tracing::error;
 use huiyu_db_util::huiyu_db_macros::datasource;
 use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
@@ -54,6 +55,7 @@ pub(crate) async fn delete_user(id: web::Path<i64>) ->Result<HttpResponse, Error
 #[datasource("postgres")]
 pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<HttpResponse, Error>{
     let mut user_entity = user_entity_json.0;
+    user_entity.create_time=Some(Local::now());
     if user_entity.id.is_none(){
         return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,"参数不能为空")));
     }

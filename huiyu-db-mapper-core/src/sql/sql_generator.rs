@@ -88,7 +88,7 @@ pub trait BaseSqlGenerator{
         let mut params = Vec::new();
         let mut column_names = Vec::new();
         for column_info in E::get_column_infos(){
-            let value = e.get_value_by_column_name(self.transfer_case_sensitive_name::<E>(column_info.column_name).as_str());
+            let value = e.get_value_by_column_name(column_info.column_name);
             if value.is_not_null(){
                 column_names.push(self.transfer_case_sensitive_name::<E>(column_info.column_name));
                 params.push(value);
@@ -105,7 +105,7 @@ pub trait BaseSqlGenerator{
         let mut params = Vec::new();
         for e in e_vec{
             for column_info in E::get_column_infos(){
-                let value = e.get_value_by_column_name(self.transfer_case_sensitive_name::<E>(column_info.column_name).as_str());
+                let value = e.get_value_by_column_name(column_info.column_name);
                 if value.is_not_null(){
                     params.push(value);
                 }else if column_info.column_type==ColumnType::DateTime && (column_info.fill_on_insert || column_info.fill_on_update){

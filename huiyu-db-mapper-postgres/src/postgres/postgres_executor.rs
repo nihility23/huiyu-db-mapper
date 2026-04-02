@@ -7,6 +7,7 @@ use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::with_conn_scope;
 use std::sync::Arc;
+use chrono::{Local, NaiveDateTime, TimeZone};
 use rust_decimal::Decimal;
 use tokio::sync::Mutex;
 use tokio::task_local;
@@ -164,6 +165,7 @@ impl FromSql<'_> for ParamValueWrapper {
             &Type::INT8 => Ok(ParamValueWrapper(ParamValue::I64(i64::from_sql(ty, _bytes)?))),
             &Type::INT4 => Ok(ParamValueWrapper(ParamValue::I32(i32::from_sql(ty, _bytes)?))),
             &Type::INT2 => Ok(ParamValueWrapper(ParamValue::I16(i16::from_sql(ty, _bytes)?))),
+            &Type::CHAR => Ok(ParamValueWrapper(ParamValue::I8(i8::from_sql(ty, _bytes)?))),
             &Type::BOOL => Ok(ParamValueWrapper(ParamValue::Bool(bool::from_sql(ty, _bytes)?))),
             &Type::TEXT => Ok(ParamValueWrapper(ParamValue::String(String::from_sql(ty, _bytes)?))),
             &Type::VARCHAR => {
@@ -178,7 +180,18 @@ impl FromSql<'_> for ParamValueWrapper {
                 Ok(ParamValueWrapper(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
             },
             &Type::TIMESTAMP => {
-                Ok(ParamValueWrapper(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
+                let naive_date_time = NaiveDateTime::from_sql(ty, _bytes)?;
+                let date_local = Local.from_local_datetime(&naive_date_time);
+                match date_local {
+                    chrono::LocalResult::Single(dt) => {
+                        Ok(ParamValueWrapper(ParamValue::DateTime(dt)))
+                    }
+                    chrono::LocalResult::Ambiguous(dt1, _) => {
+                        Ok(ParamValueWrapper(ParamValue::DateTime(dt1)))
+                    }
+                    chrono::LocalResult::None=> Ok(ParamValueWrapper(ParamValue::Null))
+                }
+
             },
             &Type::VOID => Ok(ParamValueWrapper(ParamValue::Null)),
             &Type::NUMERIC => {
@@ -208,11 +221,11 @@ impl ParamValueWrapper {
                 ParamValue::U64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x as i64))),
                 ParamValue::U32(x) => Ok(ParamValueWrapper(ParamValue::I32(*x as i32))),
                 ParamValue::U16(x) => Ok(ParamValueWrapper(ParamValue::I16(*x as i16))),
-                ParamValue::U8(x) => Ok(ParamValueWrapper(ParamValue::I8(*x as i8)))        ,
+                ParamValue::U8(x) => Ok(ParamValueWrapper(ParamValue::I16(*x as i16)))        ,
                 ParamValue::I64(x) => Ok(ParamValueWrapper(ParamValue::I64(*x))),
                 ParamValue::I32(x) => Ok(ParamValueWrapper(ParamValue::I32(*x))),
                 ParamValue::I16(x) => Ok(ParamValueWrapper(ParamValue::I16(*x))),
-                ParamValue::I8(x) => Ok(ParamValueWrapper(ParamValue::I8(*x))),
+                ParamValue::I8(x) => Ok(ParamValueWrapper(ParamValue::I16(*x as i16))),
                 ParamValue::String(x) => Ok(ParamValueWrapper(ParamValue::String(x.to_string()))),
                 ParamValue::F32(x) => Ok(ParamValueWrapper(ParamValue::F32(*x))),
                 ParamValue::F64(x) => Ok(ParamValueWrapper(ParamValue::F64(*x))),

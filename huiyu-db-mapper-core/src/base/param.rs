@@ -312,6 +312,9 @@ macro_rules! impl_date_conversions {
                         }
                         None
                     },
+                    ParamValue::DateTime(v)=>{
+                        Some(v)
+                    }
                     _ => None,
                 }
             }

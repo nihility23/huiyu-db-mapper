@@ -7,6 +7,7 @@ use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::with_conn_scope;
 use std::sync::Arc;
+use rust_decimal::Decimal;
 use tokio::sync::Mutex;
 use tokio::task_local;
 use tokio_postgres::types::{FromSql, ToSql, Type};
@@ -180,6 +181,9 @@ impl FromSql<'_> for ParamValueWrapper {
                 Ok(ParamValueWrapper(ParamValue::DateTime(chrono::DateTime::<chrono::Local>::from_sql(ty, _bytes)?)))
             },
             &Type::VOID => Ok(ParamValueWrapper(ParamValue::Null)),
+            &Type::NUMERIC => {
+                Ok(ParamValueWrapper(ParamValue::Decimal(Decimal::from_sql(ty, _bytes)?)))
+            },
             _ => Err(Box::new(DatabaseError::ConvertError(format!("Unsupported type {}", ty.name())))),
         }
 
@@ -216,6 +220,7 @@ impl ParamValueWrapper {
                 ParamValue::Blob(x) => Ok(ParamValueWrapper(ParamValue::Blob(x.to_vec()))),
                 ParamValue::Clob(x) => Ok(ParamValueWrapper(ParamValue::String(String::from_utf8(x.to_vec()).unwrap()))),
                 ParamValue::DateTime(x) => Ok(ParamValueWrapper(ParamValue::DateTime(*x))),
+                ParamValue::Decimal(x) => Ok(ParamValueWrapper(ParamValue::Decimal(*x))),
                 _ => Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", param_value)))
             }
         }).collect()
@@ -234,6 +239,7 @@ impl ParamValueWrapper {
             ParamValue::Blob(v) => Ok(v),
             ParamValue::Clob(v) => Ok(v),
             ParamValue::DateTime(v) => Ok(v),
+            ParamValue::Decimal(v) => { Ok(v) },
             _=> Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", self.0)))
         }
     }

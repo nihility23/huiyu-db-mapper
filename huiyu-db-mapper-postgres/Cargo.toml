@@ -26,3 +26,4 @@ tracing = {workspace = true}
 tokio-postgres = {workspace = true}
 deadpool-postgres = { workspace = true}
 postgres-types = { workspace = true }
+rust_decimal = {workspace = true, features = ["db-tokio-postgres"]}

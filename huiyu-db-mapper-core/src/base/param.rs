@@ -1,6 +1,10 @@
+use rust_decimal::prelude::ToPrimitive;
+use rust_decimal::prelude::FromPrimitive;
+use std::str::FromStr;
 use crate::base::error::DatabaseError;
 use crate::util::time_util;
 use chrono::{DateTime, Local};
+use rust_decimal::Decimal;
 
 #[derive(Clone, Debug)]
 pub enum ParamValue {
@@ -19,6 +23,7 @@ pub enum ParamValue {
     DateTime(DateTime<Local>),
     Blob(Vec<u8>),
     Clob(Vec<u8>),
+    Decimal(Decimal),
     Null,
 }
 
@@ -91,6 +96,7 @@ impl_param_value!(clone
     String => String,
     DateTime<Local> => DateTime,
     Vec<u8> => Blob,
+    Decimal => Decimal,
 );
 
 // &str 特殊处理
@@ -184,6 +190,13 @@ macro_rules! impl_numeric_conversions {
                         ParamValue::$src(v) => Some(*v as $target),
                     )+
                     ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
+                    ParamValue::Bool(v)=>{
+                        if *v {
+                            Some(1 as $target)
+                        } else {
+                            Some(0 as $target)
+                        }
+                    },
                     _ => None,
                 }
             }
@@ -202,6 +215,35 @@ macro_rules! impl_float_conversions {
                     $(
                         ParamValue::$src(v) => Some(v as $target),
                     )+
+                    ParamValue::Decimal(v)=>Some(v.to_f64().unwrap_or_default() as $target),
+                    ParamValue::String(v)=>Some(v.parse::<$target>().unwrap_or_default()),
+                    _ => None,
+                }
+            }
+        }
+        impl From<ParamValue> for $target where $target: Default {
+            fn from(val: ParamValue) -> Self {
+                // 不能在重复模式中直接使用 $target
+                let result: Option<$target> = val.into();
+                result.unwrap_or_default()
+            }
+        }
+    };
+}
+
+// decimal转换宏
+macro_rules! impl_decimal_conversions {
+    ($target:ty: $($src:ident),+ $(,)?) => {
+        impl From<ParamValue> for Option<$target> {
+            fn from(val: ParamValue) -> Self {
+                match val {
+                    $(
+                        ParamValue::$src(v) => Some(v.into()),
+                    )+
+                    ParamValue::F64(v)=>Decimal::from_f64(v),
+                    ParamValue::F32(v)=>Decimal::from_f32(v),
+                    ParamValue::Decimal(v)=>Some(v),
+                    ParamValue::String(v)=>Some(Decimal::from_str(v.as_str()).unwrap_or_default()),
                     _ => None,
                 }
             }
@@ -283,23 +325,6 @@ macro_rules! impl_date_conversions {
         }
     };
 }
-// // 使用宏
-// impl_numeric_conversions!(i8: I8, U8);
-// impl_numeric_conversions!(i16: I8, I16, U8, U16);
-// impl_numeric_conversions!(i32: I8, I16, I32, U8, U16, U32);
-// impl_numeric_conversions!(i64: I8, I16, I32, I64, U8, U16, U32, U64);
-// impl_numeric_conversions!(usize: I8, I16, I32, U8, U16, U32);
-// impl_numeric_conversions!(u8: U8);
-// impl_numeric_conversions!(u16: U8, U16);
-// impl_numeric_conversions!(u32: U8, U16, U32);
-// impl_numeric_conversions!(u64: U8, U16, U32, U64);
-//
-// // 浮点数
-// impl_float_conversions!(f32: F32, I8, I16, I32, I64, U8, U16, U32, U64);
-// impl_float_conversions!(f64: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
-//
-// // 布尔值
-// impl_numeric_conversions!(bool: Bool);
 
 // 使用宏
 impl_numeric_conversions!(i8: I8, I16, I32, I64, U8, U16, U32, U64);
@@ -315,6 +340,7 @@ impl_numeric_conversions!(u64: I8, I16, I32, I64, U8, U16, U32, U64);
 // 浮点数
 impl_float_conversions!(f32: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
 impl_float_conversions!(f64: F64, F32, I8, I16, I32, I64, U8, U16, U32, U64);
+impl_decimal_conversions!(Decimal: I8, I16, I32, I64, U8, U16, U32, U64);
 
 // 布尔值
 impl_bool_conversions!(bool: I8, I16, I32, I64, U8, U16, U32, U64);
@@ -398,6 +424,7 @@ impl ParamValue {
             ParamValue::Null => "null".to_string(),
             ParamValue::F32(x) => x.to_string(),
             ParamValue::F64(x) => x.to_string(),
+            ParamValue::Decimal(x) => x.to_string(),
         }
     }
 

@@ -16,7 +16,7 @@ deadpool = { workspace = true }
 deadpool-sync = {workspace = true}
 dashmap = {workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
-
+rust_decimal = "1.41.0"
 
 ## sqlite
 deadpool-sqlite = { workspace = true}

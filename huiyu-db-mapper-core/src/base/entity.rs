@@ -1,3 +1,5 @@
+use chrono::{DateTime, Local};
+use rust_decimal::Decimal;
 use crate::base::param::ParamValue;
 use tracing::error;
 use crate::base::mapping::Mapping;
@@ -93,6 +95,8 @@ impl From<&str> for KeyGenerateType {
 pub struct ColumnInfo {
     pub field_name: &'static str,
 
+    pub field_type: FieldType,
+
     pub column_name: &'static str,
 
     pub column_type: ColumnType,
@@ -113,6 +117,7 @@ pub struct ColumnInfo {
 impl ColumnInfo {
     pub fn new(
         field_name: &'static str,
+        field_type: FieldType,
         column_name: &'static str,
         column_type: ColumnType,
         fill_on_update: bool,
@@ -124,6 +129,7 @@ impl ColumnInfo {
     ) -> Self {
         Self {
             field_name,
+            field_type,
             column_name,
             column_type,
             fill_on_update,
@@ -136,6 +142,7 @@ impl ColumnInfo {
     }
 }
 
+// 数据库支持的类型
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum ColumnType {
     I8,
@@ -150,8 +157,47 @@ pub enum ColumnType {
     F64,
     USize,
     Bool,
+    DateTime,
+    Timestamp,
+    TimestampTz,
+    Date,
+    TinyInt,
+    SmallInt,
+    Integer,
+    BigInt,
+    Float,
+    Double,
+    Time,
+    Char,
+    VarChar,
+    NVarChar,
+    Text,
+    Blob,
+    Clob,
+    Decimal,
+    Numeric,
+    Null
+}
+
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+pub enum FieldType{
+    I8,
+    I16,
+    I32,
+    I64,
+    U8,
+    U16,
+    U32,
+    U64,
+    F32,
+    F64,
+    Bool,
     String,
     DateTime,
+    Blob,
+    Clob,
+    Decimal,
+    Null,
 }
 
 pub trait TypeHandler {

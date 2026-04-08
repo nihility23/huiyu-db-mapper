@@ -228,10 +228,6 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
     // 是否大小写敏感
     let (table_name_opt, is_case_sensitive) = parse_table_info(&input.attrs);
     let table_name = table_name_opt.unwrap_or_else(|| format!("t_{}", name.to_string().to_lowercase()));
-    // let is_case_sensitive = parse_table_case_sensitive(&input.attrs).unwrap_or(false);
-    // 解析表名
-    // let table_name = parse_table_name(&input.attrs)
-    //     .unwrap_or_else(|| format!("t_{}", name.to_string().to_lowercase()));
     let table_name_lit = LitStr::new(&table_name, proc_macro2::Span::call_site());
 
     // 解析字段信息
@@ -341,51 +337,9 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 Some(#id_column_info)
             }
 
-            // fn column_names() -> Vec<&'static str> {
-            //     vec![#(#column_names),*]
-            // }
-            //
-            // fn field_names() -> Vec<&'static str> {
-            //     vec![#(#field_names),*]
-            // }
-
             fn table_name() -> &'static str {
                 #table_name_lit
             }
-
-            // fn new() -> Self {
-            //     Self {
-            //         #(#field_inits),*
-            //     }
-            // }
-
-            // fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
-            //     match field_name {
-            //         #(#get_value_by_field_arms)*
-            //         _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
-            //     }
-            // }
-            //
-            // fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
-            //     match column_name {
-            //         #(#get_value_by_column_arms)*
-            //         _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
-            //     }
-            // }
-            //
-            // fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
-            //     match field_name {
-            //         #(#set_value_by_field_arms)*
-            //         _ => tracing::error!("Field name not found: {}", field_name),
-            //     }
-            // }
-            //
-            // fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
-            //     match column_name {
-            //         #(#set_value_by_column_arms)*
-            //         _ => tracing::error!("Column name not found: {}", column_name),
-            //     }
-            // }
 
             fn get_column_infos() -> Vec<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
                 vec![#(#column_infos),*]
@@ -450,6 +404,7 @@ struct FieldInfo {
     field_name: String,
     column_name: String,
     field_type: Type,
+    column_type: String,
     original_type_name: String,
     field_span: proc_macro2::Span,
     is_option: bool,
@@ -547,6 +502,7 @@ fn parse_fields(fields: &Fields) -> Vec<FieldInfo> {
         let mut field_info = FieldInfo {
             field_name: field_name.clone(),
             column_name: field_name,
+            column_type: "varchar".to_string(),
             field_type: field.ty.clone(),
             original_type_name: get_type_name(&field.ty),
             field_span: field.span(),
@@ -674,6 +630,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
 
     let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
     let column_type = infer_column_type(ty);
+    let field_type = quote! {huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::String};
 
     // 主键生成策略（保持为 Option<String>）
     let key_generate_type = match &f.key_generate_type {
@@ -687,6 +644,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
     quote! {
         huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo {
             field_name: #field_name_lit,
+            field_type: #field_type,
             column_name: #column_name_lit,
             column_type: #column_type,
             is_nullable: #is_nullable,
@@ -698,6 +656,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
         }
     }
 }
+
 
 // 推断列类型
 fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
@@ -717,7 +676,7 @@ fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
                 "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F32 },
                 "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F64 },
                 "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
-                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::String },
+                // "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::String },
                 "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
                 "Vec" => {
                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {

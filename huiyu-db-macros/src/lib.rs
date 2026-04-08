@@ -550,6 +550,8 @@ fn parse_id_attributes(attr: &Attribute, info: &mut FieldInfo) {
             info.is_auto_increment = parse_bool_lit(&meta)?;
         } else if meta.path.is_ident("key_generate_type") {
             info.key_generate_type = Some(parse_string_lit(&meta)?);
+        } else if meta.path.is_ident("type") {
+            info.column_type = parse_string_lit(&meta)?;
         }
         Ok(())
     });
@@ -569,8 +571,8 @@ fn parse_field_attributes(attr: &Attribute, info: &mut FieldInfo) {
             info.fill_on_update = parse_bool_lit(&meta)?;
         } else if meta.path.is_ident("fill_on_insert") {
             info.fill_on_insert = parse_bool_lit(&meta)?;
-        } else if meta.path.is_ident("key_generate_type") {
-            info.key_generate_type = Some(parse_string_lit(&meta)?);
+        } else if meta.path.is_ident("type") {
+            info.column_type = parse_string_lit(&meta)?;
         }
         Ok(())
     });

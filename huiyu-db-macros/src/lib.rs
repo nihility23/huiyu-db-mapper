@@ -632,7 +632,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
 
     let ty = f.inner_type.as_ref().unwrap_or(&f.field_type);
     let column_type = infer_column_type(ty);
-    let field_type = quote! {huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::String};
+    let field_type = infer_field_type(ty);
 
     // 主键生成策略（保持为 Option<String>）
     let key_generate_type = match &f.key_generate_type {
@@ -659,6 +659,31 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
     }
 }
 
+fn infer_field_type(ty: &Type) -> proc_macro2::TokenStream {
+    match ty {
+        Type::Path(type_path) => {
+            let segment = type_path.path.segments.last().unwrap();
+            match segment.ident.to_string().as_str() {
+                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I8 },
+                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I16 },
+                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I32 },
+                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I64 },
+                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U8 },
+                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U16 },
+                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U32 },
+                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U64 },
+                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::USize },
+                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::F32 },
+                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::F64 },
+                "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::Bool },
+                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::String },
+                "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::DateTime },
+                _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+            }
+        }
+        _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+    }
+}
 
 // 推断列类型
 fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
@@ -666,19 +691,19 @@ fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
         Type::Path(type_path) => {
             let segment = type_path.path.segments.last().unwrap();
             match segment.ident.to_string().as_str() {
-                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I8 },
-                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I16 },
-                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I32 },
-                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::I64 },
-                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U8 },
-                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U16 },
-                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U32 },
-                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::U64 },
-                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::USize },
-                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F32 },
-                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::F64 },
+                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
+                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
+                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
+                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
+                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
+                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
+                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Float },
+                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Double },
                 "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
-                // "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::String },
+                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Varchar },
                 "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
                 "Vec" => {
                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {

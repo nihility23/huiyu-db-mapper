@@ -26,12 +26,12 @@ fn init_mysql(){
     println!("init mysql");
     let db_config_mysql = DbConfig::new(DbType::Mysql,
                                         "mysql".to_string(),
-                                        Some("10.150.6.6".to_string()),
+                                        Some("10.150.6.7".to_string()),
                                         Some(3306),
                                         Some("root".to_string()),
-                                        Some("1qaz!QAZ".to_string()),
-                                        Some("test".to_string()),
-                                        Some("test".to_string()),
+                                        Some("neusoft".to_string()),
+                                        Some("huiyu".to_string()),
+                                        Some("".to_string()),
     );
     DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
 }

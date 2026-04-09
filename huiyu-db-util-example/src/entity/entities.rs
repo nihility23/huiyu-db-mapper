@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 // 用户实体
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Entity)]
-#[table(name = "T_USER", case_sensitive=true)]
+#[table(name = "T_USER")]
 pub struct UserEntity {
     #[id(column = "ID", auto_increment = true, key_generate_type = "auto_increment")]
     pub id: Option<i64>,  // 自增主键，使用i64类型,数据库返回i64，确保兼容性，不能丢失精度

@@ -11,7 +11,7 @@ use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use crate::entity::mappings::RoleDTO;
 use crate::param::param::UserQueryParam;
 
-#[datasource("postgres")]
+#[datasource("mysql")]
 pub(crate) async fn query_user_page(json: web::Json<UserQueryParam>) ->Result<HttpResponse, Error>{
     let app_query_param = json.0;
     if app_query_param.current_page.is_none(){
@@ -52,7 +52,7 @@ pub(crate) async fn delete_user(id: web::Path<i64>) ->Result<HttpResponse, Error
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))
 }
 
-#[datasource("postgres")]
+#[datasource("mysql")]
 pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<HttpResponse, Error>{
     let mut user_entity = user_entity_json.0;
     user_entity.create_time=Some(Local::now());
@@ -77,7 +77,7 @@ pub(crate) async fn save_user(user_entity_json: web::Json<UserEntity>) ->Result<
     Ok(HttpResponse::Ok().json(Res::<()>::success_without_res()))
 }
 
-#[datasource("postgres")]
+#[datasource("mysql")]
 pub(crate) async fn query_user_by_id(id: web::Path<i64>) ->Result<HttpResponse, Error>{
     let user_res = UserMapper::select_by_key(&id.into_inner()).await;
     if user_res.is_err(){
@@ -93,7 +93,7 @@ pub(crate) async fn query_user_by_id(id: web::Path<i64>) ->Result<HttpResponse, 
     Ok(HttpResponse::Ok().json(Res::<UserEntity>::success(user_entity)))
 }
 
-#[datasource("postgres")]
+#[datasource("mysql")]
 pub(crate) async fn query_user_name_by_id(id: web::Path<i64>) ->Result<HttpResponse, Error>{
     let user_name_res = UserMapper::select_name_by_id(id.into_inner()).await;
     if user_name_res.is_err(){
@@ -107,7 +107,7 @@ pub(crate) async fn query_user_name_by_id(id: web::Path<i64>) ->Result<HttpRespo
     Ok(HttpResponse::Ok().json(Res::<String>::success(user_name_opt.unwrap())))
 }
 
-#[datasource("postgres")]
+#[datasource("mysql")]
 pub(crate) async fn query_user_name_by_page(json: web::Json<UserQueryParam>) ->Result<HttpResponse, Error>{
     let user_name_res = UserMapper::select_name_by_page(Page::new(json.0.current_page.unwrap() as u64, json.0.page_size.unwrap() as u64), json.0.user_name.unwrap()).await;
     if user_name_res.is_err(){

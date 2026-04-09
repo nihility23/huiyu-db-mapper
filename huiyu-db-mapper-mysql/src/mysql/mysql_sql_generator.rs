@@ -7,7 +7,7 @@ pub struct MysqlSqlGenerator;
 
 impl PageSqlGenerator for MysqlSqlGenerator {
     fn gen_page_query_sql(&self, query_sql: &str, current_page: u64, page_size: u64) -> (String,u64,u64) {
-        (format!("select * from({}) limit ? , ?",query_sql),page_size, (current_page-1)*page_size)
+        (format!("select * from({} ) t  limit ? , ?",query_sql), (current_page-1)*page_size,page_size)
     }
 }
 

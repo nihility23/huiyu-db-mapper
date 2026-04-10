@@ -21,7 +21,6 @@ huiyu-db-mapper-sqlite={workspace = true, optional = true}
 huiyu-db-mapper-mysql={workspace = true, optional = true}
 huiyu-db-mapper-oracle={workspace = true, optional = true}
 
-tracing = {workspace = true}
 uuid = {workspace = true}
 tokio = { workspace = true }
 

@@ -26,7 +26,7 @@ pub fn mapper(args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #input
 
-        impl BaseMapper<#entity_type> for #struct_name {
+        impl huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper<#entity_type> for #struct_name {
         }
     };
 
@@ -205,14 +205,14 @@ pub fn derive_mapping(input: TokenStream) -> TokenStream {
             fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
-                    _ => tracing::error!("Field name not found: {}", field_name),
+                    _ => panic!("Field name not found: {}", field_name),
                 }
             }
 
             fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
-                    _ => tracing::error!("Column name not found: {}", column_name),
+                    _ => panic!("Column name not found: {}", column_name),
                 }
             }
         }
@@ -380,14 +380,14 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
             fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
-                    _ => tracing::error!("Field name not found: {}", field_name),
+                    _ => panic!("Field name not found: {}", field_name),
                 }
             }
 
             fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
-                    _ => tracing::error!("Column name not found: {}", column_name),
+                    _ => panic!("Column name not found: {}", column_name),
                 }
             }
         }

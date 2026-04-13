@@ -2,11 +2,11 @@ use crate::common::db::init_dbs;
 use crate::entity::entities::{UserEntity, UserRoleEntity};
 use crate::mapper::mappers::{RoleMapper, UserMapper, UserRoleMapper};
 use chrono::{Local, NaiveDateTime, TimeZone};
-use huiyu_db_util::huiyu_db_macros::{datasource, transactional};
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec;
-use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping;
+use huiyu_db_mapper::huiyu_db_mapper_macros::{datasource, transactional};
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::transactional::transactional_exec;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::mapping::Mapping;
 
 #[tokio::test]
 pub async fn test()-> Result<(), DatabaseError>{

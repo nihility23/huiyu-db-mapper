@@ -1,11 +1,11 @@
 use chrono::Local;
 use crate::common::db::init_dbs;
 use crate::mapper::mappers::{PermissionMapper, RoleMapper};
-use huiyu_db_util::huiyu_db_macros::datasource;
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper::query::query_wrapper_occupy::OccupyQueryMapper;
-use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use huiyu_db_util::huiyu_db_mapper_core::base::page::Page;
+use huiyu_db_mapper::huiyu_db_mapper_macros::datasource;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryMapper;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::page::Page;
 
 #[tokio::test]
 async fn test(){

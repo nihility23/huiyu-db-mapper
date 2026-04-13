@@ -4,10 +4,10 @@ use crate::mapper::mappers::UserMapper;
 use actix_web::{web, Error, HttpResponse};
 use chrono::{DateTime, Local};
 use tracing::error;
-use huiyu_db_util::huiyu_db_macros::datasource;
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper_core::base::page::{Page, PageRes};
-use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
+use huiyu_db_mapper::huiyu_db_mapper_macros::datasource;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::page::{Page, PageRes};
+use huiyu_db_mapper::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use crate::entity::mappings::RoleDTO;
 use crate::param::param::UserQueryParam;
 

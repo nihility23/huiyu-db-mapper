@@ -26,7 +26,7 @@ pub fn mapper(args: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #input
 
-        impl huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper<#entity_type> for #struct_name {
+        impl huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper<#entity_type> for #struct_name {
         }
     };
 
@@ -40,7 +40,7 @@ pub fn transactional(input: TokenStream) -> TokenStream {
 
     // 生成 transactional_exec 调用并直接作为表达式返回
     let expanded = quote! {
-        huiyu_db_util::huiyu_db_mapper::query::transactional::transactional_exec(async || {
+        huiyu_db_mapper::huiyu_db_mapper_impl::query::transactional::transactional_exec(async || {
             #block
         }).await
     };
@@ -82,7 +82,7 @@ pub fn datasource(args: TokenStream, input: TokenStream) -> TokenStream {
         #(#attrs)*
         #vis #sig {
             use std::sync::Arc;
-            use huiyu_db_util::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
+            use huiyu_db_mapper::huiyu_db_mapper_core::pool::datasource::DB_NAME_REGISTRY;
 
             let ds_name: Arc<String> = Arc::new(#db_name_str.to_string());
             // 执行 scope 并返回结果
@@ -166,12 +166,12 @@ pub fn derive_mapping(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
 
-        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType;
+        // use db_mapper::base::entity::huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType;
         // use db_mapper::base::entity::Entity;
-        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo;
-        // use db_mapper::base::param::huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
+        // use db_mapper::base::entity::huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo;
+        // use db_mapper::base::param::huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue;
 
-        impl huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping for #name {
+        impl huiyu_db_mapper::huiyu_db_mapper_core::base::mapping::Mapping for #name {
 
 
             fn column_names() -> Vec<&'static str> {
@@ -188,28 +188,28 @@ pub fn derive_mapping(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue {
                 match field_name {
                     #(#get_value_by_field_arms)*
-                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                    _ => huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue {
                 match column_name {
                     #(#get_value_by_column_arms)*
-                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                    _ => huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
                     _ => panic!("Field name not found: {}", field_name),
                 }
             }
 
-            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
                     _ => panic!("Column name not found: {}", column_name),
@@ -294,7 +294,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
         quote! { #name: None }
     });
 
-    // 生成 huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo 列表
+    // 生成 huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo 列表
     let column_infos = generate_column_infos(&fields_info);
     let column_const_names = generate_column_names(&fields_info);
 
@@ -311,14 +311,14 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
 
-        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType;
+        // use db_mapper::base::entity::huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType;
         // use db_mapper::base::entity::Entity;
-        // use db_mapper::base::entity::huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo;
-        // use db_mapper::base::param::huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
+        // use db_mapper::base::entity::huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo;
+        // use db_mapper::base::param::huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue;
         impl #name{
             #(#column_const_names)*
         }
-        impl huiyu_db_util::huiyu_db_mapper_core::base::entity::Entity for #name {
+        impl huiyu_db_mapper::huiyu_db_mapper_core::base::entity::Entity for #name {
             type K = #key_type;
 
             fn is_case_sensitive() -> bool {
@@ -333,7 +333,7 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 #id_column_name_lit
             }
 
-            fn key_info() -> Option<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
+            fn key_info() -> Option<huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo> {
                 Some(#id_column_info)
             }
 
@@ -341,12 +341,12 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 #table_name_lit
             }
 
-            fn get_column_infos() -> Vec<huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo> {
+            fn get_column_infos() -> Vec<huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo> {
                 vec![#(#column_infos),*]
             }
         }
 
-        impl huiyu_db_util::huiyu_db_mapper_core::base::mapping::Mapping for #name {
+        impl huiyu_db_mapper::huiyu_db_mapper_core::base::mapping::Mapping for #name {
 
 
             fn column_names() -> Vec<&'static str> {
@@ -363,28 +363,28 @@ pub fn derive_entity(input: TokenStream) -> TokenStream {
                 }
             }
 
-            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            fn get_value_by_field_name(&self, field_name: &str) -> huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue {
                 match field_name {
                     #(#get_value_by_field_arms)*
-                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                    _ => huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue {
+            fn get_value_by_column_name(&self, column_name: &str) -> huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue {
                 match column_name {
                     #(#get_value_by_column_arms)*
-                    _ => huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null,
+                    _ => huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue::Null,
                 }
             }
 
-            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            fn set_value_by_field_name(&mut self, field_name: &str, value: huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue) {
                 match field_name {
                     #(#set_value_by_field_arms)*
                     _ => panic!("Field name not found: {}", field_name),
                 }
             }
 
-            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue) {
+            fn set_value_by_column_name(&mut self, column_name: &str, value: huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue) {
                 match column_name {
                     #(#set_value_by_column_arms)*
                     _ => panic!("Column name not found: {}", column_name),
@@ -644,7 +644,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
     };
 
     quote! {
-        huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnInfo {
+        huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnInfo {
             field_name: #field_name_lit,
             field_type: #field_type,
             column_name: #column_name_lit,
@@ -664,24 +664,24 @@ fn infer_field_type(ty: &Type) -> proc_macro2::TokenStream {
         Type::Path(type_path) => {
             let segment = type_path.path.segments.last().unwrap();
             match segment.ident.to_string().as_str() {
-                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I8 },
-                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I16 },
-                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I32 },
-                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::I64 },
-                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U8 },
-                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U16 },
-                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U32 },
-                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::U64 },
-                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::USize },
-                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::F32 },
-                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::F64 },
-                "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::Bool },
-                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::String },
-                "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::FieldType::DateTime },
-                _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+                "i8" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::I8 },
+                "i16" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::I16 },
+                "i32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::I32 },
+                "i64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::I64 },
+                "u8" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::U8 },
+                "u16" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::U16 },
+                "u32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::U32 },
+                "u64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::U64 },
+                "usize" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::USize },
+                "f32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::F32 },
+                "f64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::F64 },
+                "bool" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::Bool },
+                "String" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::String },
+                "DateTime" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::DateTime },
+                _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
             }
         }
-        _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+        _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
     }
 }
 
@@ -691,38 +691,38 @@ fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
         Type::Path(type_path) => {
             let segment = type_path.path.segments.last().unwrap();
             match segment.ident.to_string().as_str() {
-                "i8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
-                "i16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
-                "i32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
-                "i64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
-                "u8" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
-                "u16" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
-                "u32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
-                "u64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
-                "usize" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
-                "f32" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Float },
-                "f64" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Double },
-                "bool" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
-                "String" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Varchar },
-                "DateTime" => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
+                "i8" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
+                "i16" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
+                "i32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "i64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
+                "u8" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::TinyInt },
+                "u16" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::SmallInt },
+                "u32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "u64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::BigInt },
+                "usize" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Integer },
+                "f32" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Float },
+                "f64" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Double },
+                "bool" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
+                "String" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Varchar },
+                "DateTime" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
                 "Vec" => {
                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                         if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
                             if let Type::Path(inner_path) = inner {
                                 if let Some(inner_seg) = inner_path.path.segments.last() {
                                     if inner_seg.ident == "u8" {
-                                        return quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Blob };
+                                        return quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Blob };
                                     }
                                 }
                             }
                         }
                     }
-                    quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Clob }
+                    quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Clob }
                 }
-                _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+                _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
             }
         }
-        _ => quote! { huiyu_db_util::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+        _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
     }
 }
 
@@ -743,7 +743,7 @@ fn generate_get_value_arms(fields_info: &[FieldInfo], use_field_name: bool) -> V
 
             let conversion = quote!{
                 {if self.#field_ident.is_none(){
-                    huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue::Null
+                    huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue::Null
                 }else{
                     self.#field_ident.clone().unwrap().into()
                 }}

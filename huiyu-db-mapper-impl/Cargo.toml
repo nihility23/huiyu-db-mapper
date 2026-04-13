@@ -1,5 +1,5 @@
 [package]
-name = "huiyu-db-util"
+name = "huiyu-db-mapper-impl"
 version = {workspace = true}
 edition = {workspace = true}
 authors = {workspace = true}
@@ -15,19 +15,19 @@ license = { workspace = true }
 repository = {workspace = true}
 
 [dependencies]
-huiyu-db-macros={workspace = true}
 huiyu-db-mapper-core={workspace = true}
-huiyu-db-mapper = {workspace = true}
-huiyu-db-mapper-postgres={workspace = true, optional = true}
+huiyu-db-mapper-postgres={workspace = true,optional = true}
 huiyu-db-mapper-sqlite={workspace = true, optional = true}
 huiyu-db-mapper-mysql={workspace = true, optional = true}
 huiyu-db-mapper-oracle={workspace = true, optional = true}
 
+uuid = {workspace = true}
+tokio = { workspace = true }
+
 
 [features]
 default = ["sqlite"]
-postgres = ["huiyu-db-mapper-postgres", "huiyu-db-mapper/postgres"]
-sqlite = ["huiyu-db-mapper-sqlite", "huiyu-db-mapper/sqlite"]
-mysql = ["huiyu-db-mapper-mysql", "huiyu-db-mapper/mysql"]
-oracle = ["huiyu-db-mapper-oracle", "huiyu-db-mapper/oracle"]
-
+postgres = ["huiyu-db-mapper-postgres"]
+sqlite = ["huiyu-db-mapper-sqlite"]
+mysql = ["huiyu-db-mapper-mysql"]
+oracle = ["huiyu-db-mapper-oracle"]

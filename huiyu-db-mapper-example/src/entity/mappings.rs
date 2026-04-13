@@ -1,6 +1,6 @@
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
-use huiyu_db_util::huiyu_db_macros::Mapping;
+use huiyu_db_mapper::huiyu_db_mapper_macros::Mapping;
 
 #[derive(Default,Mapping,Serialize,Deserialize,Debug)]
 pub struct RoleDTO{

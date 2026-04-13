@@ -1,19 +1,19 @@
 use std::alloc;
 use chrono::{DateTime, Local};
-use huiyu_db_util::huiyu_db_macros::mapper;
-use huiyu_db_util::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
+use huiyu_db_mapper::huiyu_db_mapper_macros::mapper;
+use huiyu_db_mapper::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
 use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
 use crate::entity::mappings::RoleDTO;
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
-use huiyu_db_util::huiyu_db_mapper::{execute_impl, select_impl};
-use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
-use huiyu_db_util::huiyu_db_mapper_core::base::error::DatabaseError;
-use huiyu_db_util::huiyu_db_mapper_core::base::page::{Page, PageRes};
-use huiyu_db_util::huiyu_db_mapper_core::base::param::ParamValue;
-use huiyu_db_util::huiyu_db_mapper_core::sql::executor::Executor;
-use huiyu_db_util::huiyu_db_mapper_core::sql::sql_generator::PageSqlGenerator;
-use huiyu_db_util::huiyu_db_mapper::query::query_wrapper_occupy::OccupyQueryMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::db_type_wrapper::DbTypeWrapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::{execute_impl, select_impl};
+use huiyu_db_mapper::huiyu_db_mapper_core::base::db_type::DbType;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::error::DatabaseError;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::page::{Page, PageRes};
+use huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue;
+use huiyu_db_mapper::huiyu_db_mapper_core::sql::executor::Executor;
+use huiyu_db_mapper::huiyu_db_mapper_core::sql::sql_generator::PageSqlGenerator;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryMapper;
 
 pub struct UserMapper;
 

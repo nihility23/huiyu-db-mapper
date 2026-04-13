@@ -1122,25 +1122,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
-name = "huiyu-db-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "huiyu-db-mapper"
 version = "0.1.0"
 dependencies = [
  "huiyu-db-mapper-core",
+ "huiyu-db-mapper-impl",
+ "huiyu-db-mapper-macros",
  "huiyu-db-mapper-mysql",
  "huiyu-db-mapper-oracle",
  "huiyu-db-mapper-postgres",
  "huiyu-db-mapper-sqlite",
- "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -1155,6 +1146,53 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "huiyu-db-mapper-example"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "chrono",
+ "dashmap",
+ "deadpool 0.13.0",
+ "deadpool-postgres",
+ "deadpool-sqlite",
+ "deadpool-sync",
+ "huiyu-db-mapper",
+ "lazy_static",
+ "rusqlite",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-postgres",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "huiyu-db-mapper-impl"
+version = "0.1.0"
+dependencies = [
+ "huiyu-db-mapper-core",
+ "huiyu-db-mapper-mysql",
+ "huiyu-db-mapper-oracle",
+ "huiyu-db-mapper-postgres",
+ "huiyu-db-mapper-sqlite",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "huiyu-db-mapper-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -1205,44 +1243,6 @@ dependencies = [
  "rusqlite",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "huiyu-db-util"
-version = "0.1.0"
-dependencies = [
- "huiyu-db-macros",
- "huiyu-db-mapper",
- "huiyu-db-mapper-core",
- "huiyu-db-mapper-mysql",
- "huiyu-db-mapper-oracle",
- "huiyu-db-mapper-postgres",
- "huiyu-db-mapper-sqlite",
-]
-
-[[package]]
-name = "huiyu-db-util-example"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "chrono",
- "dashmap",
- "deadpool 0.13.0",
- "deadpool-postgres",
- "deadpool-sqlite",
- "deadpool-sync",
- "huiyu-db-util",
- "lazy_static",
- "rusqlite",
- "rust_decimal",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "tokio-postgres",
- "tracing",
- "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]

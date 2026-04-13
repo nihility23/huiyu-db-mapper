@@ -90,7 +90,7 @@ async fn queries()->Result<(),DatabaseError>{
 queries方法里面的数据库操作都会使用sqlite名称的数据源
 ### Mapping          查询返回映射宏
 ```aiignore
-use huiyu_db_util::huiyu_db_macros::Mapping;
+use huiyu_db_mapper::huiyu_db_mapper_macros::Mapping;
 
 #[derive(Default,Mapping,Serialize,Deserialize)]
 pub struct RoleDTO{
@@ -101,7 +101,7 @@ pub struct RoleDTO{
 必须是struct，成员必须Option,搭配select_impl使用
 ### Entity           实体宏
 ```aiignore
-use huiyu_db_util::huiyu_db_macros::Entity;
+use huiyu_db_mapper::huiyu_db_mapper_macros::Entity;
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Entity)]
 #[table(name = "t_role")]
 pub struct RoleEntity {

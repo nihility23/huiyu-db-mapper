@@ -1,11 +1,11 @@
 
 #[cfg(test)]
 mod tests {
-    use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper;
-    use huiyu_db_util::huiyu_db_mapper::query::db_type_wrapper::DbTypeWrapper;
-    use huiyu_db_util::huiyu_db_mapper::query::query_wrapper_occupy::OccupyQueryMapper;
-    use huiyu_db_util::huiyu_db_mapper_core::base::db_type::DbType;
-    use huiyu_db_util::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
+    use huiyu_db_mapper::huiyu_db_mapper_impl::query::db_type_wrapper;
+    use huiyu_db_mapper::huiyu_db_mapper_impl::query::db_type_wrapper::DbTypeWrapper;
+    use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryMapper;
+    use huiyu_db_mapper::huiyu_db_mapper_core::base::db_type::DbType;
+    use huiyu_db_mapper::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
     use crate::mapper::mappers::RoleMapper;
 
     #[test]

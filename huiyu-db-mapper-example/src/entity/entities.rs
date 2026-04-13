@@ -1,5 +1,5 @@
 use chrono::{DateTime, Local};
-use huiyu_db_util::huiyu_db_macros::Entity;
+use huiyu_db_mapper::huiyu_db_mapper_macros::Entity;
 use serde::{Deserialize, Serialize};
 
 // 用户实体

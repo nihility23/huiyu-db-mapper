@@ -1,6 +1,14 @@
 [workspace]
-name = "huiyu-db-util"
-members = ["huiyu-db-macros", "huiyu-db-mapper-core", "huiyu-db-mapper-postgres", "huiyu-db-mapper-sqlite", "huiyu-db-mapper", "huiyu-db-util", "huiyu-db-util-example", "huiyu-db-mapper-mysql", "huiyu-db-mapper-oracle"]
+name = "huiyu-db-mapper"
+members = ["huiyu-db-mapper-macros",
+            "huiyu-db-mapper-core",
+            "huiyu-db-mapper-postgres",
+            "huiyu-db-mapper-sqlite",
+            "huiyu-db-mapper-impl",
+            "huiyu-db-mapper",
+            "huiyu-db-mapper-example",
+            "huiyu-db-mapper-mysql",
+            "huiyu-db-mapper-oracle"]
 
 [workspace.package]
 version = "0.1.0"
@@ -19,6 +27,7 @@ keywords = [
     "database",
     "query_wrapper",
     "orm",
+    "deadpool",
 ]
 license = "MIT OR Apache-2.0"
 repository = ""
@@ -26,10 +35,10 @@ repository = ""
 [workspace.dependencies]
 
 #### members
-huiyu-db-macros = { path = "huiyu-db-macros" , version = "0.1.0"}
+huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.0"}
 huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.0"}
-huiyu-db-mapper = { path = "huiyu-db-mapper" , version = "0.1.0"}
-huiyu-db-util = { path = "huiyu-db-util" , version = "0.1.0"}
+huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.0"}
+huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.0"}
 huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.0"}
 huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.0"}
 huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.0"}

@@ -1,10 +1,10 @@
 [package]
-name = "huiyu-db-util-example"
+name = "huiyu-db-mapper-example"
 version = {workspace = true}
 edition = {workspace = true}
 
 [dependencies]
-huiyu-db-util={workspace = true, features = ["postgres", "sqlite", "mysql","oracle"]}
+huiyu-db-mapper={workspace = true, features = ["postgres", "sqlite", "mysql","oracle"]}
 
 chrono = { workspace = true }
 tracing = {workspace = true}

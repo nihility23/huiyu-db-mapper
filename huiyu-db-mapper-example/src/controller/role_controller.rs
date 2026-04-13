@@ -1,8 +1,8 @@
 use actix_web::{web, Error, HttpResponse};
-use huiyu_db_util::huiyu_db_macros::datasource;
-use huiyu_db_util::huiyu_db_mapper::query::base_mapper::BaseMapper;
-use huiyu_db_util::huiyu_db_mapper_core::base::page::Page;
-use huiyu_db_util::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
+use huiyu_db_mapper::huiyu_db_mapper_macros::datasource;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
+use huiyu_db_mapper::huiyu_db_mapper_core::base::page::Page;
+use huiyu_db_mapper::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use crate::common::result::Res;
 use crate::entity::entities::{RoleEntity, UserEntity};
 use crate::mapper::mappers::{RoleMapper, UserMapper};

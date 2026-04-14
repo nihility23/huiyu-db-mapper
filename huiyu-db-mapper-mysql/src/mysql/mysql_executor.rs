@@ -206,15 +206,15 @@ fn value_to_param_value(value: Value) -> Result<ParamValue, DatabaseError> {
             year as i32, month as u32, day as u32, hour as u32, minutes as u32, seconds as u32, micro
         ))),
         Value::Time(is_negative, days, hours, minutes, seconds, micro_seconds) => {
-            let duration = time::Duration::from_days(days as u64)
-                +time::Duration::from_hours(hours as u64)
-                +time::Duration::from_mins(minutes as u64)
-                +time::Duration::from_secs(seconds as u64)
-                +time::Duration::from_micros(micro_seconds as u64);
+            let duration_micros = days as u64 * 24 * 60 * 60 * 1_000_000
+                + hours as u64 * 60 * 60 * 1_000_000
+                + minutes as u64 * 60 * 1_000_000
+                + seconds as u64 * 1_000_000
+                + micro_seconds as u64;
             if is_negative {
-                return Ok(ParamValue::I64(0 - duration.as_micros() as i64));
+                return Ok(ParamValue::I64(0 - duration_micros as i64));
             }
-            Ok(ParamValue::I64(duration.as_micros() as i64))
+            Ok(ParamValue::I64(duration_micros as i64))
         },
         Value::NULL => Ok(ParamValue::Null),
     }

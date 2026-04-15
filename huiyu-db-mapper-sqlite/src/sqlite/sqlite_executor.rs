@@ -176,7 +176,7 @@ impl ParamValueWrapper {
                 ParamValue::Bool(x) => Ok(ParamValueWrapper(ParamValue::Bool(*x))),
                 ParamValue::Blob(x) => Ok(ParamValueWrapper(ParamValue::Blob(x.to_vec()))),
                 ParamValue::Clob(x) => Ok(ParamValueWrapper(ParamValue::String(String::from_utf8(x.to_vec()).unwrap()))),
-                ParamValue::DateTime(x) => Ok(ParamValueWrapper(ParamValue::String(time_util::format_date_time_local(x, "%Y-%m-%d %H:%M:%S")))),
+                ParamValue::DateTime(x) => Ok(ParamValueWrapper(ParamValue::I64(x.timestamp()))),
                 _ => Err(DatabaseError::ConvertError(format!("Can't Convert Postgres Error: {:?}", param_value)))
             }
         }).collect()

@@ -1,8 +1,6 @@
-use chrono::{DateTime, Local};
-use rust_decimal::Decimal;
+use crate::base::mapping::Mapping;
 use crate::base::param::ParamValue;
 use tracing::error;
-use crate::base::mapping::Mapping;
 
 pub trait Entity: Mapping + Send + Sync + 'static {
     type K: Into<ParamValue> + From<ParamValue> + Default + Clone + Send + Sync + 'static;

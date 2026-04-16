@@ -4,7 +4,6 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
-use huiyu_db_mapper_core::util::time_util;
 use huiyu_db_mapper_core::with_conn_scope;
 use rusqlite::types::ValueRef;
 use rusqlite::ToSql;

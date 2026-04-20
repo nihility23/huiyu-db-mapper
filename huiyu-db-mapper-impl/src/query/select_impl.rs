@@ -12,6 +12,8 @@ macro_rules! select_impl {
             .gen_where_sql($wrapper) {
             $sql = $sql.replacen("#{qw}", format!("and {}",&where_sql).as_str(), 1);
             $params.append(&mut wrapper_params);
+        }else{
+            $sql = $sql.replacen("#{qw}", "", 1);
         }
         select_impl!(@process_args ($($rest)*), $sql, $db_type, $params);
     };
@@ -22,6 +24,8 @@ macro_rules! select_impl {
             .gen_where_sql($wrapper) {
             $sql = $sql.replacen("#{qw}", format!("and {}",&where_sql).as_str(), 1);
             $params.append(&mut wrapper_params);
+        }else {
+            $sql = $sql.replacen("#{qw}", "", 1);
         }
     };
 

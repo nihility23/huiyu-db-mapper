@@ -51,7 +51,7 @@ macro_rules! execute_impl {
     };
 
     // query_wrapper + 逗号 + 剩余参数
-    (@process_args ($wrapper:ident: &OccupyQueryMapper<'_>, $($rest:tt)*), $sql:expr, $db_type:expr, $params:expr) => {
+    (@process_args ($wrapper:ident: &OccupyQueryWrapper<'_>, $($rest:tt)*), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
             $sql = $sql.replacen("#{qw}", &where_sql, 1);
@@ -67,7 +67,7 @@ macro_rules! execute_impl {
     };
 
     // 单个 query_wrapper
-    (@process_args ($wrapper:ident: &OccupyQueryMapper<'_>), $sql:expr, $db_type:expr, $params:expr) => {
+    (@process_args ($wrapper:ident: &OccupyQueryWrapper<'_>), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
             $sql = $sql.replacen("#{qw}", &where_sql, 1);

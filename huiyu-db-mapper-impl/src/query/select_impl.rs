@@ -6,21 +6,21 @@ macro_rules! select_impl {
         // 空参数列表，不需要处理
     };
 
-    // 处理包含 OccupyQueryMapper 的参数（带生命周期）
-    (@process_args ($wrapper:ident: &OccupyQueryMapper<$lt:lifetime>, $($rest:tt)*), $sql:expr, $db_type:expr, $params:expr) => {
+    // 处理包含 OccupyQueryWrapper 的参数（带生命周期）
+    (@process_args ($wrapper:ident: &OccupyQueryWrapper<$lt:lifetime>, $($rest:tt)*), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
-            $sql = $sql.replacen("#{qw}", &where_sql, 1);
+            $sql = $sql.replacen("#{qw}", format!("and {}",&where_sql).as_str(), 1);
             $params.append(&mut wrapper_params);
         }
         select_impl!(@process_args ($($rest)*), $sql, $db_type, $params);
     };
 
-    // 处理单个包含 OccupyQueryMapper 的参数（带生命周期）
-    (@process_args ($wrapper:ident: &OccupyQueryMapper<$lt:lifetime>), $sql:expr, $db_type:expr, $params:expr) => {
+    // 处理单个包含 OccupyQueryWrapper 的参数（带生命周期）
+    (@process_args ($wrapper:ident: &OccupyQueryWrapper<$lt:lifetime>), $sql:expr, $db_type:expr, $params:expr) => {
         if let Some((where_sql, mut wrapper_params)) = <DbType as Into<DbTypeWrapper>>::into($db_type)
             .gen_where_sql($wrapper) {
-            $sql = $sql.replacen("#{qw}", &where_sql, 1);
+            $sql = $sql.replacen("#{qw}", format!("and {}",&where_sql).as_str(), 1);
             $params.append(&mut wrapper_params);
         }
     };

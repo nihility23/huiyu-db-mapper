@@ -13,7 +13,7 @@ use huiyu_db_mapper::huiyu_db_mapper_core::base::page::{Page, PageRes};
 use huiyu_db_mapper::huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper::huiyu_db_mapper_core::sql::executor::Executor;
 use huiyu_db_mapper::huiyu_db_mapper_core::sql::sql_generator::PageSqlGenerator;
-use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryWrapper;
 
 pub struct UserMapper;
 
@@ -56,26 +56,26 @@ impl RoleMapper {
         async fn query_role_name(name: String, status: i8) -> Result<Option<String>, DatabaseError>;
         
         #[select("select * from t_role where role_code = ? and #{qw}")]
-        async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
+        async fn query_role_dtos_by_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryWrapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role  where 1=1 and #{qw}")]
-        async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
+        async fn query_role_page_query_wrapper<'a>(page: Page,name:String,name1:String,query_wrapper: &OccupyQueryWrapper<'a>) -> Result<PageRes<RoleDTO>, DatabaseError>;
         
         #[select("select * from t_role where role_name like concat('%',?#,'%') and #{qw}")]
-        async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
+        async fn query_role_first_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryWrapper<'a>) -> Result<Option<RoleDTO>, DatabaseError>;
         
         #[select("select role_name from t_user u left join t_user_role ur on ur.user_id = u.id left join t_role r on r.id = ur.role_id where role_name like concat('%',?#,'%') and #{qw}")]
         #[value]   // 标记为简单值类型
-        async fn query_role_name_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryMapper<'a>) -> Result<Option<String>, DatabaseError>;
+        async fn query_role_name_query_wrapper<'a>(name:String,query_wrapper: &OccupyQueryWrapper<'a>) -> Result<Option<String>, DatabaseError>;
         
-        // 支持多个 OccupyQueryMapper 的示例
+        // 支持多个 OccupyQueryWrapper 的示例
         #[select("select * from t_role where 1=1 and role_code =?# and #{qw} and #{qw}")]
-        async fn query_role_by_multiple_wrappers<'a>(code:String,wrapper1: &OccupyQueryMapper<'a>, wrapper2: &OccupyQueryMapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
+        async fn query_role_by_multiple_wrappers<'a>(code:String,wrapper1: &OccupyQueryWrapper<'a>, wrapper2: &OccupyQueryWrapper<'a>) -> Result<Vec<RoleDTO>, DatabaseError>;
     }
     
     execute_impl!{
         #[sql("update t_role set update_time = ? where #{qw} and #{qw}")]
-        async fn update_role(update_time: DateTime<Local>, query_wrapper: &OccupyQueryMapper<'_>,query_wrapper1: &OccupyQueryMapper<'_>) -> Result<u64, DatabaseError>;
+        async fn update_role(update_time: DateTime<Local>, query_wrapper: &OccupyQueryWrapper<'_>,query_wrapper1: &OccupyQueryWrapper<'_>) -> Result<u64, DatabaseError>;
         #[sql("create table t_test(id: int)")]
         async fn create_table_test(id: i64) -> Result<u64, DatabaseError>;
         #[sql("CREATE TABLE Employees_?@ (

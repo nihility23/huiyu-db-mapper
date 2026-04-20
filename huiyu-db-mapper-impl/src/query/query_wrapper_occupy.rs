@@ -65,5 +65,5 @@ impl Mapping for EntityOccupy {
     }
 }
 
-pub type OccupyQueryMapper<'a> = QueryWrapper<'a,EntityOccupy>;
+pub type OccupyQueryWrapper<'a> = QueryWrapper<'a,EntityOccupy>; 
 

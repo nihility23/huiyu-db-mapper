@@ -3,7 +3,7 @@ use crate::common::db::init_dbs;
 use crate::mapper::mappers::{PermissionMapper, RoleMapper};
 use huiyu_db_mapper::huiyu_db_mapper_macros::datasource;
 use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
-use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryMapper;
+use huiyu_db_mapper::huiyu_db_mapper_impl::query::query_wrapper_occupy::OccupyQueryWrapper;
 use huiyu_db_mapper::huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper::huiyu_db_mapper_core::base::page::Page;
 
@@ -35,14 +35,14 @@ async fn queries()->Result<(),DatabaseError>{
     let role_name = RoleMapper::query_role_name("admin".to_string(), 1).await?;
     println!("{:?}", role_name);
 
-    let query1 = OccupyQueryMapper::new().eq("status",1);
+    let query1 = OccupyQueryWrapper::new().eq("status",1);
     let res = RoleMapper::query_role_dtos_by_query_wrapper("admin".to_string(),&query1).await?;
     println!("{:?}", res);
 
     let res = RoleMapper::query_role_name_query_wrapper("管理员".to_string(), &query1).await?;
     println!("{:?}", res);
 
-    let query2 = OccupyQueryMapper::new().le("create_time",Local::now());
+    let query2 = OccupyQueryWrapper::new().le("create_time",Local::now());
     let res = RoleMapper::query_role_by_multiple_wrappers("admin".to_string(), &query1, &query2).await?;
     println!("{:?}", res);
     

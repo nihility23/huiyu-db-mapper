@@ -13,21 +13,7 @@ pub trait Entity: Mapping + Send + Sync + 'static {
 
     fn key_info() -> Option<ColumnInfo>;
 
-    // fn column_names() -> Vec<&'static str>;
-
-    // fn field_names() -> Vec<&'static str>;
-
     fn table_name() -> &'static str;
-
-    // fn new() -> Self;
-    //
-    // fn get_value_by_field_name(&self, field_name: &str) -> ParamValue;
-    //
-    // fn get_value_by_column_name(&self, column_name: &str) -> ParamValue;
-    //
-    // fn set_value_by_field_name(&mut self, field_name: &str, value: ParamValue);
-    //
-    // fn set_value_by_column_name(&mut self, column_name: &str, value: ParamValue);
 
     fn get_column_infos() -> Vec<ColumnInfo>;
 }
@@ -105,7 +91,7 @@ pub struct ColumnInfo {
     
     pub is_primary_key: bool,
 
-    pub is_nullable: bool,
+    pub update_null: bool,
 
     pub is_auto_increment: bool,
 
@@ -121,7 +107,7 @@ impl ColumnInfo {
         fill_on_update: bool,
         fill_on_insert: bool,
         is_primary_key: bool,
-        is_nullable: bool,
+        update_null: bool,
         is_auto_increment: bool,
         key_generate_type: KeyGenerateType,
     ) -> Self {
@@ -133,7 +119,7 @@ impl ColumnInfo {
             fill_on_update,
             fill_on_insert,
             is_primary_key,
-            is_nullable,
+            update_null,
             is_auto_increment,
             key_generate_type,
         }

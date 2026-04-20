@@ -61,7 +61,7 @@ where
     // update $table_name set $column_name = ? where id = ?
     async fn update_by_key(e: &E) -> Result<u64, DatabaseError> {
         Self::exec::< _,_,_,_, u64>(|db_type: DbType|{
-            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_by_key_sql::<E>(&e,false);
+            let (sql, param_vec) = <DbType as Into<DbTypeWrapper>>::into(db_type).gen_update_by_key_sql::<E>(&e);
             (db_type,sql,param_vec)
         },async |(db_type,sql,param_vec)|{
             <DbType as Into<DbTypeWrapper>>::into(db_type).update(sql.as_str(),&param_vec).await

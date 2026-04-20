@@ -135,7 +135,7 @@ pub trait BaseSqlGenerator{
         (format!("delete from {} where {} in ({})", self.transfer_case_sensitive_name::<E>(E::table_name()),self.transfer_case_sensitive_name::<E>(E::key_name()),vec!["?";ks.len()].join(",")),ks.into_iter().map(|k| k.clone().into()).collect::<Vec<ParamValue>>())
     }
 
-    fn gen_update_by_key_sql<E>(&self,e: &E, is_update_null: bool) ->(String,Vec<ParamValue>) where E:Entity{
+    fn gen_update_by_key_sql<E>(&self,e: &E) ->(String,Vec<ParamValue>) where E:Entity{
         let mut params = Vec::new();
         let mut update_sql_parts = Vec::new();
         for column_info in E::get_column_infos(){
@@ -143,7 +143,7 @@ pub trait BaseSqlGenerator{
                 continue;
             }
             let value = e.get_value_by_column_name(self.transfer_case_sensitive_name::<E>(column_info.column_name).as_str());
-            if is_update_null || value.is_not_null(){
+            if column_info.update_null || value.is_not_null(){
                 update_sql_parts.push(format!("{} = ?", self.transfer_case_sensitive_name::<E>(column_info.column_name)));
                 params.push(value);
             }else if column_info.fill_on_update && column_info.column_type==ColumnType::DateTime{
@@ -168,7 +168,7 @@ pub trait QueryWrapperSqlGenerator : BaseSqlGenerator + PageSqlGenerator + Where
         for column_info in E::get_column_infos() {
             let value = e.get_value_by_column_name(self.transfer_case_sensitive_name::<E>(column_info.column_name).as_str());
             // let value = e.get_value_by_column_name(self.transfer_column_name::<E>(column_info.column_name));
-            if is_update_null || value.is_not_null() {
+            if is_update_null || column_info.update_null || value.is_not_null() {
                 update_sql_parts.push(format!("{} = ?", self.transfer_case_sensitive_name::<E>(column_info.column_name)));
                 params.push(value);
             } else if column_info.fill_on_update && column_info.column_type == ColumnType::DateTime {

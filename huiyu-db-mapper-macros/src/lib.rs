@@ -411,7 +411,7 @@ struct FieldInfo {
     inner_type: Option<Type>,
     is_id: bool,
     is_auto_increment: bool,
-    is_nullable: bool,
+    update_null: bool,
     key_generate_type: Option<String>,
     fill_on_update: bool,
     fill_on_insert: bool,
@@ -514,7 +514,7 @@ fn parse_fields(fields: &Fields) -> Vec<FieldInfo> {
             },
             is_id: false,
             is_auto_increment: false,
-            is_nullable: true,
+            update_null: false,
             key_generate_type: None,
             fill_on_update: false,
             fill_on_insert: false,
@@ -537,7 +537,7 @@ fn parse_fields(fields: &Fields) -> Vec<FieldInfo> {
 
 fn parse_id_attributes(attr: &Attribute, info: &mut FieldInfo) {
     info.is_id = true;
-    info.is_nullable = false;
+    info.update_null = false;
 
     if attr.meta.require_list().is_err() {
         return;
@@ -565,8 +565,8 @@ fn parse_field_attributes(attr: &Attribute, info: &mut FieldInfo) {
     let _ = attr.parse_nested_meta(|meta| {
         if meta.path.is_ident("column") {
             info.column_name = parse_string_lit(&meta)?;
-        } else if meta.path.is_ident("nullable") {
-            info.is_nullable = parse_bool_lit(&meta)?;
+        } else if meta.path.is_ident("update_null") {
+            info.update_null = parse_bool_lit(&meta)?;
         } else if meta.path.is_ident("fill_on_update") {
             info.fill_on_update = parse_bool_lit(&meta)?;
         } else if meta.path.is_ident("fill_on_insert") {
@@ -624,7 +624,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
     let field_name_lit = LitStr::new(&f.field_name, proc_macro2::Span::call_site());
     let column_name_lit = LitStr::new(&f.column_name, proc_macro2::Span::call_site());
 
-    let is_nullable = f.is_nullable;
+    let update_null = f.update_null;
     let is_auto_increment = f.is_auto_increment;
     let is_id = f.is_id;
     let fill_on_update = f.fill_on_update;
@@ -649,7 +649,7 @@ fn generate_column_info(f: &FieldInfo) -> proc_macro2::TokenStream {
             field_type: #field_type,
             column_name: #column_name_lit,
             column_type: #column_type,
-            is_nullable: #is_nullable,
+            update_null: #update_null,
             is_auto_increment: #is_auto_increment,
             is_primary_key: #is_id,
             key_generate_type: #key_generate_type.into(),

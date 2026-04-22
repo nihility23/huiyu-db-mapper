@@ -211,7 +211,7 @@ where
             <DbType as Into<DbTypeWrapper>>::into(db_type).delete(sql.as_str(),&param_vec).await
         }).await
     }
-
+    
     async fn exec<F,P,BF,Fut,T>(f: F, bf: BF) -> Result<T, DatabaseError>
     where
         F: FnOnce(DbType) -> P,

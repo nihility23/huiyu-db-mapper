@@ -17,6 +17,9 @@
  - [x] 插入
  - [x] 自定义查询
 
+### 引入
+[workspace.dependencies]
+huiyu-db-mapper = {git = "https://github.com/nihility23/huiyu-db-mapper.git", features = ["sqlite"]}
 
 ### 查询功能
 #### QueryWrapper    查询条件构造器

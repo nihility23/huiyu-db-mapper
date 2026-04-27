@@ -29,7 +29,7 @@ fn init_mysql(){
                                         Some("10.150.6.7".to_string()),
                                         Some(3306),
                                         Some("root".to_string()),
-                                        Some("neusoft".to_string()),
+                                        Some("123456".to_string()),
                                         Some("huiyu".to_string()),
                                         Some("".to_string()),
     );

@@ -18,8 +18,61 @@
  - [x] 自定义查询
 
 ### 引入
-[workspace.dependencies]
-huiyu-db-mapper = {git = "https://github.com/nihility23/huiyu-db-mapper.git", features = ["sqlite"]}
+    [workspace.dependencies]
+    huiyu-db-mapper = {version = "0.1.0", features = ["sqlite"]}
+### 注册数据源
+```aiignore
+fn init_postgres(){
+    println!("init postgres");
+    let db_config_postgres = DbConfig::new(DbType::Postgres,
+                                           "postgres".to_string(),
+                                           Some("10.150.2.200".to_string()),
+                                           Some(5432),
+                                           Some("postgres".to_string()),
+                                           Some("123456".to_string()),
+                                           Some("huiyu".to_string()),
+                                           Some("public".to_string()),
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_postgres]).expect("Failed to register db");
+}
+fn init_mysql(){
+    println!("init mysql");
+    let db_config_mysql = DbConfig::new(DbType::Mysql,
+                                        "mysql".to_string(),
+                                        Some("10.150.6.7".to_string()),
+                                        Some(3306),
+                                        Some("root".to_string()),
+                                        Some("123456".to_string()),
+                                        Some("huiyu".to_string()),
+                                        Some("".to_string()),
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
+}
+fn init_sqlite(){
+    println!("init sqlite");
+    let db_config_sqlite = DbConfig::new(
+        DbType::Sqlite,
+        "sqlite".to_string(),
+        None, None, None, None,
+        Some("E:\\test\\huiyu.db".to_string()), None
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_sqlite]).expect("Failed to register db");
+}
+
+fn init_oracle(){
+    println!("init oracle");
+    let db_config_oracle = DbConfig::new(DbType::Oracle,
+                                        "oracle".to_string(),
+                                        Some("10.150.6.7".to_string()),
+                                        Some(1521),
+                                        Some("huiyu".to_string()),
+                                        Some("123456".to_string()),
+                                        Some("orcl".to_string()),
+                                        None,
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_oracle]).expect("Failed to register db");
+}
+```
 
 ### 查询功能
 #### QueryWrapper    查询条件构造器
@@ -119,6 +172,7 @@ pub struct RoleEntity {
 
 ### select_impl      自定义查询宏
 ```aiignore
+impl RoleMapper {
     select_impl! {
 
         #[select("select * from t_role where id = ?")]
@@ -165,7 +219,11 @@ pub struct RoleEntity {
         ")]
         async fn create_table_employees(idx:i64) -> Result<u64, DatabaseError>;
     }
+}
 ```
+### 例子地址
+
+https://github.com/nihility23/huiyu-db-mapper/tree/master/huiyu-db-mapper-example
 ### 参数值支持：
 #### 1.普通值.可以多个与？搭配，按顺序替换
 #### 2.OccupyQueryMapper，可以多个，通过#{qw}按顺序替换

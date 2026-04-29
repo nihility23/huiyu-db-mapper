@@ -124,7 +124,56 @@ t_role where id = ?  AND  role_name != ?  AND  status > ?  AND  status < ?  AND 
 ```
 
 ## 宏
-    
+
+### mapper宏
+```aiignore
+#[mapper(RoleEntity)]
+pub struct RoleMapper;
+```
+这样该mapper就具有以下方法,其中RoleEntity是实体类，由Entity宏标注
+```aiignore
+// select * from $table_name where $id = ?
+async fn select_by_key(key: &E::K) -> Result<Option<E>, DatabaseError>;
+
+// select * from $table_name where $id in (?,...)
+async fn select_by_keys(keys: &Vec<E::K>) -> Result<Vec<E>, DatabaseError>;
+
+// delete from $table_name where $id = ?
+async fn delete_by_key(key: &E::K) -> Result<u64, DatabaseError>;
+
+// delete from $table_name where $id in (?,...)
+async fn delete_by_keys(keys: &Vec<E::K>) -> Result<u64, DatabaseError>;
+
+// update $table_name set $column_name = ? where id = ?
+async fn update_by_key(e: &E) -> Result<u64, DatabaseError>;
+
+// insert $table_name into ($id,$column,...) values (?,?,...)
+async fn insert(e: &mut E) -> Result<Option<E::K>, DatabaseError>;
+
+// insert $table_name into ($id,$column,...) values (?,?,...),(?,?,...)
+async fn insert_batch(entities: Vec<E>) -> Result<u64, DatabaseError>;
+
+// select count(*) from (select * from $table_name where $column = ? ...)
+// select * from $table_name where $column = ? ... limit ?,?
+async fn select_page<'a>(page: Page,query_wrapper: &QueryWrapper<'a, E>,) -> Result<PageRes<E>, DatabaseError>;
+
+// select * from $table_name where $column = ? ...
+async fn select<'a>(query_wrapper: &QueryWrapper<'a, E>,) -> Result<Vec<E>, DatabaseError>;
+
+// select * from $table_name where $column = ? ... limit 1
+async fn select_one<'a>(query_wrapper: &QueryWrapper<'a, E>,) -> Result<Option<E>, DatabaseError>;
+
+// update $table_name set $column_name = ? where $column = ? ...
+async fn update<'a>(e: &E, query_wrapper: &QueryWrapper<'a, E>,) -> Result<u64, DatabaseError>;
+
+// update $table_name set $column_name = ? where $column = ? ...
+async fn update_with_null<'a>(&self, e: &E, query_wrapper: &QueryWrapper<'a, E>,) -> Result<u64, DatabaseError>;
+
+// delete from $table_name where $column = ? ...
+async fn delete<'a>(query_wrapper: &QueryWrapper<'a, E>) -> Result<u64, DatabaseError>;
+```
+
+
 ### transactional    事务宏
 ```aiignore
 

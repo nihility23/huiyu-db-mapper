@@ -678,10 +678,11 @@ fn infer_field_type(ty: &Type) -> proc_macro2::TokenStream {
                 "bool" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::Bool },
                 "String" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::String },
                 "DateTime" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::DateTime },
-                _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+                "Decimal" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::Decimal },
+                _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::Null },
             }
         }
-        _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Null },
+        _ => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::FieldType::Null },
     }
 }
 
@@ -705,6 +706,7 @@ fn infer_column_type(ty: &Type) -> proc_macro2::TokenStream {
                 "bool" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Bool },
                 "String" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Varchar },
                 "DateTime" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::DateTime },
+                "Decimal" => quote! { huiyu_db_mapper::huiyu_db_mapper_core::base::entity::ColumnType::Decimal },
                 "Vec" => {
                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                         if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {

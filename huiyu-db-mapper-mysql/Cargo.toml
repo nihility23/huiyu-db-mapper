@@ -19,4 +19,4 @@ huiyu-db-mapper-core = { workspace = true }
 tokio = { workspace = true}
 chrono = {workspace = true}
 tracing = {workspace = true}
-mysql = { workspace = true }
+mysql = { workspace = true, features = ["rust_decimal"] }

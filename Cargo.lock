@@ -1648,6 +1648,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "regex",
+ "rust_decimal",
  "saturating",
  "serde",
  "serde_json",

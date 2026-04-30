@@ -156,13 +156,6 @@ impl Executor for MysqlSqlExecutor {
         with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
     }
 
-    // async fn transactional_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>
-    // where
-    //     F: FnOnce() -> Fut,
-    //     Fut: Future<Output=Result<T, DatabaseError>>
-    // {
-    //     with_conn_scope!(MYSQL_CONN_REGISTER, self, func)
-    // }
 }
 
 fn param_value_to_value(val: &ParamValue) -> Result<Value, DatabaseError> {
@@ -190,6 +183,7 @@ fn param_value_to_value(val: &ParamValue) -> Result<Value, DatabaseError> {
                 x.nanosecond()/ 1000u32,
             ))
         }
+        ParamValue::Decimal(x)=>{Ok(x.into())}
         ParamValue::Null=>Ok(Value::NULL),
         _=>Err(DatabaseError::ConvertError("Unsupported parameter type".to_string()))
     }

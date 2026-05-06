@@ -10,13 +10,13 @@ impl DbRegister for SqliteDbRegister{
     fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {
         Self::check_config(self, config)?;
         DbManager::register(config,|config| {
-            Config::new(config.database.clone().unwrap()).create_pool(deadpool_sqlite::Runtime::Tokio1).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
+            Config::new(config.url.clone().unwrap()).create_pool(deadpool_sqlite::Runtime::Tokio1).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
         })?;
         Ok(())
     }
 
     fn check_config(&self,config: &DbConfig) -> Result<(), DatabaseError> {
-        if config.database.is_none() {
+        if config.url.is_none() {
             return Err(DatabaseError::ConfigNotFoundError("Database URL is missing".to_string()));
         }
         Ok(())

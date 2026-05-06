@@ -12,9 +12,9 @@ impl DbRegister for MysqlDbRegister{
         DbManager::register(config, |config| {
             // 1. 创建数据库连接池
             // mysql://root:password@localhost:3307/db_name
-            let url = format!("mysql://{}:{}@{}:{}/{}", config.username.clone().unwrap(), config.password.clone().unwrap(), config.host.clone().unwrap(), config.port.clone().unwrap(), config.database.clone().unwrap());
-            info!("mysql url: {}", url);
-            Ok(Pool::new(url.as_str()))
+            // let url = format!("mysql://{}:{}@{}:{}/{}", config.username.clone().unwrap(), config.password.clone().unwrap(), config.host.clone().unwrap(), config.port.clone().unwrap(), config.database.clone().unwrap());
+            info!("mysql url: {}", config.url.as_ref().unwrap().as_str());
+            Ok(Pool::new(config.url.as_ref().unwrap().as_str()))
         })?;
         Ok(())
     }

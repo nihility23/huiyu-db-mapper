@@ -353,7 +353,7 @@ pub trait DbRegister{
     fn register_db(&self,config: &DbConfig) -> Result<(), DatabaseError>;
 
     fn check_config(&self, config: &DbConfig) -> Result<(), DatabaseError>{
-        if config.database.is_none() {
+        if config.url.is_none() {
             return Err(DatabaseError::ConfigNotFoundError("Database is missing".to_string()));
         }
         if config.username.is_none() {

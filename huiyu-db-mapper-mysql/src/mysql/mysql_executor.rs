@@ -1,3 +1,4 @@
+use futures_util::future::TryFutureExt;
 use chrono::{Datelike, Timelike};
 use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::base::param::ParamValue;
@@ -5,19 +6,16 @@ use huiyu_db_mapper_core::pool::datasource::get_datasource_name;
 use huiyu_db_mapper_core::pool::db_manager::DbManager;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::util::time_util;
-use mysql::prelude::{Queryable};
-use mysql::Error::FromRowError;
-use mysql::{Params, Pool, PooledConn, Row, Value};
 use tracing::info;
 use tokio::sync::Mutex;
 use std::sync::Arc;
-use std::time;
-use tokio::task::spawn_blocking;
+use mysql_async::{Conn, FromRowError, Params, Pool, Row, Value};
+use mysql_async::prelude::Queryable;
 use tokio::task_local;
 use huiyu_db_mapper_core::with_conn_scope;
 
 task_local! {
-    pub static MYSQL_CONN_REGISTER : Arc<Mutex<PooledConn>>;
+    pub static MYSQL_CONN_REGISTER : Arc<Mutex<Conn>>;
 }
 #[derive(Clone)]
 pub struct MysqlSqlExecutor;
@@ -55,35 +53,33 @@ impl RowType for MysqlRow {
 impl Executor for MysqlSqlExecutor {
 
     type Row<'a> = MysqlRow;
-    type Conn = PooledConn;
+    type Conn = Conn;
 
     async fn query<T, R, F, Q>(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>, mapper: F, processor: Q) -> Result<R, DatabaseError>
     where
         T: Send + 'static,
         R: Send + 'static,
-        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static + Sync,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static
     {
         let sql = sql.to_string();
         let params = params.clone();
-        spawn_blocking(move || {
-            let mut conn = conn.blocking_lock();
-            let stat = conn.prep(sql).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
-            let mut vec = Vec::new();
-            for param in params.iter() {
-                vec.push(param_value_to_value(param)?);
-            }
-            let res = conn.exec_map(stat, Params::Positional(vec),|row: Row|{
-                let res = mapper(&MysqlRow{row: row.clone()}).map_err(|_| FromRowError(row));
-                res
-            }).map_err(|e| DatabaseError::RowConvertError(e.to_string()))?;
-            let mut vec = Vec::new();
-            for row in res {
-                let row = row.map_err(|e| DatabaseError::RowConvertError(e.to_string()));
-                vec.push(row?);
-            }
-            processor(vec)
-        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
+        let mut conn = conn.lock().await;
+        let stat = conn.prep(sql).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        let mut vec = Vec::new();
+        for param in params.iter() {
+            vec.push(param_value_to_value(param)?);
+        }
+        let res = conn.exec_map(stat, Params::Positional(vec),|row: Row|{
+            let res = mapper(&MysqlRow{row: row.clone()}).map_err(|_| FromRowError(row));
+            res
+        }).map_err(|e| DatabaseError::RowConvertError(e.to_string())).await?;
+        let mut vec = Vec::new();
+        for row in res {
+            let row = row.map_err(|e| DatabaseError::RowConvertError(e.to_string()));
+            vec.push(row?);
+        }
+        processor(vec)
     }
 
     async fn execute(&self, conn: Arc<Mutex<Self::Conn>>, sql: &str, params: &Vec<ParamValue>) -> Result<u64, DatabaseError> {
@@ -92,14 +88,12 @@ impl Executor for MysqlSqlExecutor {
             vec.push(param_value_to_value(param)?);
         }
         let sql = sql.to_string();
-        spawn_blocking(move || {
-            let mut conn = conn.blocking_lock();
-            let res:Option<Value> = conn.exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string()))?;
-            if res.is_none() {
-                return Ok(0);
-            }
-            Ok(value_to_param_value(res.unwrap())?.into())
-        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
+        let mut conn = conn.lock().await;
+        let res:Option<Value> = conn.exec_first(sql, Params::Positional(vec)).map_err(|e| DatabaseError::ConvertError(e.to_string())).await?;
+        if res.is_none() {
+            return Ok(0);
+        }
+        Ok(value_to_param_value(res.unwrap())?.into())
     }
 
 
@@ -113,39 +107,32 @@ impl Executor for MysqlSqlExecutor {
 
     async fn get_conn(&self) -> Result<Self::Conn,DatabaseError> {
         let db_name = get_datasource_name();
-        spawn_blocking(move || {
-            info!("get_conn: {}", db_name);
-            let db_manager = DbManager::<Pool>::get_instance(db_name.as_str()).unwrap();
-            let pool = db_manager.get_pool();
-            pool.get_conn().map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))
-        }).await.map_err(|e| DatabaseError::ConvertError(e.to_string()))?
+        info!("get_conn: {}", db_name);
+        let db_manager = DbManager::<Pool>::get_instance(db_name.as_str()).unwrap();
+        let pool = db_manager.get_pool();
+        let conn = pool.get_conn().await. map_err(|e| DatabaseError::ConnectCanNotGetError(e.to_string()))?;
+        Ok(conn)
     }
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        spawn_blocking(move || {
             let mut conn = conn.blocking_lock();
-            conn.exec_first::<Value, &str, mysql::Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
+            conn.exec_first::<Value, &str, Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
             Ok(())
-        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        spawn_blocking(move || {
-            let mut conn = conn.blocking_lock();
-            conn.exec_first::<Value, &str, mysql::Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
-            Ok(())
-        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
+        let mut conn = conn.blocking_lock();
+        conn.exec_first::<Value, &str, Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        spawn_blocking(move || {
-            let mut conn = conn.blocking_lock();
-            conn.exec_first::<Value, &str, mysql::Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string()))?;
-            Ok(())
-        }).await.map_err(|e| DatabaseError::ExecuteError(e.to_string()))?
+        let mut conn = conn.blocking_lock();
+        conn.exec_first::<Value, &str, Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        Ok(())
     }
 
     async fn transaction_basic_exec<F, T, Fut>(&self, func: F) -> Result<T, DatabaseError>

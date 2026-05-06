@@ -243,6 +243,13 @@ macro_rules! impl_decimal_conversions {
                     ParamValue::F64(v)=>Decimal::from_f64(v),
                     ParamValue::F32(v)=>Decimal::from_f32(v),
                     ParamValue::Decimal(v)=>Some(v),
+                    ParamValue::Blob(v)=>{
+                        let res = String::from_utf8(v.to_vec());
+                        if res.is_err(){
+                            return None;
+                        }
+                        Some(Decimal::from_str(res.unwrap().as_str()).unwrap_or_default())
+                    }
                     ParamValue::String(v)=>Some(Decimal::from_str(v.as_str()).unwrap_or_default()),
                     _ => None,
                 }

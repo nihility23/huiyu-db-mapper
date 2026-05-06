@@ -1,4 +1,4 @@
-use mysql::Pool;
+use mysql_async::Pool;
 use tracing::info;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;
@@ -10,10 +10,11 @@ impl DbRegister for MysqlDbRegister{
     fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {
         Self::check_config(self, config)?;
         DbManager::register(config, |config| {
+            // 1. 创建数据库连接池
             // mysql://root:password@localhost:3307/db_name
             let url = format!("mysql://{}:{}@{}:{}/{}", config.username.clone().unwrap(), config.password.clone().unwrap(), config.host.clone().unwrap(), config.port.clone().unwrap(), config.database.clone().unwrap());
             info!("mysql url: {}", url);
-            Pool::new(url.as_str()).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
+            Ok(Pool::new(url.as_str()))
         })?;
         Ok(())
     }

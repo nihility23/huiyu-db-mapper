@@ -54,7 +54,6 @@ tokio = { version = "1.49.0" ,features = ["full"]}
 deadpool = "=0.13.0"
 deadpool-sync = "=0.2.0"
 dashmap = "6.1.0"
-parking_lot = "0.12.5"
 serde = { version = "1.0.228", features = ["derive"] }
 rust_decimal = "1.41.0"
 #### proc-macro
@@ -70,8 +69,8 @@ postgres-types = { version = "0.2.12", features = ["with-chrono-0_4"] }
 deadpool-sqlite = "0.13.0"
 rusqlite = { version = "0.38" ,features = ["bundled"] }
 
-### mysql
-mysql = "27.0.0"
-
 ### oracle
 deadpool-oracle = "0.1.1"
+
+### mysql
+mysql_async = { version = "0.36.2",features = ["rust_decimal"] }

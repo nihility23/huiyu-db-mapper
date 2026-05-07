@@ -14,7 +14,7 @@ fn init_postgres(){
 //     postgresql://user:pass@localhost:5432/mydb?sslmode=require
     let db_config_postgres = DbConfig::new(DbType::Postgres,
                                            "postgres".to_string(),
-                                           Some("postgresql://user:pass@localhost:5432/aaa".to_string()),
+                                           Some("postgresql://user:pass@localhost:5432/dbname".to_string()),
                                            None,
                                            None,
     );
@@ -25,7 +25,7 @@ fn init_mysql(){
     // "mysql://root:password@localhost:3306/mydb"
     let db_config_mysql = DbConfig::new(DbType::Mysql,
                                         "mysql".to_string(),
-                                        Some("mysql://root:neusoft@10.150.6.7:3306/huiyu".to_string()),
+                                        Some("mysql://root:123456@10.150.6.7:3306/dbname".to_string()),
                                         None,None
     );
     DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
@@ -35,7 +35,7 @@ fn init_sqlite(){
     let db_config_sqlite = DbConfig::new(
         DbType::Sqlite,
         "sqlite".to_string(),
-        Some("E:\\test\\huiyu.db".to_string()),
+        Some("E:\\test\\dbname.db".to_string()),
         None,
         None
     );

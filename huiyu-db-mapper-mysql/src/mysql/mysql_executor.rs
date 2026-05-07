@@ -182,7 +182,12 @@ fn value_to_param_value(value: Value) -> Result<ParamValue, DatabaseError> {
         Value::UInt(v) => Ok(ParamValue::U64(v)),
         Value::Float(v) => Ok(ParamValue::F32(v)),
         Value::Double(v) => Ok(ParamValue::F64(v)),
-        Value::Bytes(v) => Ok(ParamValue::Blob(v)),
+        Value::Bytes(v) => {
+            if let Ok(s) = std::str::from_utf8(&v) {
+                return Ok(ParamValue::String(s.to_string()));
+            }
+            Ok(ParamValue::Blob(v))
+        },
         Value::Date(year, month, day, hour, minutes, seconds, micro) => Ok(ParamValue::DateTime(time_util::create_datetime_local(
             year as i32, month as u32, day as u32, hour as u32, minutes as u32, seconds as u32, micro
         ))),

@@ -5,6 +5,7 @@ use crate::base::error::DatabaseError;
 use crate::util::time_util;
 use chrono::{DateTime, Local};
 use rust_decimal::Decimal;
+use paste::paste;
 
 #[derive(Clone, Debug)]
 pub enum ParamValue {
@@ -170,6 +171,9 @@ macro_rules! impl_numeric_conversions {
                         ParamValue::$src(v) => Some(v as $target),
                     )+
                     ParamValue::String(v) => Some(v.parse::<$target>().unwrap_or_default()),
+                    ParamValue::Decimal(v) => paste! {
+                        Some(v.[<to_ $target>]().unwrap_or_default())
+                    },
                     ParamValue::Bool(v)=>{
                         if v {
                             Some(1 as $target)

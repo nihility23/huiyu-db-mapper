@@ -3,6 +3,7 @@ use huiyu_db_mapper_core::base::error::DatabaseError;
 use huiyu_db_mapper_core::pool::datasource::get_datasource_type;
 use huiyu_db_mapper_core::sql::executor::Executor;
 use std::future::Future;
+use tracing::error;
 
 pub async fn transactional_exec<F, Fut, T>(func: F) -> Result<T, DatabaseError>
 where
@@ -30,6 +31,7 @@ async fn do_transaction<F, Fut, T>(db_wrapper: DbTypeWrapper, func: F) -> Result
     };
     let res = db_wrapper.start_transaction().await;
     if res.is_err() {
+        error!("start_transaction failed: {:?}", res.as_ref().err().unwrap());
         guard.rollback_needed = false;
         return Err(res.err().unwrap());
     }

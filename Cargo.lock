@@ -1187,6 +1187,7 @@ dependencies = [
  "huiyu-db-mapper-postgres",
  "huiyu-db-mapper-sqlite",
  "tokio",
+ "tracing",
  "uuid",
 ]
 

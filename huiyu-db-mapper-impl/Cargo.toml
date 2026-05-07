@@ -23,6 +23,7 @@ huiyu-db-mapper-oracle={workspace = true, optional = true}
 
 uuid = {workspace = true}
 tokio = { workspace = true }
+tracing = { workspace = true }
 
 
 [features]

@@ -116,22 +116,22 @@ impl Executor for MysqlSqlExecutor {
 
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-            let mut conn = conn.blocking_lock();
-            conn.exec_first::<Value, &str, Params>("BEGIN", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
-            Ok(())
+        let mut conn = conn.lock().await;
+        conn.query_drop("BEGIN").map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        Ok(())
     }
 
     async fn commit(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        let mut conn = conn.blocking_lock();
-        conn.exec_first::<Value, &str, Params>("COMMIT", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        let mut conn = conn.lock().await;
+        conn.query_drop("COMMIT").map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
         Ok(())
     }
 
     async fn rollback(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
-        let mut conn = conn.blocking_lock();
-        conn.exec_first::<Value, &str, Params>("ROLLBACK", Params::Positional(vec![])).map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
+        let mut conn = conn.lock().await;
+        conn.query_drop("ROLLBACK").map_err(|e| DatabaseError::ExecuteError(e.to_string())).await?;
         Ok(())
     }
 

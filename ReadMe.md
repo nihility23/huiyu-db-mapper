@@ -69,8 +69,8 @@ fn init_oracle(){
 
 | 名称 | url格式 |
 |------|-----------------|
-|mysql| mysql://root:password@localhost:3306/mydb |
-|postgres| postgresql://user:pass@localhost:5432/mydb?sslmode=require |
+|mysql| mysql://localhost:3306/mydb |
+|postgres| postgresql://localhost:5432/mydb?sslmode=require |
 |oracle|       host:port/service_name|
 |oracle|             host/service_name|
 |oracle|            host:port:sid|

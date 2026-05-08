@@ -19,8 +19,8 @@ impl DbRegister for PostgresDbRegister{
             // cfg.manager = Some(ManagerConfig {
             //     recycling_method: RecyclingMethod::Fast,
             // });
-            // cfg.user = Some(config.username.clone().expect("Username is missing").to_string());
-            // cfg.password = Some(config.password.clone().expect("Password is missing").to_string());
+            cfg.user = Some(config.username.clone().expect("Username is missing").to_string());
+            cfg.password = Some(config.password.clone().expect("Password is missing").to_string());
             // cfg.host = Some(config.host.clone().expect("Host is missing").to_string());
             // cfg.port = Some(config.port.expect("Port is missing") as u16);
             // if config.schema.is_some() {

@@ -1126,7 +1126,7 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
 name = "huiyu-db-mapper"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-impl",
@@ -1139,7 +1139,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "dashmap",
@@ -1154,7 +1154,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-example"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-web",
  "chrono",
@@ -1179,7 +1179,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-impl"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-mysql",
@@ -1193,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1202,7 +1202,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-mysql"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "futures-util",
@@ -1214,7 +1214,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-oracle"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "deadpool-oracle",
@@ -1226,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-postgres"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "deadpool 0.13.0",
@@ -1242,7 +1242,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-sqlite"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "deadpool-sqlite",
  "huiyu-db-mapper-core",

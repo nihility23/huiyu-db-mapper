@@ -5,7 +5,6 @@ use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
 use tracing::{info, trace, warn};
 use std::any::{Any, TypeId};
-use std::cmp::PartialEq;
 use std::error::Error;
 use std::sync::{Arc, OnceLock};
 

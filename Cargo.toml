@@ -11,7 +11,7 @@ members = ["huiyu-db-mapper-macros",
             "huiyu-db-mapper-oracle"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Nihility123"]
 build = false
@@ -35,14 +35,14 @@ repository = "https://github.com/nihility23/huiyu-db-mapper.git"
 [workspace.dependencies]
 
 #### members
-huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.0"}
-huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.0"}
-huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.0"}
-huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.0"}
-huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.0"}
-huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.0"}
-huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.0"}
-huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.0"}
+huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.1"}
+huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.1"}
+huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.1"}
+huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.1"}
+huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.1"}
+huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.1"}
+huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.1"}
+huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.1"}
 
 ##### common
 chrono = { version = "0.4.42",features = ["serde"] }
@@ -71,6 +71,7 @@ rusqlite = { version = "0.38" ,features = ["bundled"] }
 
 ### oracle
 deadpool-oracle = "0.1.1"
-
+oracle-rs = "0.1.5"
 ### mysql
 mysql_async = { version = "0.36.2",features = ["rust_decimal"] }
+futures-util = "0.3.32"

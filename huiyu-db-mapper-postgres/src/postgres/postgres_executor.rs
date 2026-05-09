@@ -201,7 +201,7 @@ impl FromSql<'_> for ParamValueWrapper {
         }
 
     }
-    fn from_sql_null(ty: &Type) -> Result<Self, Box<dyn Error + Sync + Send>> {
+    fn from_sql_null(_: &Type) -> Result<Self, Box<dyn Error + Sync + Send>> {
         Ok(ParamValueWrapper(ParamValue::Null))
     }
 

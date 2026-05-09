@@ -24,4 +24,4 @@ lazy_static = {workspace = true}
 dashmap = {workspace = true }
 serde = { workspace = true}
 rust_decimal = {workspace = true}
-paste = "1.0.15"
+paste = {workspace = true}

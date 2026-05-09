@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use deadpool_oracle::PoolBuilder;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;
@@ -10,18 +11,23 @@ impl DbRegister for OracleDbRegister{
     fn register_db(&self, config: &DbConfig) -> Result<(), DatabaseError> {
         Self::check_config(self, config)?;
         DbManager::register(config, |config| {
+            // Formats supported:
+            // - `host:port/service_name`
+            // - `host/service_name`
+            // - `host:port:sid`
+            // - `//host:port/service_name` (with optional leading slashes)
             // Create connection config
-            let config = Config::new(config.host.clone().unwrap_or("localhost".to_string()),
-                                     config.port.unwrap_or(1521),
-                                     config.database.clone().unwrap_or("orcl".to_string()),
-                                     config.username.clone().unwrap(),
-                                     config.password.clone().unwrap(),);
+            let mut inner_config = Config::from_str(config.clone().url.unwrap().as_str()).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))?;
+            inner_config.set_username(config.username.clone().unwrap());
+            inner_config.set_password(config.password.clone().unwrap());
+            
 
             // Create pool
 
-            PoolBuilder::new(config)
-                .max_size(10)
-                .build().map_err(|e| DatabaseError::CommonError(e.to_string()))
+            PoolBuilder::new(inner_config)
+                .max_size(config.max_size.unwrap_or(10) as usize)
+                .create_timeout(Some(std::time::Duration::from_secs(config.timeout.unwrap_or(1).into())))
+                .build().map_err(|e| DatabaseError::PoolCreateError(e.to_string()))
         })?;
         Ok(())
     }

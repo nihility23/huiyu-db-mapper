@@ -31,7 +31,7 @@ pub trait Executor{
     where
         T: Send + 'static,
         R: Send + 'static,
-        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + Sync + 'static,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static;
     async fn execute(
         &self,
@@ -64,7 +64,7 @@ pub trait Executor{
     where
         T: Send + 'static,
         R: Send + 'static,
-        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static,
+        F: for<'a> Fn(&Self::Row<'a>) -> Result<T, DatabaseError> + Send + 'static + Sync,
         Q: FnOnce(Vec<T>) -> Result<R, DatabaseError> + Send + 'static{
 
         warn!("query sql: {} with params: {:?}", sql, params);

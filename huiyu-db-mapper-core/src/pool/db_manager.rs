@@ -5,6 +5,7 @@ use crate::pool::datasource::{get_datasource_name, set_datasource_type};
 use dashmap::DashMap;
 use tracing::{info, trace, warn};
 use std::any::{Any, TypeId};
+use std::cmp::PartialEq;
 use std::error::Error;
 use std::sync::{Arc, OnceLock};
 
@@ -353,14 +354,17 @@ pub trait DbRegister{
     fn register_db(&self,config: &DbConfig) -> Result<(), DatabaseError>;
 
     fn check_config(&self, config: &DbConfig) -> Result<(), DatabaseError>{
-        if config.database.is_none() {
+        if config.url.is_none() {
             return Err(DatabaseError::ConfigNotFoundError("Database is missing".to_string()));
         }
+        if config.db_type == DbType::Other {
+            return Err(DatabaseError::ConfigNotFoundError("Database type is missing".to_string()));
+        }
         if config.username.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Username is missing".to_string()));
+            return Err(DatabaseError::ConfigNotFoundError("Database username is missing".to_string()));
         }
         if config.password.is_none() {
-            return Err(DatabaseError::ConfigNotFoundError("Password is missing".to_string()));
+            return Err(DatabaseError::ConfigNotFoundError("Database password is missing".to_string()));
         }
         Ok(())
     }

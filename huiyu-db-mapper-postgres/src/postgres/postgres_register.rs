@@ -1,4 +1,4 @@
-use deadpool_postgres::{ManagerConfig, RecyclingMethod, Runtime};
+use deadpool_postgres::{Runtime};
 use tokio_postgres::NoTls;
 use huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper_core::base::error::DatabaseError;

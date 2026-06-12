@@ -49,7 +49,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
-                // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "dameng")]
+                DbType::Dameng => DAMENG_SQL_GENERATOR.$method($($param),*),
                 _ => {panic!()}
             }
         }
@@ -68,7 +69,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
-                // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "dameng")]
+                DbType::Dameng => DAMENG_SQL_GENERATOR.$method($($param),*),
                 _ => {panic!()}
             }
         }
@@ -88,7 +90,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
-                // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "dameng")]
+                DbType::Dameng => DAMENG_SQL_GENERATOR.$method($($param),*),
                 _ => {panic!()}
             }
         }
@@ -106,7 +109,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
-                // DbType::SqlServer => SQL_SERVER_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "dameng")]
+                DbType::Dameng => DAMENG_SQL_GENERATOR.$method($($param),*),
                 _=>{panic!()}
             }
         }
@@ -154,8 +158,8 @@ macro_rules! impl_executor_methods {
             DbType::Oracle => ORACLE_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method($($arg),*).await,
-            // #[cfg(feature = "sqlserver")]
-            // DbType::SqlServer => todo!(),
+            #[cfg(feature = "dameng")]
+            DbType::Dameng => DAMENG_SQL_EXECUTOR.$method($($arg),*).await,
             _ => {panic!()},
         }
     };
@@ -171,8 +175,8 @@ macro_rules! impl_executor_methods {
             DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
-            // #[cfg(feature = "sqlserver")]
-            // DbType::SqlServer => todo!(),
+            #[cfg(feature = "dameng")]
+            DbType::Dameng => DAMENG_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             _ => {panic!()},
         }
     };
@@ -303,8 +307,8 @@ impl DbRegister for DbTypeWrapper {
             DbType::Oracle => ORACLE_DB_REGISTER.register_db(config),
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_DB_REGISTER.register_db(config),
-            // #[cfg(feature = "sqlserver")]
-            // DbType::SqlServer => SQLSERVER_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "dameng")]
+            DbType::Dameng => DAMENG_SQL_EXECUTOR.register_db(config),
             _ => {panic!()},
         }
     }

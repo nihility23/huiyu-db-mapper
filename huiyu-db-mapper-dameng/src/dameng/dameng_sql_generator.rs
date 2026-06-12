@@ -1,0 +1,35 @@
+use huiyu_db_mapper_core::base::entity::Entity;
+use huiyu_db_mapper_core::base::param::ParamValue;
+use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+
+pub const DAMENG_SQL_GENERATOR:DamengSqlGenerator = DamengSqlGenerator{};
+pub struct DamengSqlGenerator;
+
+impl PageSqlGenerator for DamengSqlGenerator {
+    fn gen_page_query_sql(&self, query_sql: &str, current_page: u64, page_size: u64) -> (String,u64,u64) {
+        (format!("select * from({} ) t  limit ? , ?",query_sql), (current_page-1)*page_size,page_size)
+    }
+}
+
+impl WhereSqlGenerator for DamengSqlGenerator {
+
+}
+
+impl BaseSqlGenerator for DamengSqlGenerator{
+    fn gen_case_sensitive(&self, column:&str)->String{
+        format!("`{}`",column)
+    }
+
+    fn gen_insert_and_get_id_sql<E>(&self, e:&E) -> (String, Vec<ParamValue>)
+    where
+        E: Entity
+    {
+
+        let (sql,params) = self.gen_insert_one_sql(e);
+        (format!("{};{}",sql,"SELECT LAST_INSERT_ID()"),params)
+    }
+}
+
+impl QueryWrapperSqlGenerator for DamengSqlGenerator {
+
+}

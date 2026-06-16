@@ -17,7 +17,7 @@ impl Display for DbType {
             DbType::Postgres => write!(f, "postgres"),
             DbType::Mysql => write!(f, "mysql"),
             DbType::Oracle => write!(f, "oracle"),
-            DbType::Dameng => write!(f, "dameng"),
+            DbType::Dameng => write!(f, "dameng"), 
             // DbType::SqlServer => write!(f, "sqlserver"),
             DbType::Other => write!(f, "other"),
         }

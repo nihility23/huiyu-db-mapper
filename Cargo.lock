@@ -1321,6 +1321,7 @@ name = "huiyu-db-mapper"
 version = "0.1.1"
 dependencies = [
  "huiyu-db-mapper-core",
+ "huiyu-db-mapper-dameng",
  "huiyu-db-mapper-impl",
  "huiyu-db-mapper-macros",
  "huiyu-db-mapper-mysql",

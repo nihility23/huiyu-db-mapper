@@ -9,6 +9,12 @@ use huiyu_db_mapper_core::base::param::ParamValue;
 use huiyu_db_mapper_core::pool::db_manager::DbRegister;
 use huiyu_db_mapper_core::sql::executor::{Executor, RowType};
 use huiyu_db_mapper_core::sql::sql_generator::{BaseSqlGenerator, PageSqlGenerator, QueryWrapperSqlGenerator, WhereSqlGenerator};
+#[cfg(feature = "dameng")]
+use huiyu_db_mapper_dameng::dameng::dameng_executor::DAMENG_SQL_EXECUTOR;
+#[cfg(feature = "dameng")]
+use huiyu_db_mapper_dameng::dameng::dameng_register::DAMENG_DB_REGISTER;
+#[cfg(feature = "dameng")]
+use huiyu_db_mapper_dameng::dameng::dameng_sql_generator::DAMENG_SQL_GENERATOR;
 #[cfg(feature = "mysql")]
 use huiyu_db_mapper_mysql::mysql::mysql_executor::MYSQL_SQL_EXECUTOR;
 #[cfg(feature = "mysql")]
@@ -308,7 +314,7 @@ impl DbRegister for DbTypeWrapper {
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_DB_REGISTER.register_db(config),
             #[cfg(feature = "dameng")]
-            DbType::Dameng => DAMENG_SQL_EXECUTOR.register_db(config),
+            DbType::Dameng => DAMENG_DB_REGISTER.register_db(config),
             _ => {panic!()},
         }
     }

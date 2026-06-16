@@ -14,8 +14,9 @@ impl DbRegister for DamengDbRegister{
             // dm://10.150.1.88:5234?schema=MEDILINK&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
             info!("dameng url: {}", config.url.as_ref().unwrap().as_str());
             // Create connection options
-            let options = DamengDbRegister::parse_from_url(config.url.as_ref().unwrap().as_str())?;
-
+            let mut options = DamengDbRegister::parse_from_url(config.url.as_ref().unwrap().as_str())?;
+            options.username = config.username.clone().unwrap_or_default();
+            options.password = config.password.clone().unwrap_or_default();
             // 2. 从基础配置创建Builder，再单独设置用户名和密码
             // Create client
             let client = DamengClient::new(options).map_err(|e| DatabaseError::PoolCreateError(e.to_string()))?;

@@ -22,6 +22,7 @@ huiyu-db-mapper-postgres={workspace = true, optional = true}
 huiyu-db-mapper-sqlite={workspace = true, optional = true}
 huiyu-db-mapper-mysql={workspace = true, optional = true}
 huiyu-db-mapper-oracle={workspace = true, optional = true}
+huiyu-db-mapper-dameng={workspace = true, optional = true}
 
 
 [features]
@@ -30,4 +31,5 @@ postgres = ["huiyu-db-mapper-postgres", "huiyu-db-mapper-impl/postgres"]
 sqlite = ["huiyu-db-mapper-sqlite", "huiyu-db-mapper-impl/sqlite"]
 mysql = ["huiyu-db-mapper-mysql", "huiyu-db-mapper-impl/mysql"]
 oracle = ["huiyu-db-mapper-oracle", "huiyu-db-mapper-impl/oracle"]
+dameng = ["huiyu-db-mapper-dameng", "huiyu-db-mapper-impl/dameng"]
 

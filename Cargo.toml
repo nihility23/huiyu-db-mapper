@@ -76,7 +76,7 @@ deadpool-sqlite = "0.13.0"
 rusqlite = { version = "0.38" ,features = ["bundled"] }
 
 ### oracle
-deadpool-oracle = "0.1.2"
+deadpool-oracle = "0.1.1"
 oracle-rs = "0.1.5"
 ### mysql
 mysql_async = { version = "0.36.2",features = ["rust_decimal"] }

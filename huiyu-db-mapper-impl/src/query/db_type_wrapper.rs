@@ -29,6 +29,13 @@ use huiyu_db_mapper_oracle::oracle::oracle_register::ORACLE_DB_REGISTER;
 #[cfg(feature = "oracle")]
 use huiyu_db_mapper_oracle::oracle::oracle_sql_generator::ORACLE_SQL_GENERATOR;
 
+#[cfg(feature = "oracle11g")]
+use huiyu_db_mapper_oracle11g::oracle11g::oracle_executor::ORACLE11G_SQL_EXECUTOR;
+#[cfg(feature = "oracle11g")]
+use huiyu_db_mapper_oracle11g::oracle11g::oracle_register::ORACLE11G_DB_REGISTER;
+#[cfg(feature = "oracle11g")]
+use huiyu_db_mapper_oracle11g::oracle11g::oracle_sql_generator::ORACLE11G_SQL_GENERATOR;
+
 #[cfg(feature = "postgres")]
 use huiyu_db_mapper_postgres::postgres::postgres_executor::POSTGRES_SQL_EXECUTOR;
 #[cfg(feature = "postgres")]
@@ -53,6 +60,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "oracle")]
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle11g")]
+                DbType::Oracle11g => ORACLE11G_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "dameng")]
@@ -73,6 +82,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "oracle")]
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle11g")]
+                DbType::Oracle11g => ORACLE11G_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "dameng")]
@@ -94,6 +105,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "oracle")]
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle11g")]
+                DbType::Oracle11g => ORACLE11G_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "dameng")]
@@ -113,6 +126,8 @@ macro_rules! impl_db_method_generic {
                 DbType::Postgres => POSTGRES_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "oracle")]
                 DbType::Oracle => ORACLE_SQL_GENERATOR.$method($($param),*),
+                #[cfg(feature = "oracle11g")]
+                DbType::Oracle11g => ORACLE11G_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "sqlite")]
                 DbType::Sqlite => SQLITE_SQL_GENERATOR.$method($($param),*),
                 #[cfg(feature = "dameng")]
@@ -162,6 +177,8 @@ macro_rules! impl_executor_methods {
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "oracle")]
             DbType::Oracle => ORACLE_SQL_EXECUTOR.$method($($arg),*).await,
+            #[cfg(feature = "oracle11g")]
+            DbType::Oracle11g => ORACLE11G_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method($($arg),*).await,
             #[cfg(feature = "dameng")]
@@ -179,6 +196,8 @@ macro_rules! impl_executor_methods {
             DbType::Sqlite => SQLITE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "oracle")]
             DbType::Oracle => ORACLE_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
+            #[cfg(feature = "oracle11g")]
+            DbType::Oracle11g => ORACLE11G_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_SQL_EXECUTOR.$method::<$($gen),*>($($arg),*).await,
             #[cfg(feature = "dameng")]
@@ -311,6 +330,8 @@ impl DbRegister for DbTypeWrapper {
             DbType::Sqlite => SQLITE_DB_REGISTER.register_db(config),
             #[cfg(feature = "oracle")]
             DbType::Oracle => ORACLE_DB_REGISTER.register_db(config),
+            #[cfg(feature = "oracle11g")]
+            DbType::Oracle11g => ORACLE11G_DB_REGISTER.register_db(config),
             #[cfg(feature = "postgres")]
             DbType::Postgres => POSTGRES_DB_REGISTER.register_db(config),
             #[cfg(feature = "dameng")]

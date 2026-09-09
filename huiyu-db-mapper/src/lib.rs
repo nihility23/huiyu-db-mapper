@@ -10,3 +10,7 @@ pub use huiyu_db_mapper_sqlite;
 pub use huiyu_db_mapper_mysql;
 #[cfg(feature = "oracle")]
 pub use huiyu_db_mapper_oracle;
+#[cfg(feature = "oracle11g")]
+pub use huiyu_db_mapper_oracle11g;
+#[cfg(feature = "dameng")]
+pub use huiyu_db_mapper_dameng;

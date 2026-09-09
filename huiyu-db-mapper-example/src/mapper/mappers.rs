@@ -2,7 +2,7 @@ use std::alloc;
 use chrono::{DateTime, Local};
 use huiyu_db_mapper::huiyu_db_mapper_macros::mapper;
 use huiyu_db_mapper::huiyu_db_mapper_core::sql::sql_generator::QueryWrapperSqlGenerator;
-use crate::entity::entities::{PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
+use crate::entity::entities::{EdPatientEntity, PermissionEntity, RoleEntity, UserEntity, UserRoleEntity};
 use crate::entity::mappings::RoleDTO;
 use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
 use huiyu_db_mapper::huiyu_db_mapper_impl::query::db_type_wrapper::DbTypeWrapper;
@@ -91,6 +91,5 @@ impl RoleMapper {
 #[mapper(PermissionEntity)]
 pub struct PermissionMapper;
 
-// impl BaseMapper<PermissionEntity> for PermissionMapper {
-// 
-// }
+#[mapper(EdPatientEntity)]
+pub struct EdPatientMapper;

@@ -848,7 +848,7 @@ dependencies = [
 
 [[package]]
 name = "deadpool-oracle"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13166537898cf51a12f385bda1b839a9b817d7338df77a65c65ef9255bc43395"
 dependencies = [
@@ -1353,7 +1353,7 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
 name = "huiyu-db-mapper"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-dameng",
@@ -1368,7 +1368,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "dashmap",
@@ -1383,7 +1383,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-dameng"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "dameng_rust_sdk",
@@ -1396,7 +1396,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-example"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "actix-web",
  "chrono",
@@ -1421,7 +1421,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-impl"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-dameng",
@@ -1437,7 +1437,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-macros"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1446,7 +1446,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-mysql"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "futures-util",
@@ -1458,7 +1458,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-oracle"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "deadpool-oracle",
@@ -1470,7 +1470,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-oracle11g"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "huiyu-db-mapper-core",
@@ -1484,7 +1484,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-postgres"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "deadpool 0.13.0",
@@ -1500,7 +1500,7 @@ dependencies = [
 
 [[package]]
 name = "huiyu-db-mapper-sqlite"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "deadpool-sqlite",
  "huiyu-db-mapper-core",
@@ -1804,7 +1804,7 @@ dependencies = [
 
 [[package]]
 name = "libredox"
-version = "0.1.14"
+version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1744e39d1d6a9948f4f388969627434e31128196de472883b39f148769bfe30a"
 dependencies = [
@@ -2030,7 +2030,7 @@ dependencies = [
 
 [[package]]
 name = "ndk-context"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27b02d87554356db9e9a873add8782d4ea6e3e58ea071a9adb9a2e8ddb884a8b"
 
@@ -2372,7 +2372,7 @@ checksum = "6c219b6a4cd9eb167239d921d7348132cdff2eca05abbf1094e7f7ec9b8936b6"
 
 [[package]]
 name = "odpic-sys"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "920b5474a5128a9f0232df5a0ffc50aaa5b077b29b8b06ab0131985ac82793ed"
 dependencies = [
@@ -3542,7 +3542,7 @@ dependencies = [
 
 [[package]]
 name = "tinyvec_macros"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
@@ -3799,7 +3799,7 @@ dependencies = [
 
 [[package]]
 name = "valuable"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
@@ -4020,7 +4020,7 @@ checksum = "72069c3113ab32ab29e5584db3c6ec55d416895e60715417b5b883a357c3e471"
 
 [[package]]
 name = "winapi-util"
-version = "0.1.11"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [

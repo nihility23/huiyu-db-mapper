@@ -6,7 +6,8 @@ pub enum DbType{
     Postgres,
     Mysql,
     Oracle,
-
+    Oracle11g,
+    Dameng,
     Other,
 }
 
@@ -17,6 +18,8 @@ impl Display for DbType {
             DbType::Postgres => write!(f, "postgres"),
             DbType::Mysql => write!(f, "mysql"),
             DbType::Oracle => write!(f, "oracle"),
+            DbType::Oracle11g => write!(f, "oracle11g"),
+            DbType::Dameng => write!(f, "dameng"), 
             // DbType::SqlServer => write!(f, "sqlserver"),
             DbType::Other => write!(f, "other"),
         }

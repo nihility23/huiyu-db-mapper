@@ -22,6 +22,7 @@ async fn main() -> std::io::Result<()>{
             .route("/user/query_user_by_id/{id}", web::get().to(controller::user_controller::query_user_by_id))
             .route("/user/query_user_name_by_id/{id}", web::get().to(controller::user_controller::query_user_name_by_id))
             .route("/user/query_user_name_by_page", web::post().to(controller::user_controller::query_user_name_by_page))
+            .route("/patient/query_patient_by_page", web::post().to(controller::patient_controller::query_patient_by_page))
     })
         .bind(("127.0.0.1", 9999))?
         .run()

@@ -17,3 +17,11 @@ pub(crate) struct RoleQueryParam{
     pub(crate) id : Option<i64>,
     pub(crate) role_name : Option<String>,
 }
+
+#[derive(Serialize,Debug, Deserialize)]
+pub(crate) struct PatientQueryParam{
+    pub(crate) current_page : Option<u32>,
+    pub(crate) page_size : Option<u32>,
+    pub(crate) id : Option<String>,
+    pub(crate) patient_name : Option<String>,
+}

@@ -1,5 +1,5 @@
 [package]
-name = "huiyu-db-mapper-core"
+name = "huiyu-db-mapper-oracle11g"
 version = {workspace = true}
 edition = {workspace = true}
 authors = {workspace = true}
@@ -14,14 +14,12 @@ keywords = {workspace = true}
 license = { workspace = true }
 repository = {workspace = true}
 
-
 [dependencies]
-chrono = { workspace = true }
+huiyu-db-mapper-core = { workspace = true }
+tokio = { workspace = true}
+chrono = {workspace = true}
 tracing = {workspace = true}
-thiserror = {workspace = true}
-tokio = {workspace = true}
-lazy_static = {workspace = true}
-dashmap = {workspace = true }
-serde = { workspace = true}
-rust_decimal = {workspace = true}
-paste = {workspace = true}
+oracle = {workspace = true}
+rust_decimal = { workspace = true }
+r2d2 = "0.8.10"
+r2d2-oracle = { version = "0.7.0", features = ["chrono"] }

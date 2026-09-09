@@ -1,5 +1,5 @@
 [package]
-name = "huiyu-db-mapper-core"
+name = "huiyu-db-mapper-dameng"
 version = {workspace = true}
 edition = {workspace = true}
 authors = {workspace = true}
@@ -16,12 +16,10 @@ repository = {workspace = true}
 
 
 [dependencies]
-chrono = { workspace = true }
+huiyu-db-mapper-core = { workspace = true }
+tokio = { workspace = true}
+chrono = {workspace = true}
 tracing = {workspace = true}
-thiserror = {workspace = true}
-tokio = {workspace = true}
-lazy_static = {workspace = true}
-dashmap = {workspace = true }
-serde = { workspace = true}
-rust_decimal = {workspace = true}
-paste = {workspace = true}
+futures-util = {workspace = true}
+dameng_rust_sdk = "0.1.3"
+url = "2.5.8"

@@ -159,6 +159,32 @@ pub struct RolePermissionEntity {
     pub create_time: Option<DateTime<Local>>,  // 创建时间
 }
 
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Entity)]
+#[table(name = "ed_patient")]
+pub struct EdPatientEntity{
+    #[id(column = "id")]
+    pub id: Option<String>,
+    pub patient_name: Option<String>,
+    pub patient_id: Option<String>,
+    pub pad_id: Option<String>,
+    pub site_id: Option<String>,
+    pub age: Option<String>,
+    pub sex: Option<String>,
+    pub idcard_type: Option<String>,
+    pub idcard: Option<String>,
+    pub dept_name: Option<String>,
+    pub dept_id: Option<String>,
+    pub doctor_name: Option<String>,
+    pub pad_file_state: Option<String>,
+    pub pad_send_state: Option<String>,
+    pub del_state: Option<String>,
+    pub file_name: Option<String>,
+    pub report_name: Option<String>,
+    pub report_state: Option<String>,
+    pub pc_file_state: Option<String>,
+    pub start_time: Option<DateTime<Local>>,
+}
+
 // 为了方便使用，可以定义一些枚举类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Gender {
@@ -224,9 +250,3 @@ impl UserEntity {
     }
 }
 
-// 如果需要使用Cargo.toml依赖，可以添加以下内容：
-/*
-[dependencies]
-chrono = { version = "0.4", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"] }
-*/

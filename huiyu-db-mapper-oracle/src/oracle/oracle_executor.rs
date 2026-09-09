@@ -158,6 +158,7 @@ impl ParamValueWrapper {
             ParamValue::Bool(v) => Ok(Value::Boolean(*v)),
             ParamValue::Blob(v) => Ok(Value::Bytes(v.to_vec())),
             ParamValue::Clob(v) => Ok(Value::String(String::from_utf8(v.to_vec()).unwrap())),
+            ParamValue::U64(v) => Ok(Value::Integer(*v as i64)),
             ParamValue::U32(v) => Ok(Value::Integer(*v as i64)),
             ParamValue::U16(v) => Ok(Value::Integer(*v as i64)),
             ParamValue::U8(v) => Ok(Value::Integer(*v as i64)),

@@ -3,10 +3,12 @@ use huiyu_db_mapper::huiyu_db_mapper_core::base::config::DbConfig;
 use huiyu_db_mapper::huiyu_db_mapper_core::base::db_type::DbType;
 
 pub fn init_dbs(){
-    init_postgres();
-    init_mysql();
-    init_sqlite();
-    init_oracle();
+    // init_postgres();
+    // init_mysql();
+    // init_sqlite();
+    // init_oracle();
+    init_oracle11g();
+    // init_dameng();
 }
 
 fn init_postgres(){
@@ -25,7 +27,7 @@ fn init_mysql(){
     // "mysql://root:password@localhost:3306/mydb"
     let db_config_mysql = DbConfig::new(DbType::Mysql,
                                         "mysql".to_string(),
-                                        Some("mysql://root:123456!@10.150.6.7:3306/dbname".to_string()),
+                                        Some("mysql://root:123456!@localhost:3306/dbname".to_string()),
                                         None,None
     );
     DbTypeWrapper::register_dbs(vec![db_config_mysql]).expect("Failed to register db");
@@ -50,4 +52,24 @@ fn init_oracle(){
                                         Some("user".to_string()),Some("password".to_string()),
     );
     DbTypeWrapper::register_dbs(vec![db_config_oracle]).expect("Failed to register db");
+}
+
+fn init_oracle11g(){
+    println!("init oracle11g");
+    let db_config_oracle11g = DbConfig::new(DbType::Oracle11g,
+                                            "oracle11g".to_string(),
+                                            Some("localhost:1521/orcl".to_string()),
+                                            Some("user".to_string()),Some("password".to_string()),
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_oracle11g]).expect("Failed to register db");
+}
+
+fn init_dameng(){
+    println!("init dameng");
+    let db_config_dameng = DbConfig::new(DbType::Dameng,
+                                        "dameng".to_string(),
+                                        Some("dm://localhost:5234?schema=MEDILINK&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai".to_string()),
+                                        Some("user".to_string()),Some("password".to_string()),
+    );
+    DbTypeWrapper::register_dbs(vec![db_config_dameng]).expect("Failed to register db");
 }

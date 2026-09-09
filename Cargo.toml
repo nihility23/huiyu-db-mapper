@@ -8,10 +8,13 @@ members = ["huiyu-db-mapper-macros",
             "huiyu-db-mapper",
             "huiyu-db-mapper-example",
             "huiyu-db-mapper-mysql",
-            "huiyu-db-mapper-oracle"]
+            "huiyu-db-mapper-oracle",
+            "huiyu-db-mapper-dameng",
+            "huiyu-db-mapper-oracle11g"
+]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["Nihility123"]
 build = false
@@ -35,14 +38,16 @@ repository = "https://github.com/nihility23/huiyu-db-mapper.git"
 [workspace.dependencies]
 
 #### members
-huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.1"}
-huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.1"}
-huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.1"}
-huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.1"}
-huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.1"}
-huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.1"}
-huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.1"}
-huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.1"}
+huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.2"}
+huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.2"}
+huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.2"}
+huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.2"}
+huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.2"}
+huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.2"}
+huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.2"}
+huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.2"}
+huiyu-db-mapper-oracle11g = { path = "huiyu-db-mapper-oracle11g" , version = "0.1.2"}
+huiyu-db-mapper-dameng = { path = "huiyu-db-mapper-dameng" , version = "0.1.2"}
 
 ##### common
 chrono = { version = "0.4.42",features = ["serde"] }
@@ -56,6 +61,7 @@ deadpool-sync = "=0.2.0"
 dashmap = "6.1.0"
 serde = { version = "1.0.228", features = ["derive"] }
 rust_decimal = "1.41.0"
+paste = "1.0.15"
 #### proc-macro
 proc-macro2 = "1.0.101"
 quote = "1.0.41"
@@ -70,8 +76,10 @@ deadpool-sqlite = "0.13.0"
 rusqlite = { version = "0.38" ,features = ["bundled"] }
 
 ### oracle
-deadpool-oracle = "0.1.1"
+deadpool-oracle = "0.1.2"
 oracle-rs = "0.1.5"
 ### mysql
 mysql_async = { version = "0.36.2",features = ["rust_decimal"] }
 futures-util = "0.3.32"
+### oracle11g，需客户端
+oracle = { version = "0.6.3", features = ["chrono"] }

@@ -5,7 +5,7 @@ edition = {workspace = true}
 publish = false   # 不会被发布
 
 [dependencies]
-huiyu-db-mapper={workspace = true, features = ["postgres", "sqlite", "mysql","oracle"]}
+huiyu-db-mapper={workspace = true, features = ["postgres", "sqlite", "mysql","oracle","dameng","oracle11g"]}
 
 chrono = { workspace = true }
 tracing = {workspace = true}

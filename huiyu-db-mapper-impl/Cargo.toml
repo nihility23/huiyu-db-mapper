@@ -29,7 +29,6 @@ tracing = { workspace = true }
 
 
 [features]
-default = ["sqlite"]
 postgres = ["huiyu-db-mapper-postgres"]
 sqlite = ["huiyu-db-mapper-sqlite"]
 mysql = ["huiyu-db-mapper-mysql"]

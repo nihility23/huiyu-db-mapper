@@ -27,7 +27,6 @@ huiyu-db-mapper-dameng={workspace = true, optional = true}
 
 
 [features]
-default = ["sqlite"]
 postgres = ["huiyu-db-mapper-postgres", "huiyu-db-mapper-impl/postgres"]
 sqlite = ["huiyu-db-mapper-sqlite", "huiyu-db-mapper-impl/sqlite"]
 mysql = ["huiyu-db-mapper-mysql", "huiyu-db-mapper-impl/mysql"]

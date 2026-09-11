@@ -23,14 +23,14 @@ autobins = false
 autoexamples = false
 autotests = false
 autobenches = false
-description = "Database Query Tool with Deadpool. Query Wrapper Tool. Orm Tool"
+description = "Database Query Tool with Deadpool. Query Wrapper Tool. Orm Tool. Like mybatis plus"
 readme = "ReadMe.md"
 keywords = [
     "async",
-    "database",
+    "QueryWrapper",
     "query_wrapper",
     "orm",
-    "deadpool",
+    "mybatis",
 ]
 license = "Apache-2.0"
 repository = "https://github.com/nihility23/huiyu-db-mapper.git"

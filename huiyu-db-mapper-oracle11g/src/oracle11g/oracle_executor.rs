@@ -12,7 +12,8 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_oracle::OracleConnectionManager;
 use tokio::sync::Mutex;
 use tokio::task_local;
-use tracing::warn;
+use tracing::{error, warn};
+use huiyu_db_mapper_core::base::entity::Entity;
 
 task_local! {
     pub static ORACLE11G_CONN_REGISTER : Arc<Mutex<PooledConnection<OracleConnectionManager>>>;
@@ -69,6 +70,7 @@ impl RowType for OracleRow {
         }
     }
 }
+
 // 查询基本实现
 impl Executor for Oracle11gSqlExecutor {
     type Row<'a> = OracleRow;
@@ -115,6 +117,14 @@ impl Executor for Oracle11gSqlExecutor {
         let stmt = conn.execute(&str, &*to_sql_values).map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute statement: {:?}", e)))?;
         let affected = stmt.row_count().map_err(|e| DatabaseError::ExecuteError(format!("Failed to get row count: {:?}", e)))?;
         Ok(affected)
+    }
+
+    async fn insert<E>(&self, sql:&str, params: &Vec<ParamValue>) -> Result<Option<E::K>,DatabaseError>where E:Entity{
+        self.exec_basic(
+            sql,
+            params
+        ).await?;
+        Ok(None)
     }
 
     fn get_conn_ref(&self) -> Result<Arc<Mutex<Self::Conn>>, DatabaseError> {

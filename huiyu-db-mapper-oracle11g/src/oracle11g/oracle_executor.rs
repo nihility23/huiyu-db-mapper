@@ -87,8 +87,9 @@ impl Executor for Oracle11gSqlExecutor {
         let mut str = sql.to_string();
         for i in 0..params.len() {
             str = str.replacen("?", &format!(":{}", i+1), 1);
-            warn!("oracle11g sql : {}", str);
         }
+        warn!("oracle11g sql : {}", str);
+
         let params = params.clone();
         let conn = conn.lock().await;
             let param_refs = ParamValueWrapper::convert_param_values(&params)?;

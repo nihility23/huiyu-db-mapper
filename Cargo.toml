@@ -14,7 +14,7 @@ members = ["huiyu-db-mapper-macros",
 ]
 
 [workspace.package]
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 authors = ["Nihility123"]
 build = false
@@ -23,14 +23,14 @@ autobins = false
 autoexamples = false
 autotests = false
 autobenches = false
-description = "Database Query Tool with Deadpool. Query Wrapper Tool. Orm Tool"
+description = "Database Query Tool with Deadpool. Query Wrapper Tool. Orm Tool. Like mybatis plus"
 readme = "ReadMe.md"
 keywords = [
     "async",
-    "database",
+    "QueryWrapper",
     "query_wrapper",
     "orm",
-    "deadpool",
+    "mybatis",
 ]
 license = "Apache-2.0"
 repository = "https://github.com/nihility23/huiyu-db-mapper.git"
@@ -38,16 +38,16 @@ repository = "https://github.com/nihility23/huiyu-db-mapper.git"
 [workspace.dependencies]
 
 #### members
-huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.3"}
-huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.3"}
-huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.3"}
-huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.3"}
-huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.3"}
-huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.3"}
-huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.3"}
-huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.3"}
-huiyu-db-mapper-oracle11g = { path = "huiyu-db-mapper-oracle11g" , version = "0.1.3"}
-huiyu-db-mapper-dameng = { path = "huiyu-db-mapper-dameng" , version = "0.1.3"}
+huiyu-db-mapper = { path = "huiyu-db-mapper", version = "0.1.4"}
+huiyu-db-mapper-core = { path = "huiyu-db-mapper-core" , version = "0.1.4"}
+huiyu-db-mapper-impl = { path = "huiyu-db-mapper-impl", version = "0.1.4"}
+huiyu-db-mapper-macros = { path = "huiyu-db-mapper-macros", version = "0.1.4"}
+huiyu-db-mapper-sqlite = { path = "huiyu-db-mapper-sqlite" , version = "0.1.4"}
+huiyu-db-mapper-mysql = { path = "huiyu-db-mapper-mysql" , version = "0.1.4"}
+huiyu-db-mapper-postgres = { path = "huiyu-db-mapper-postgres" , version = "0.1.4"}
+huiyu-db-mapper-oracle = { path = "huiyu-db-mapper-oracle" , version = "0.1.4"}
+huiyu-db-mapper-oracle11g = { path = "huiyu-db-mapper-oracle11g" , version = "0.1.4"}
+huiyu-db-mapper-dameng = { path = "huiyu-db-mapper-dameng" , version = "0.1.4"}
 
 ##### common
 chrono = { version = "0.4.42",features = ["serde"] }

@@ -6,6 +6,8 @@
   - [x] Mysql
   - [x] PostgreSql
   - [x] Oracle(>12)
+  - [x] Oracle(需安装oracle Instant Client到环境变量下)
+  - [ ] Dameng
 
 ## 功能
  - [x] 多数据源切换

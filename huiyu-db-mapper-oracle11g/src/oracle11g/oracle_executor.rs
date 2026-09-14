@@ -116,7 +116,9 @@ impl Executor for Oracle11gSqlExecutor {
         let param_refs = ParamValueWrapper::convert_param_values(&params)?;
         let to_sql_values = param_refs.iter().map(|x| x.as_sql_param()).collect::<Result<Vec<_>, DatabaseError>>()?;
         let stmt = conn.execute(&str, &*to_sql_values).map_err(|e| DatabaseError::ExecuteError(format!("Failed to execute statement: {:?}", e)))?;
-        conn.commit().map_err(|e| DatabaseError::ExecuteError(format!("Failed to commit transaction: {:?}", e)))?;
+        if self.get_conn_ref().is_err(){
+            conn.commit().map_err(|e| DatabaseError::ExecuteError(format!("Failed to commit transaction: {:?}", e)))?;
+        }
         let affected = stmt.row_count().map_err(|e| DatabaseError::ExecuteError(format!("Failed to get row count: {:?}", e)))?;
         Ok(affected)
     }
@@ -146,7 +148,7 @@ impl Executor for Oracle11gSqlExecutor {
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("SET TRANSACTION READ WRITE;", &[] as &[&dyn ToSql]).map_err(|e| DatabaseError::ExecuteError(format!("Failed to set transaction: {:?}", e)))?;
+        conn.execute("SET TRANSACTION READ WRITE", &[] as &[&dyn ToSql]).map_err(|e| DatabaseError::ExecuteError(format!("Failed to set transaction: {:?}", e)))?;
         Ok(())
     }
 

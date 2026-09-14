@@ -1,8 +1,9 @@
 use actix_web::{web, Error, HttpResponse};
+use huiyu_db_mapper::huiyu_db_mapper_core::base::mapping::Mapping;
 use huiyu_db_mapper::huiyu_db_mapper_core::base::page::Page;
 use huiyu_db_mapper::huiyu_db_mapper_core::query::query_wrapper::QueryWrapper;
 use huiyu_db_mapper::huiyu_db_mapper_impl::query::base_mapper::BaseMapper;
-use huiyu_db_mapper::huiyu_db_mapper_macros::datasource;
+use huiyu_db_mapper::huiyu_db_mapper_macros::{datasource, transactional};
 use crate::common::result::Res;
 use crate::entity::entities::{EdPatientEntity, RoleEntity};
 use crate::mapper::mappers::{EdPatientMapper, RoleMapper};
@@ -30,4 +31,29 @@ pub(crate) async fn query_patient_by_page(json: web::Json<PatientQueryParam>) ->
         return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1,page_res.err().unwrap().to_string().as_str())));
     }
     Ok(HttpResponse::Ok().json(Res::success(page_res.ok().unwrap())))
+}
+
+#[datasource("oracle11g")]
+pub(crate) async fn insert_patient() ->Result<HttpResponse, Error>{
+    let mut ed_patient = EdPatientEntity::new();
+    ed_patient.id = Some(uuid::Uuid::new_v4().to_string());
+    ed_patient.patient_id = Some(uuid::Uuid::new_v4().to_string());
+    ed_patient.file_name = Some("file_name".to_string());
+    ed_patient.site_id = Some("xdts".to_string());
+    ed_patient.pad_id = Some("xdts".to_string());
+    ed_patient.start_time = Some(chrono::Local::now());
+    ed_patient.pc_file_state = Some("1".to_string());
+    ed_patient.del_state = Some("2".to_string());
+    ed_patient.pad_send_state = Some("2".to_string());
+    ed_patient.pad_file_state = Some("2".to_string());
+
+    ed_patient.report_state=Some("1".to_string());
+    let res = transactional!({
+        let insert_result = EdPatientMapper::insert(&mut ed_patient).await;
+        insert_result
+    });
+    if res.is_err() {
+        return Ok(HttpResponse::Ok().json(Res::<()>::fail(-1, res.err().unwrap().to_string().as_str())));
+    }
+    Ok(HttpResponse::Ok().json(Res::success(ed_patient.id.unwrap())))
 }

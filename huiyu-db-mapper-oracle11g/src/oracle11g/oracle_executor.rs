@@ -148,7 +148,7 @@ impl Executor for Oracle11gSqlExecutor {
     async fn start_transaction(&self) -> Result<(), DatabaseError> {
         let conn = self.get_conn_ref()?;
         let conn = conn.lock().await;
-        conn.execute("SET TRANSACTION READ WRITE;", &[] as &[&dyn ToSql]).map_err(|e| DatabaseError::ExecuteError(format!("Failed to set transaction: {:?}", e)))?;
+        conn.execute("SET TRANSACTION READ WRITE", &[] as &[&dyn ToSql]).map_err(|e| DatabaseError::ExecuteError(format!("Failed to set transaction: {:?}", e)))?;
         Ok(())
     }
 

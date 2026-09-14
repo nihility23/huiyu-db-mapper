@@ -58,8 +58,8 @@ fn init_oracle11g(){
     println!("init oracle11g");
     let db_config_oracle11g = DbConfig::new(DbType::Oracle11g,
                                             "oracle11g".to_string(),
-                                            Some("localhost:1521/orcl".to_string()),
-                                            Some("user".to_string()),Some("password".to_string()),
+                                            Some("10.30.0.7:1521/his".to_string()),
+                                            Some("xindian".to_string()),Some("1qaz!QAZ".to_string()),
     );
     DbTypeWrapper::register_dbs(vec![db_config_oracle11g]).expect("Failed to register db");
 }

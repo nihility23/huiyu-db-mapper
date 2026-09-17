@@ -26,6 +26,7 @@ huiyu-db-mapper-dameng={workspace = true, optional = true}
 uuid = {workspace = true}
 tokio = { workspace = true }
 tracing = { workspace = true }
+futures-util = { workspace = true }
 
 
 [features]

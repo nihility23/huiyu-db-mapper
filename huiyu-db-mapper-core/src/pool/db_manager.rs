@@ -1,7 +1,7 @@
 use crate::base::config::DbConfig;
 use crate::base::db_type::DbType;
 use crate::base::error::DatabaseError;
-use crate::pool::datasource::{get_datasource_name, set_datasource_type};
+use crate::pool::datasource::{get_datasource_name, remove_datasource_type, set_datasource_type};
 use dashmap::DashMap;
 use tracing::{info, trace, warn};
 use std::any::{Any, TypeId};
@@ -238,6 +238,9 @@ impl<M: Send + Sync + 'static> DbManager<M> {
             .ok_or("Database registry not initialized")?;
 
         let removed = registry.remove::<M>(name);
+
+        // 同步清理名称到数据库类型的映射，避免全局注册表累积陈旧条目
+        remove_datasource_type(name);
 
         if removed.is_some() {
             info!("Database instance '{}' unregistered successfully", name);

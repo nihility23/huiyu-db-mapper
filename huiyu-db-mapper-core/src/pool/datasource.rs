@@ -28,6 +28,11 @@ pub(crate) fn set_datasource_type(name: String, data_type: DbType) {
     DB_TYPE_REGISTRY.insert(name, data_type);
 }
 
+/// 注销时清理名称到数据库类型的映射，避免 DB_TYPE_REGISTRY 无限累积陈旧条目
+pub(crate) fn remove_datasource_type(name: &str) {
+    DB_TYPE_REGISTRY.remove(name);
+}
+
 pub fn get_datasource_type_by_name(name: &str) -> Option<DbType> {
     let data_type = DB_TYPE_REGISTRY.get(name);
     if let Some(data_type) = data_type {

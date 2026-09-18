@@ -1442,6 +1442,7 @@ dependencies = [
 name = "huiyu-db-mapper-impl"
 version = "0.1.4"
 dependencies = [
+ "futures-util",
  "huiyu-db-mapper-core",
  "huiyu-db-mapper-dameng",
  "huiyu-db-mapper-mysql",
